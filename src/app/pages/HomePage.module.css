@@ -1,0 +1,12 @@
+.home {
+  max-width: 640px;
+}
+
+.home h1 {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--space-3);
+}
+
+.home p {
+  color: var(--color-text-muted);
+}

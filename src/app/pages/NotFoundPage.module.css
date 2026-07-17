@@ -1,0 +1,12 @@
+.notFound {
+  max-width: 640px;
+}
+
+.notFound h1 {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--space-3);
+}
+
+.notFound p {
+  color: var(--color-text-muted);
+}

@@ -1,0 +1,12 @@
+.section {
+  margin-bottom: var(--space-5);
+}
+
+.heading {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-2);
+}

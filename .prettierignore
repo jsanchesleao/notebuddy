@@ -1,0 +1,10 @@
+dist
+dev-dist
+coverage
+node_modules
+pnpm-lock.yaml
+
+# Pre-existing planning docs — not part of the codebase Prettier manages
+pitch.md
+roadmap.md
+spec.md
