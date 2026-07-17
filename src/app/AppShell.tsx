@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { Sidebar } from './Sidebar/Sidebar'
+import { Fab } from './Fab/Fab'
 import { ThemeToggle } from '../theme/ThemeToggle'
 import { AppRoutes } from './routes'
+import { useCurrentRouteContext } from './routeContext'
 import styles from './AppShell.module.css'
 
 export function AppShell() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { folderId, notebookId } = useCurrentRouteContext()
 
   return (
     <div className={styles.shell}>
@@ -28,11 +31,12 @@ export function AppShell() {
         aria-hidden="true"
       />
       <div className={styles.body}>
-        <Sidebar open={sidebarOpen} />
+        <Sidebar open={sidebarOpen} currentFolderId={folderId} />
         <main className={styles.main}>
           <AppRoutes />
         </main>
       </div>
+      <Fab folderId={folderId} notebookId={notebookId} />
     </div>
   )
 }

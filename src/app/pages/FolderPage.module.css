@@ -1,0 +1,15 @@
+.page {
+  max-width: 640px;
+}
+
+.breadcrumb {
+  display: inline-block;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  margin-bottom: var(--space-4);
+}
+
+.breadcrumb:hover {
+  color: var(--color-accent);
+}

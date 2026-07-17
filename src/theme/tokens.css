@@ -59,6 +59,9 @@
   /* Radius */
   --radius-sm: 4px;
   --radius-md: 8px;
+
+  /* Layout */
+  --header-height: 3.5rem;
 }
 
 [data-theme='dark'] {

@@ -12,10 +12,44 @@
   color: var(--color-text-muted);
 }
 
+.upLink {
+  display: block;
+  margin-bottom: var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.upLink:hover {
+  color: var(--color-accent);
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.link {
+  display: block;
+  padding: var(--space-1) 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link:hover {
+  color: var(--color-accent);
+}
+
 @media (max-width: 767px) {
   .sidebar {
     position: fixed;
-    top: 0;
+    top: var(--header-height);
     left: 0;
     bottom: 0;
     z-index: 20;
