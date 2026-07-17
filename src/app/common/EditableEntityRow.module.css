@@ -10,6 +10,16 @@
   background: var(--color-bg-elevated);
 }
 
+.icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
 .link {
   flex: 1;
   min-width: 0;

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { faFolder } from '@fortawesome/free-solid-svg-icons'
 import { deleteFolder, getFolder, renameFolder } from '../../domain/folders/folderRepository'
 import { EntityPageHeader } from '../common/EntityPageHeader'
 import { FolderContents } from '../folders/FolderContents'
@@ -38,6 +39,7 @@ export function FolderPage() {
       </Link>
       <EntityPageHeader
         title={folder.title}
+        icon={faFolder}
         entityLabel="folder"
         onRename={(title) => renameFolder(folder.id, title)}
         onDelete={async () => {

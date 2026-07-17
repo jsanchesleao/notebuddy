@@ -5,6 +5,15 @@
   margin-bottom: var(--space-5);
 }
 
+.icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-lg);
+}
+
 .title {
   flex: 1;
   min-width: 0;
@@ -31,7 +40,7 @@
 .iconButton {
   flex-shrink: 0;
   padding: var(--space-1) var(--space-2);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-lg);
   color: var(--color-text-muted);
   background: none;
   border: none;

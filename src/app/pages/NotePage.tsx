@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { faStickyNote } from '@fortawesome/free-solid-svg-icons'
 import { deleteNote, getNote, renameNote } from '../../domain/notes/noteRepository'
 import { EntityPageHeader } from '../common/EntityPageHeader'
 import styles from './NotePage.module.css'
@@ -34,6 +35,7 @@ export function NotePage() {
       </Link>
       <EntityPageHeader
         title={note.title}
+        icon={faStickyNote}
         entityLabel="note"
         onRename={(title) => renameNote(note.id, title)}
         onDelete={async () => {

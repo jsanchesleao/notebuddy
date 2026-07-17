@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { faBook, faChalkboard, faFolder } from '@fortawesome/free-solid-svg-icons'
 import { EditableEntityRow } from '../common/EditableEntityRow'
 import { deleteFolder, listFoldersByParent, renameFolder } from '../../domain/folders/folderRepository'
 import {
@@ -18,51 +19,41 @@ export function FolderContents({ parentFolderId }: FolderContentsProps) {
   const notebooks = useLiveQuery(() => listNotebooksByFolder(parentFolderId), [parentFolderId])
   const boards = useLiveQuery(() => listBoardsByFolder(parentFolderId), [parentFolderId])
 
+  const isEmpty = folders?.length === 0 && notebooks?.length === 0 && boards?.length === 0
+
+  if (isEmpty) {
+    return <p className={styles.empty}>Use the + button to create a folder, notebook, or board.</p>
+  }
+
   return (
-    <div className={styles.contents}>
-      <section className={styles.section}>
-        <h2 className={styles.heading}>Folders</h2>
-        {folders?.length === 0 && <p className={styles.empty}>No folders yet</p>}
-        <ul className={styles.list}>
-          {folders?.map((folder) => (
-            <li key={folder.id}>
-              <EditableEntityRow
-                title={folder.title}
-                to={`/folders/${folder.id}`}
-                onRename={(title) => renameFolder(folder.id, title)}
-                onDelete={() => deleteFolder(folder.id)}
-              />
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className={styles.section}>
-        <h2 className={styles.heading}>Notebooks</h2>
-        {notebooks?.length === 0 && <p className={styles.empty}>No notebooks yet</p>}
-        <ul className={styles.list}>
-          {notebooks?.map((notebook) => (
-            <li key={notebook.id}>
-              <EditableEntityRow
-                title={notebook.title}
-                to={`/notebooks/${notebook.id}`}
-                onRename={(title) => renameNotebook(notebook.id, title)}
-                onDelete={() => deleteNotebook(notebook.id)}
-              />
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className={styles.section}>
-        <h2 className={styles.heading}>Boards</h2>
-        {boards?.length === 0 && <p className={styles.empty}>No boards yet</p>}
-        <ul className={styles.list}>
-          {boards?.map((board) => (
-            <li key={board.id}>{board.title}</li>
-          ))}
-        </ul>
-      </section>
-    </div>
+    <ul className={styles.list}>
+      {folders?.map((folder) => (
+        <li key={folder.id}>
+          <EditableEntityRow
+            title={folder.title}
+            icon={faFolder}
+            to={`/folders/${folder.id}`}
+            onRename={(title) => renameFolder(folder.id, title)}
+            onDelete={() => deleteFolder(folder.id)}
+          />
+        </li>
+      ))}
+      {notebooks?.map((notebook) => (
+        <li key={notebook.id}>
+          <EditableEntityRow
+            title={notebook.title}
+            icon={faBook}
+            to={`/notebooks/${notebook.id}`}
+            onRename={(title) => renameNotebook(notebook.id, title)}
+            onDelete={() => deleteNotebook(notebook.id)}
+          />
+        </li>
+      ))}
+      {boards?.map((board) => (
+        <li key={board.id}>
+          <EditableEntityRow title={board.title} icon={faChalkboard} />
+        </li>
+      ))}
+    </ul>
   )
 }

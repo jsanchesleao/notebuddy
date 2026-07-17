@@ -1,8 +1,11 @@
 import { useState, type FormEvent } from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import styles from './EntityPageHeader.module.css'
 
 interface EntityPageHeaderProps {
   title: string
+  icon: IconDefinition
   entityLabel: string
   onRename: (title: string) => void | Promise<void>
   onDelete: () => void | Promise<void>
@@ -10,6 +13,7 @@ interface EntityPageHeaderProps {
 
 export function EntityPageHeader({
   title,
+  icon,
   entityLabel,
   onRename,
   onDelete,
@@ -35,6 +39,9 @@ export function EntityPageHeader({
   if (isRenaming) {
     return (
       <form className={styles.header} onSubmit={submitRename}>
+        <span className={styles.icon}>
+          <FontAwesomeIcon icon={icon} fixedWidth />
+        </span>
         <input
           type="text"
           className={styles.titleInput}
@@ -62,6 +69,9 @@ export function EntityPageHeader({
 
   return (
     <div className={styles.header}>
+      <span className={styles.icon}>
+        <FontAwesomeIcon icon={icon} fixedWidth />
+      </span>
       <h1 className={styles.title}>{title}</h1>
       <button
         type="button"

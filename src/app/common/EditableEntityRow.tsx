@@ -1,15 +1,18 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import styles from './EditableEntityRow.module.css'
 
 interface EditableEntityRowProps {
   title: string
-  to: string
-  onRename: (title: string) => void | Promise<void>
-  onDelete: () => void | Promise<void>
+  icon: IconDefinition
+  to?: string
+  onRename?: (title: string) => void | Promise<void>
+  onDelete?: () => void | Promise<void>
 }
 
-export function EditableEntityRow({ title, to, onRename, onDelete }: EditableEntityRowProps) {
+export function EditableEntityRow({ title, icon, to, onRename, onDelete }: EditableEntityRowProps) {
   const [isRenaming, setIsRenaming] = useState(false)
   const [draftTitle, setDraftTitle] = useState(title)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
@@ -22,7 +25,7 @@ export function EditableEntityRow({ title, to, onRename, onDelete }: EditableEnt
   const submitRename = async (event: FormEvent) => {
     event.preventDefault()
     const trimmed = draftTitle.trim()
-    if (trimmed && trimmed !== title) {
+    if (trimmed && trimmed !== title && onRename) {
       await onRename(trimmed)
     }
     setIsRenaming(false)
@@ -31,6 +34,9 @@ export function EditableEntityRow({ title, to, onRename, onDelete }: EditableEnt
   if (isRenaming) {
     return (
       <form className={styles.row} onSubmit={submitRename}>
+        <span className={styles.icon}>
+          <FontAwesomeIcon icon={icon} fixedWidth />
+        </span>
         <input
           type="text"
           className={styles.input}
@@ -58,47 +64,57 @@ export function EditableEntityRow({ title, to, onRename, onDelete }: EditableEnt
 
   return (
     <div className={styles.row}>
-      <Link to={to} className={styles.link}>
-        {title}
-      </Link>
-      <button
-        type="button"
-        className={styles.iconButton}
-        aria-label={`Rename ${title}`}
-        onClick={startRename}
-      >
-        ✎
-      </button>
-      {confirmingDelete ? (
-        <>
-          <button
-            type="button"
-            className={styles.confirmDelete}
-            onClick={() => {
-              void onDelete()
-            }}
-          >
-            Confirm delete
-          </button>
-          <button
-            type="button"
-            className={styles.iconButton}
-            aria-label="Cancel delete"
-            onClick={() => setConfirmingDelete(false)}
-          >
-            ✕
-          </button>
-        </>
+      <span className={styles.icon}>
+        <FontAwesomeIcon icon={icon} fixedWidth />
+      </span>
+      {to ? (
+        <Link to={to} className={styles.link}>
+          {title}
+        </Link>
       ) : (
+        <span className={styles.link}>{title}</span>
+      )}
+      {onRename && (
         <button
           type="button"
           className={styles.iconButton}
-          aria-label={`Delete ${title}`}
-          onClick={() => setConfirmingDelete(true)}
+          aria-label={`Rename ${title}`}
+          onClick={startRename}
         >
-          🗑
+          ✎
         </button>
       )}
+      {onDelete &&
+        (confirmingDelete ? (
+          <>
+            <button
+              type="button"
+              className={styles.confirmDelete}
+              onClick={() => {
+                void onDelete()
+              }}
+            >
+              Confirm delete
+            </button>
+            <button
+              type="button"
+              className={styles.iconButton}
+              aria-label="Cancel delete"
+              onClick={() => setConfirmingDelete(false)}
+            >
+              ✕
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            className={styles.iconButton}
+            aria-label={`Delete ${title}`}
+            onClick={() => setConfirmingDelete(true)}
+          >
+            🗑
+          </button>
+        ))}
     </div>
   )
 }

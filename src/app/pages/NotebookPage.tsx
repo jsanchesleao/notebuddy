@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { faBook, faStickyNote } from '@fortawesome/free-solid-svg-icons'
 import {
   deleteNotebook,
   getNotebook,
@@ -45,6 +46,7 @@ export function NotebookPage() {
       </Link>
       <EntityPageHeader
         title={notebook.title}
+        icon={faBook}
         entityLabel="notebook"
         onRename={(title) => renameNotebook(notebook.id, title)}
         onDelete={async () => {
@@ -62,6 +64,7 @@ export function NotebookPage() {
             <li key={note.id}>
               <EditableEntityRow
                 title={note.title}
+                icon={faStickyNote}
                 to={`/notes/${note.id}`}
                 onRename={(title) => renameNote(note.id, title)}
                 onDelete={() => deleteNote(note.id)}
