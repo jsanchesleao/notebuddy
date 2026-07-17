@@ -8,6 +8,12 @@ const LABELS: Record<ThemeMode, string> = {
   system: 'Match system',
 }
 
+const ICONS: Record<ThemeMode, string> = {
+  light: '☀',
+  dark: '☾',
+  system: '🖥',
+}
+
 export function ThemeToggle() {
   const { mode, setMode } = useTheme()
 
@@ -21,10 +27,12 @@ export function ThemeToggle() {
             type="button"
             role="radio"
             aria-checked={isActive}
+            aria-label={LABELS[option]}
+            title={LABELS[option]}
             className={isActive ? styles.optionActive : styles.option}
             onClick={() => setMode(option)}
           >
-            {LABELS[option]}
+            {ICONS[option]}
           </button>
         )
       })}

@@ -5,6 +5,8 @@
 }
 
 .header {
+  position: relative;
+  z-index: 30;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -31,6 +33,21 @@
   background: var(--color-bg-sidebar);
 }
 
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.backdropOpen {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .body {
   display: flex;
   flex: 1;
@@ -46,5 +63,11 @@
 @media (max-width: 767px) {
   .menuButton {
     display: inline-flex;
+  }
+}
+
+@media (min-width: 768px) {
+  .backdrop {
+    display: none;
   }
 }

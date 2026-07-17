@@ -22,6 +22,11 @@ export function AppShell() {
         <span className={styles.title}>Notebuddy</span>
         <ThemeToggle />
       </header>
+      <div
+        className={`${styles.backdrop} ${sidebarOpen ? styles.backdropOpen : ''}`}
+        onClick={() => setSidebarOpen(false)}
+        aria-hidden="true"
+      />
       <div className={styles.body}>
         <Sidebar open={sidebarOpen} />
         <main className={styles.main}>
