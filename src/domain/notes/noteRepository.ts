@@ -1,8 +1,21 @@
 import { db } from '../../db/db'
+import { getOpfsDriver } from '../../lib/opfs/opfsDriver'
 import { createId } from '../ids'
+import { loadNoteBlocks } from '../blocks/noteBlocksStore'
 import { createYDoc } from '../yjs/yjsDocStore'
 import { deleteUpdateRows } from '../yjs/yjsUpdatesTable'
 import type { Note } from '../entities.types'
+
+async function deleteNoteAssets(note: Note): Promise<void> {
+  const { blocks } = await loadNoteBlocks(note.blockDocId)
+  const driver = getOpfsDriver()
+
+  for (const block of blocks) {
+    if ((block.type === 'image' || block.type === 'embed') && block.opfsPath) {
+      await driver.deleteFile(block.opfsPath)
+    }
+  }
+}
 
 export interface CreateNoteInput {
   notebookId: string | null
@@ -53,19 +66,25 @@ export async function renameNote(id: string, title: string): Promise<void> {
 }
 
 export async function deleteNote(id: string): Promise<void> {
-  await db.transaction('rw', db.notes, db.yjsUpdates, async () => {
-    const note = await db.notes.get(id)
-    if (!note) return
+  const note = await db.notes.get(id)
+  if (!note) return
 
+  await deleteNoteAssets(note)
+
+  await db.transaction('rw', db.notes, db.yjsUpdates, async () => {
     await deleteUpdateRows(note.blockDocId)
     await db.notes.delete(id)
   })
 }
 
 export async function deleteNotesByNotebookId(notebookId: string): Promise<void> {
-  await db.transaction('rw', db.notes, db.yjsUpdates, async () => {
-    const notes = await db.notes.where('notebookId').equals(notebookId).toArray()
+  const notes = await db.notes.where('notebookId').equals(notebookId).toArray()
 
+  for (const note of notes) {
+    await deleteNoteAssets(note)
+  }
+
+  await db.transaction('rw', db.notes, db.yjsUpdates, async () => {
     for (const note of notes) {
       await deleteUpdateRows(note.blockDocId)
     }

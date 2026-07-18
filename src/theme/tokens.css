@@ -45,6 +45,8 @@
   /* Typography */
   --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
   --font-content: 'Source Serif 4', Georgia, serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
 
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;

@@ -61,7 +61,12 @@ describe('Sidebar', () => {
     await createNotebook({ folderId: null, title: 'Root notebook' })
     const subfolder = await createFolder({ parentFolderId: root.id, title: 'Subfolder' })
     await createNotebook({ folderId: subfolder.id, title: 'Scoped notebook' })
-    await db.boards.add({ id: 'board-1', folderId: subfolder.id, title: 'Scoped board', columns: [] })
+    await db.boards.add({
+      id: 'board-1',
+      folderId: subfolder.id,
+      title: 'Scoped board',
+      columns: [],
+    })
 
     render(
       <MemoryRouter>

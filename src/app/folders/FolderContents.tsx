@@ -1,6 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { EditableEntityRow } from '../common/EditableEntityRow'
-import { deleteFolder, listFoldersByParent, renameFolder } from '../../domain/folders/folderRepository'
+import {
+  deleteFolder,
+  listFoldersByParent,
+  renameFolder,
+} from '../../domain/folders/folderRepository'
 import {
   deleteNotebook,
   listNotebooksByFolder,

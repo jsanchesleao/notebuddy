@@ -87,7 +87,9 @@ describe('Fab', () => {
     await user.click(screen.getByRole('button', { name: 'Add' }))
 
     await waitFor(async () => {
-      const notebooks = await db.notebooks.filter((notebook) => notebook.folderId === null).toArray()
+      const notebooks = await db.notebooks
+        .filter((notebook) => notebook.folderId === null)
+        .toArray()
       expect(notebooks.map((notebook) => notebook.title)).toContain('Journal')
     })
   })

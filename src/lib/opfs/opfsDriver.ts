@@ -80,3 +80,7 @@ export function getOpfsDriver(): OpfsDriver {
   }
   return driver
 }
+
+export function setOpfsDriverForTesting(testDriver: OpfsDriver): void {
+  driver = testDriver
+}

@@ -18,7 +18,7 @@ afterEach(() => {
 })
 
 describe('NotePage', () => {
-  it('shows the note title and a Phase 2 placeholder for content', async () => {
+  it('shows the note title and mounts the block editor', async () => {
     const notebook = await createNotebook({ folderId: null, title: 'Notebook' })
     const note = await createNote({ notebookId: notebook.id, title: 'My note' })
 
@@ -29,7 +29,7 @@ describe('NotePage', () => {
     )
 
     expect(await screen.findByRole('heading', { name: 'My note' })).toBeInTheDocument()
-    expect(screen.getByText(/coming in a future update/)).toBeInTheDocument()
+    expect(await screen.findByLabelText('Add block')).toBeInTheDocument()
   })
 
   it('renames the note', async () => {

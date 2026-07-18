@@ -1,0 +1,50 @@
+.block {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+}
+
+.block:hover {
+  background: var(--color-bg-elevated);
+}
+
+.dragging {
+  opacity: 0.6;
+  box-shadow: var(--shadow-md);
+}
+
+.chrome {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: var(--space-1);
+}
+
+.gripContainer {
+  position: relative;
+}
+
+.gripButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  color: var(--color-text-muted);
+  cursor: grab;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  touch-action: none;
+}
+
+.gripButton:hover {
+  color: var(--color-text);
+  background: var(--color-bg-sidebar);
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+}

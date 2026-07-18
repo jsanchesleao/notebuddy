@@ -13,7 +13,3 @@
 .breadcrumb:hover {
   color: var(--color-accent);
 }
-
-.placeholder {
-  color: var(--color-text-muted);
-}

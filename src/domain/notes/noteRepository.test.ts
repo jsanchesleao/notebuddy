@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { db } from '../../db/db'
+import { createOpfsMemoryDriver } from '../../lib/opfs/opfsMemoryDriver'
+import { setOpfsDriverForTesting } from '../../lib/opfs/opfsDriver'
 import { createNote, deleteNote, getNote, listNotesByNotebook, renameNote } from './noteRepository'
 import { createNotebook } from '../notebooks/notebookRepository'
+import { insertBlock, loadNoteBlocks } from '../blocks/noteBlocksStore'
+import { createEmptyBlock } from '../blocks/noteBlocksFactory'
 import { appendYDocUpdate, loadYDoc } from '../yjs/yjsDocStore'
 import * as Y from 'yjs'
 
@@ -9,6 +13,7 @@ beforeEach(async () => {
   await db.notes.clear()
   await db.notebooks.clear()
   await db.yjsUpdates.clear()
+  setOpfsDriverForTesting(createOpfsMemoryDriver())
 })
 
 describe('noteRepository', () => {
@@ -68,5 +73,24 @@ describe('noteRepository', () => {
 
     expect(await getNote(note.id)).toBeUndefined()
     expect(await db.yjsUpdates.where('docId').equals(note.blockDocId).count()).toBe(0)
+  })
+
+  it('deletes OPFS files referenced by image/embed blocks when a note is deleted', async () => {
+    const notebook = await createNotebook({ folderId: null, title: 'Notebook' })
+    const note = await createNote({ notebookId: notebook.id, title: 'Note' })
+
+    const { doc } = await loadNoteBlocks(note.blockDocId)
+    const driver = createOpfsMemoryDriver()
+    setOpfsDriverForTesting(driver)
+    await driver.writeFile('notes/n/asset.png', new Blob(['x']))
+
+    const imageBlock = { ...createEmptyBlock('image'), opfsPath: 'notes/n/asset.png' }
+    await insertBlock(note.blockDocId, doc, imageBlock, 0)
+
+    expect(await driver.exists('notes/n/asset.png')).toBe(true)
+
+    await deleteNote(note.id)
+
+    expect(await driver.exists('notes/n/asset.png')).toBe(false)
   })
 })

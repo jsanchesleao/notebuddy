@@ -1,0 +1,49 @@
+.textBlock {
+  position: relative;
+  font-family: var(--font-content);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-text);
+}
+
+.textBlock :global(.ProseMirror) {
+  outline: none;
+  min-height: 1.5em;
+}
+
+.textBlock :global(.ProseMirror p) {
+  margin: 0 0 var(--space-3);
+}
+
+.textBlock :global(.ProseMirror p:last-child) {
+  margin-bottom: 0;
+}
+
+.textBlock :global(.ProseMirror h1),
+.textBlock :global(.ProseMirror h2),
+.textBlock :global(.ProseMirror h3) {
+  margin: var(--space-4) 0 var(--space-2);
+  font-family: var(--font-ui);
+  line-height: var(--line-height-tight);
+}
+
+.textBlock :global(.ProseMirror ul),
+.textBlock :global(.ProseMirror ol) {
+  margin: 0 0 var(--space-3);
+  padding-left: var(--space-5);
+}
+
+.textBlock :global(.ProseMirror blockquote) {
+  margin: 0 0 var(--space-3);
+  padding-left: var(--space-3);
+  color: var(--color-text-muted);
+  border-left: 2px solid var(--color-border);
+}
+
+.textBlock :global(.ProseMirror code) {
+  padding: 0.1em 0.3em;
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--color-bg-sidebar);
+  border-radius: var(--radius-sm);
+}

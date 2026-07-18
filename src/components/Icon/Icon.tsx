@@ -14,6 +14,17 @@ import {
   Plus,
   ArrowLeft,
   ArrowUp,
+  GripVertical,
+  Image,
+  PenTool,
+  Code,
+  Table,
+  Paperclip,
+  Download,
+  Type,
+  Bold,
+  Italic,
+  Underline,
 } from 'lucide-react'
 
 const ICONS = {
@@ -32,6 +43,17 @@ const ICONS = {
   add: Plus,
   back: ArrowLeft,
   up: ArrowUp,
+  grip: GripVertical,
+  image: Image,
+  sketch: PenTool,
+  code: Code,
+  table: Table,
+  embed: Paperclip,
+  download: Download,
+  text: Type,
+  bold: Bold,
+  italic: Italic,
+  underline: Underline,
 } as const
 
 export type IconName = keyof typeof ICONS

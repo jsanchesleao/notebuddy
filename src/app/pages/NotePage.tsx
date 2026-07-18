@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { deleteNote, getNote, renameNote } from '../../domain/notes/noteRepository'
 import { EntityPageHeader } from '../common/EntityPageHeader'
 import { Icon } from '../../components/Icon/Icon'
+import { NoteBlockList } from '../notes/blocks/NoteBlockList'
 import styles from './NotePage.module.css'
 
 export function NotePage() {
@@ -44,9 +45,7 @@ export function NotePage() {
           navigate(backTo, { replace: true })
         }}
       />
-      <p className={`content ${styles.placeholder}`}>
-        Note content editing is coming in a future update.
-      </p>
+      <NoteBlockList key={note.blockDocId} noteId={note.id} blockDocId={note.blockDocId} />
     </div>
   )
 }
