@@ -37,7 +37,7 @@ describe('Sidebar', () => {
     )
 
     await screen.findByText('No folders yet')
-    expect(screen.queryByRole('link', { name: '↑ Up' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Up' })).not.toBeInTheDocument()
   })
 
   it('reactively lists root-level folders and notebooks as they are created elsewhere', async () => {
@@ -73,7 +73,7 @@ describe('Sidebar', () => {
     expect(screen.getByText('Scoped board')).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Root notebook' })).not.toBeInTheDocument()
 
-    const upLink = await screen.findByRole('link', { name: '↑ Up' })
+    const upLink = await screen.findByRole('link', { name: 'Up' })
     expect(upLink).toHaveAttribute('href', `/folders/${root.id}`)
   })
 
@@ -86,7 +86,7 @@ describe('Sidebar', () => {
       </MemoryRouter>,
     )
 
-    const upLink = await screen.findByRole('link', { name: '↑ Up' })
+    const upLink = await screen.findByRole('link', { name: 'Up' })
     expect(upLink).toHaveAttribute('href', '/')
   })
 })

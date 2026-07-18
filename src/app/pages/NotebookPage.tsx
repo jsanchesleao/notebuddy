@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { faBook, faStickyNote } from '@fortawesome/free-solid-svg-icons'
 import {
   deleteNotebook,
   getNotebook,
@@ -10,6 +9,7 @@ import {
 import { deleteNote, listNotesByNotebook, renameNote } from '../../domain/notes/noteRepository'
 import { EntityPageHeader } from '../common/EntityPageHeader'
 import { EditableEntityRow } from '../common/EditableEntityRow'
+import { Icon } from '../../components/Icon/Icon'
 import styles from './NotebookPage.module.css'
 
 export function NotebookPage() {
@@ -42,11 +42,11 @@ export function NotebookPage() {
   return (
     <div className={styles.page}>
       <Link to={backTo} className={styles.breadcrumb}>
-        ← Back
+        <Icon name="back" size={14} /> Back
       </Link>
       <EntityPageHeader
         title={notebook.title}
-        icon={faBook}
+        icon="book"
         entityLabel="notebook"
         onRename={(title) => renameNotebook(notebook.id, title)}
         onDelete={async () => {
@@ -64,7 +64,7 @@ export function NotebookPage() {
             <li key={note.id}>
               <EditableEntityRow
                 title={note.title}
-                icon={faStickyNote}
+                icon="note"
                 to={`/notes/${note.id}`}
                 onRename={(title) => renameNote(note.id, title)}
                 onDelete={() => deleteNote(note.id)}

@@ -1,12 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import { Icon, type IconName } from '../../components/Icon/Icon'
 import styles from './EditableEntityRow.module.css'
 
 interface EditableEntityRowProps {
   title: string
-  icon: IconDefinition
+  icon: IconName
   to?: string
   onRename?: (title: string) => void | Promise<void>
   onDelete?: () => void | Promise<void>
@@ -35,7 +34,7 @@ export function EditableEntityRow({ title, icon, to, onRename, onDelete }: Edita
     return (
       <form className={styles.row} onSubmit={submitRename}>
         <span className={styles.icon}>
-          <FontAwesomeIcon icon={icon} fixedWidth />
+          <Icon name={icon} />
         </span>
         <input
           type="text"
@@ -48,7 +47,7 @@ export function EditableEntityRow({ title, icon, to, onRename, onDelete }: Edita
           aria-label={`Rename ${title}`}
         />
         <button type="submit" className={styles.iconButton} aria-label="Save name">
-          ✓
+          <Icon name="check" />
         </button>
         <button
           type="button"
@@ -56,7 +55,7 @@ export function EditableEntityRow({ title, icon, to, onRename, onDelete }: Edita
           aria-label="Cancel rename"
           onClick={() => setIsRenaming(false)}
         >
-          ✕
+          <Icon name="close" />
         </button>
       </form>
     )
@@ -65,7 +64,7 @@ export function EditableEntityRow({ title, icon, to, onRename, onDelete }: Edita
   return (
     <div className={styles.row}>
       <span className={styles.icon}>
-        <FontAwesomeIcon icon={icon} fixedWidth />
+        <Icon name={icon} />
       </span>
       {to ? (
         <Link to={to} className={styles.link}>
@@ -81,7 +80,7 @@ export function EditableEntityRow({ title, icon, to, onRename, onDelete }: Edita
           aria-label={`Rename ${title}`}
           onClick={startRename}
         >
-          ✎
+          <Icon name="edit" />
         </button>
       )}
       {onDelete &&
@@ -102,7 +101,7 @@ export function EditableEntityRow({ title, icon, to, onRename, onDelete }: Edita
               aria-label="Cancel delete"
               onClick={() => setConfirmingDelete(false)}
             >
-              ✕
+              <Icon name="close" />
             </button>
           </>
         ) : (
@@ -112,7 +111,7 @@ export function EditableEntityRow({ title, icon, to, onRename, onDelete }: Edita
             aria-label={`Delete ${title}`}
             onClick={() => setConfirmingDelete(true)}
           >
-            🗑
+            <Icon name="delete" />
           </button>
         ))}
     </div>

@@ -4,6 +4,7 @@ import { Fab } from './Fab/Fab'
 import { ThemeToggle } from '../theme/ThemeToggle'
 import { AppRoutes } from './routes'
 import { useCurrentRouteContext } from './routeContext'
+import { Icon } from '../components/Icon/Icon'
 import styles from './AppShell.module.css'
 
 export function AppShell() {
@@ -20,7 +21,7 @@ export function AppShell() {
           aria-expanded={sidebarOpen}
           aria-label="Toggle navigation"
         >
-          ☰
+          <Icon name="menu" />
         </button>
         <span className={styles.title}>Notebuddy</span>
         <ThemeToggle />

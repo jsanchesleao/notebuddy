@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { createFolder } from '../../domain/folders/folderRepository'
 import { createNotebook } from '../../domain/notebooks/notebookRepository'
 import { createNote } from '../../domain/notes/noteRepository'
+import { Icon } from '../../components/Icon/Icon'
 import styles from './Fab.module.css'
 
 interface FabProps {
@@ -89,7 +90,7 @@ export function Fab({ folderId, notebookId }: FabProps) {
               className={styles.menuItem}
               onClick={() => setActiveAction(action)}
             >
-              + New {ACTION_LABELS[action]}
+              <Icon name="add" size={14} /> New {ACTION_LABELS[action]}
             </button>
           ))}
         </div>
@@ -101,7 +102,7 @@ export function Fab({ folderId, notebookId }: FabProps) {
         aria-expanded={menuOpen}
         onClick={() => setMenuOpen((open) => !open)}
       >
-        +
+        <Icon name="add" />
       </button>
     </div>
   )

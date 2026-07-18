@@ -1,11 +1,10 @@
 import { useState, type FormEvent } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import { Icon, type IconName } from '../../components/Icon/Icon'
 import styles from './EntityPageHeader.module.css'
 
 interface EntityPageHeaderProps {
   title: string
-  icon: IconDefinition
+  icon: IconName
   entityLabel: string
   onRename: (title: string) => void | Promise<void>
   onDelete: () => void | Promise<void>
@@ -40,7 +39,7 @@ export function EntityPageHeader({
     return (
       <form className={styles.header} onSubmit={submitRename}>
         <span className={styles.icon}>
-          <FontAwesomeIcon icon={icon} fixedWidth />
+          <Icon name={icon} />
         </span>
         <input
           type="text"
@@ -53,7 +52,7 @@ export function EntityPageHeader({
           aria-label={`Rename ${entityLabel}`}
         />
         <button type="submit" className={styles.iconButton} aria-label="Save name">
-          ✓
+          <Icon name="check" />
         </button>
         <button
           type="button"
@@ -61,7 +60,7 @@ export function EntityPageHeader({
           aria-label="Cancel rename"
           onClick={() => setIsRenaming(false)}
         >
-          ✕
+          <Icon name="close" />
         </button>
       </form>
     )
@@ -70,7 +69,7 @@ export function EntityPageHeader({
   return (
     <div className={styles.header}>
       <span className={styles.icon}>
-        <FontAwesomeIcon icon={icon} fixedWidth />
+        <Icon name={icon} />
       </span>
       <h1 className={styles.title}>{title}</h1>
       <button
@@ -79,7 +78,7 @@ export function EntityPageHeader({
         aria-label={`Rename ${entityLabel}`}
         onClick={startRename}
       >
-        ✎
+        <Icon name="edit" />
       </button>
       {confirmingDelete ? (
         <>
@@ -98,7 +97,7 @@ export function EntityPageHeader({
             aria-label="Cancel delete"
             onClick={() => setConfirmingDelete(false)}
           >
-            ✕
+            <Icon name="close" />
           </button>
         </>
       ) : (
@@ -108,7 +107,7 @@ export function EntityPageHeader({
           aria-label={`Delete ${entityLabel}`}
           onClick={() => setConfirmingDelete(true)}
         >
-          🗑
+          <Icon name="delete" />
         </button>
       )}
     </div>

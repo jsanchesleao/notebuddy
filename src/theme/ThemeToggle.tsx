@@ -1,5 +1,6 @@
 import { useTheme } from './useTheme'
 import { THEME_MODES, type ThemeMode } from './theme.types'
+import { Icon, type IconName } from '../components/Icon/Icon'
 import styles from './ThemeToggle.module.css'
 
 const LABELS: Record<ThemeMode, string> = {
@@ -8,10 +9,10 @@ const LABELS: Record<ThemeMode, string> = {
   system: 'Match system',
 }
 
-const ICONS: Record<ThemeMode, string> = {
-  light: '☀',
-  dark: '☾',
-  system: '🖥',
+const ICONS: Record<ThemeMode, IconName> = {
+  light: 'themeLight',
+  dark: 'themeDark',
+  system: 'themeSystem',
 }
 
 export function ThemeToggle() {
@@ -32,7 +33,7 @@ export function ThemeToggle() {
             className={isActive ? styles.optionActive : styles.option}
             onClick={() => setMode(option)}
           >
-            {ICONS[option]}
+            <Icon name={ICONS[option]} />
           </button>
         )
       })}

@@ -29,9 +29,9 @@ describe('Fab', () => {
 
     await user.click(screen.getByRole('button', { name: 'Create' }))
 
-    expect(screen.getByRole('button', { name: '+ New Folder' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '+ New Notebook' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '+ New Note' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'New Folder' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'New Notebook' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'New Note' })).not.toBeInTheDocument()
   })
 
   it('also offers a note action when a notebook is in context', async () => {
@@ -44,7 +44,7 @@ describe('Fab', () => {
 
     await user.click(screen.getByRole('button', { name: 'Create' }))
 
-    expect(screen.getByRole('button', { name: '+ New Note' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'New Note' })).toBeInTheDocument()
   })
 
   it('creates a folder under the current folder and collapses afterwards', async () => {
@@ -58,7 +58,7 @@ describe('Fab', () => {
     )
 
     await user.click(screen.getByRole('button', { name: 'Create' }))
-    await user.click(screen.getByRole('button', { name: '+ New Folder' }))
+    await user.click(screen.getByRole('button', { name: 'New Folder' }))
     await user.type(screen.getByLabelText('New folder title'), 'Child')
     await user.click(screen.getByRole('button', { name: 'Add' }))
 
@@ -69,7 +69,7 @@ describe('Fab', () => {
     })
 
     expect(screen.queryByLabelText('New folder title')).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '+ New Folder' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'New Folder' })).not.toBeInTheDocument()
   })
 
   it('creates a notebook under the current folder', async () => {
@@ -82,7 +82,7 @@ describe('Fab', () => {
     )
 
     await user.click(screen.getByRole('button', { name: 'Create' }))
-    await user.click(screen.getByRole('button', { name: '+ New Notebook' }))
+    await user.click(screen.getByRole('button', { name: 'New Notebook' }))
     await user.type(screen.getByLabelText('New notebook title'), 'Journal')
     await user.click(screen.getByRole('button', { name: 'Add' }))
 
@@ -103,7 +103,7 @@ describe('Fab', () => {
     )
 
     await user.click(screen.getByRole('button', { name: 'Create' }))
-    await user.click(screen.getByRole('button', { name: '+ New Note' }))
+    await user.click(screen.getByRole('button', { name: 'New Note' }))
     await user.type(screen.getByLabelText('New note title'), 'First entry')
     await user.click(screen.getByRole('button', { name: 'Add' }))
 

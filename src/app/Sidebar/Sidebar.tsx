@@ -4,6 +4,7 @@ import { SidebarSection } from './SidebarSection'
 import { getFolder, listFoldersByParent } from '../../domain/folders/folderRepository'
 import { listNotebooksByFolder } from '../../domain/notebooks/notebookRepository'
 import { listBoardsByFolder } from '../../domain/boards/boardRepository'
+import { Icon } from '../../components/Icon/Icon'
 import styles from './Sidebar.module.css'
 
 interface SidebarProps {
@@ -31,7 +32,7 @@ export function Sidebar({ open, currentFolderId }: SidebarProps) {
     <nav className={`${styles.sidebar} ${open ? styles.open : ''}`} aria-label="Primary">
       {upTo && (
         <Link to={upTo} className={styles.upLink}>
-          ↑ Up
+          <Icon name="up" size={14} /> Up
         </Link>
       )}
       <SidebarSection title="Folders">

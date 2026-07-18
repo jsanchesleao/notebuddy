@@ -34,19 +34,19 @@ describe('offline persistence acceptance', () => {
     let main = within(screen.getByRole('main'))
 
     await user.click(await screen.findByRole('button', { name: 'Create' }))
-    await user.click(screen.getByRole('button', { name: '+ New Folder' }))
+    await user.click(screen.getByRole('button', { name: 'New Folder' }))
     await user.type(screen.getByLabelText('New folder title'), 'Work')
     await user.click(screen.getByRole('button', { name: 'Add' }))
     await user.click(await main.findByRole('link', { name: 'Work' }))
 
     await user.click(await screen.findByRole('button', { name: 'Create' }))
-    await user.click(screen.getByRole('button', { name: '+ New Notebook' }))
+    await user.click(screen.getByRole('button', { name: 'New Notebook' }))
     await user.type(screen.getByLabelText('New notebook title'), 'Journal')
     await user.click(screen.getByRole('button', { name: 'Add' }))
     await user.click(await main.findByRole('link', { name: 'Journal' }))
 
     await user.click(await screen.findByRole('button', { name: 'Create' }))
-    await user.click(screen.getByRole('button', { name: '+ New Note' }))
+    await user.click(screen.getByRole('button', { name: 'New Note' }))
     await user.type(screen.getByLabelText('New note title'), 'First entry')
     await user.click(screen.getByRole('button', { name: 'Add' }))
     await main.findByRole('link', { name: 'First entry' })

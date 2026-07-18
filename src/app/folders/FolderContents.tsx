@@ -1,5 +1,4 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { faBook, faChalkboard, faFolder } from '@fortawesome/free-solid-svg-icons'
 import { EditableEntityRow } from '../common/EditableEntityRow'
 import { deleteFolder, listFoldersByParent, renameFolder } from '../../domain/folders/folderRepository'
 import {
@@ -31,7 +30,7 @@ export function FolderContents({ parentFolderId }: FolderContentsProps) {
         <li key={folder.id}>
           <EditableEntityRow
             title={folder.title}
-            icon={faFolder}
+            icon="folder"
             to={`/folders/${folder.id}`}
             onRename={(title) => renameFolder(folder.id, title)}
             onDelete={() => deleteFolder(folder.id)}
@@ -42,7 +41,7 @@ export function FolderContents({ parentFolderId }: FolderContentsProps) {
         <li key={notebook.id}>
           <EditableEntityRow
             title={notebook.title}
-            icon={faBook}
+            icon="book"
             to={`/notebooks/${notebook.id}`}
             onRename={(title) => renameNotebook(notebook.id, title)}
             onDelete={() => deleteNotebook(notebook.id)}
@@ -51,7 +50,7 @@ export function FolderContents({ parentFolderId }: FolderContentsProps) {
       ))}
       {boards?.map((board) => (
         <li key={board.id}>
-          <EditableEntityRow title={board.title} icon={faChalkboard} />
+          <EditableEntityRow title={board.title} icon="board" />
         </li>
       ))}
     </ul>

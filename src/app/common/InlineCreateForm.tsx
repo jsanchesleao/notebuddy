@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Icon } from '../../components/Icon/Icon'
 import styles from './InlineCreateForm.module.css'
 
 interface InlineCreateFormProps {
@@ -26,7 +27,7 @@ export function InlineCreateForm({ label, onCreate }: InlineCreateFormProps) {
   if (!isOpen) {
     return (
       <button type="button" className={styles.trigger} onClick={() => setIsOpen(true)}>
-        + New {label}
+        <Icon name="add" size={14} /> New {label}
       </button>
     )
   }
