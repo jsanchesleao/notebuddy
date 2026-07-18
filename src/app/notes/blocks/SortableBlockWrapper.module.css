@@ -37,6 +37,14 @@
   border: none;
   border-radius: var(--radius-sm);
   touch-action: none;
+  opacity: 0;
+  transition: opacity 0.1s ease-in-out;
+}
+
+.block:hover .gripButton,
+.block:focus-within .gripButton,
+.gripButton[aria-expanded='true'] {
+  opacity: 1;
 }
 
 .gripButton:hover {

@@ -17,24 +17,54 @@ interface TextBlockProps {
   block: Extract<NoteBlock, { type: 'text' }>
   onUpdate: (patch: { content: JSONContent }) => void
   onConvert: (type: NoteBlockType) => void
+  // Optional: the trailing phantom block has no "next block" to create — Enter
+  // there just flushes the pending save below, which already promotes it via
+  // `onUpdate`/`onPromote`. Passing `onSplit` too would double up that reset.
+  onSplit?: () => void
 }
 
-export function TextBlock({ block, onUpdate, onConvert }: TextBlockProps) {
+export function TextBlock({ block, onUpdate, onConvert, onSplit }: TextBlockProps) {
   const onUpdateRef = useRef(onUpdate)
   const onConvertRef = useRef(onConvert)
+  const onSplitRef = useRef(onSplit)
+  const [slashQuery, setSlashQuery] = useState<string | null>(null)
+  const slashQueryRef = useRef(slashQuery)
   useEffect(() => {
     onUpdateRef.current = onUpdate
     onConvertRef.current = onConvert
+    onSplitRef.current = onSplit
+    slashQueryRef.current = slashQuery
   })
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hasPendingSaveRef = useRef(false)
-  const [slashQuery, setSlashQuery] = useState<string | null>(null)
 
   // `deps` defaults to `[]`, so this editor instance is created once on mount;
   // `block.content` is only ever read as the initial value, never re-applied.
   const editor = useEditor({
     extensions: [StarterKit, TextStyle, Color],
     content: block.content,
+    editorProps: {
+      // Root-level editorProps are checked before any extension's keymap
+      // (StarterKit's default Enter -> splitBlock), so this reliably wins.
+      // Shift+Enter is left untouched and falls through to StarterKit's
+      // default hard-break binding.
+      handleKeyDown: (_view, event) => {
+        if (event.key !== 'Enter' || event.shiftKey) return false
+        // Let the slash-command menu's own Enter handling (select command) win.
+        if (slashQueryRef.current !== null) return false
+        event.preventDefault()
+        // Flush any pending edit immediately rather than waiting on the debounce,
+        // so nothing typed just before Enter is lost. For the trailing phantom
+        // this also runs the existing promote-to-real-block flow via `onUpdate`.
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+        if (hasPendingSaveRef.current) {
+          hasPendingSaveRef.current = false
+          onUpdateRef.current({ content: editor.getJSON() })
+        }
+        onSplitRef.current?.()
+        return true
+      },
+    },
     onUpdate: ({ editor }) => {
       setSlashQuery(parseSlashQuery(editor.getText()))
 

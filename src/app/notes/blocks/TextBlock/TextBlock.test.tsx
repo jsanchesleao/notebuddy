@@ -11,7 +11,9 @@ afterEach(() => {
 describe('TextBlock', () => {
   it('renders a contenteditable surface seeded from the block content', () => {
     const block = createEmptyBlock('text')
-    const { container } = render(<TextBlock block={block} onUpdate={vi.fn()} onConvert={vi.fn()} />)
+    const { container } = render(
+      <TextBlock block={block} onUpdate={vi.fn()} onConvert={vi.fn()} onSplit={vi.fn()} />,
+    )
 
     const editable = container.querySelector('.ProseMirror')
     expect(editable).toBeTruthy()
@@ -24,7 +26,7 @@ describe('TextBlock', () => {
     const user = userEvent.setup()
 
     const { container, unmount } = render(
-      <TextBlock block={block} onUpdate={onUpdate} onConvert={vi.fn()} />,
+      <TextBlock block={block} onUpdate={onUpdate} onConvert={vi.fn()} onSplit={vi.fn()} />,
     )
     const editable = container.querySelector('.ProseMirror') as HTMLElement
 
@@ -45,7 +47,7 @@ describe('TextBlock', () => {
     const user = userEvent.setup()
 
     const { container, getByRole, queryByRole } = render(
-      <TextBlock block={block} onUpdate={vi.fn()} onConvert={vi.fn()} />,
+      <TextBlock block={block} onUpdate={vi.fn()} onConvert={vi.fn()} onSplit={vi.fn()} />,
     )
     const editable = container.querySelector('.ProseMirror') as HTMLElement
 
@@ -61,7 +63,7 @@ describe('TextBlock', () => {
     const user = userEvent.setup()
 
     const { container, queryByRole } = render(
-      <TextBlock block={block} onUpdate={vi.fn()} onConvert={vi.fn()} />,
+      <TextBlock block={block} onUpdate={vi.fn()} onConvert={vi.fn()} onSplit={vi.fn()} />,
     )
     const editable = container.querySelector('.ProseMirror') as HTMLElement
 
@@ -78,7 +80,7 @@ describe('TextBlock', () => {
     const user = userEvent.setup()
 
     const { container, getByRole } = render(
-      <TextBlock block={block} onUpdate={onUpdate} onConvert={onConvert} />,
+      <TextBlock block={block} onUpdate={onUpdate} onConvert={onConvert} onSplit={vi.fn()} />,
     )
     const editable = container.querySelector('.ProseMirror') as HTMLElement
 
@@ -87,5 +89,57 @@ describe('TextBlock', () => {
     await user.click(getByRole('menuitem', { name: 'Table' }))
 
     expect(onConvert).toHaveBeenCalledWith('table')
+  })
+
+  it('calls onSplit and not onUpdate/onConvert when Enter is pressed', async () => {
+    const block = createEmptyBlock('text')
+    const onSplit = vi.fn()
+    const user = userEvent.setup()
+
+    const { container } = render(
+      <TextBlock block={block} onUpdate={vi.fn()} onConvert={vi.fn()} onSplit={onSplit} />,
+    )
+    const editable = container.querySelector('.ProseMirror') as HTMLElement
+
+    await user.click(editable)
+    await user.type(editable, 'Hello{Enter}')
+
+    expect(onSplit).toHaveBeenCalledTimes(1)
+    expect(editable.textContent).toBe('Hello')
+  })
+
+  it('inserts a line break instead of calling onSplit on Shift+Enter', async () => {
+    const block = createEmptyBlock('text')
+    const onSplit = vi.fn()
+    const user = userEvent.setup()
+
+    const { container } = render(
+      <TextBlock block={block} onUpdate={vi.fn()} onConvert={vi.fn()} onSplit={onSplit} />,
+    )
+    const editable = container.querySelector('.ProseMirror') as HTMLElement
+
+    await user.click(editable)
+    await user.type(editable, 'Hello{Shift>}{Enter}{/Shift}World')
+
+    expect(onSplit).not.toHaveBeenCalled()
+    expect(editable.querySelector('br')).toBeTruthy()
+  })
+
+  it('does not call onSplit when Enter selects a slash-command entry', async () => {
+    const block = createEmptyBlock('text')
+    const onConvert = vi.fn()
+    const onSplit = vi.fn()
+    const user = userEvent.setup()
+
+    const { container } = render(
+      <TextBlock block={block} onUpdate={vi.fn()} onConvert={onConvert} onSplit={onSplit} />,
+    )
+    const editable = container.querySelector('.ProseMirror') as HTMLElement
+
+    await user.click(editable)
+    await user.type(editable, '/tab{Enter}')
+
+    expect(onConvert).toHaveBeenCalledWith('table')
+    expect(onSplit).not.toHaveBeenCalled()
   })
 })

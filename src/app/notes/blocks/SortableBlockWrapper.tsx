@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Icon } from '../../../components/Icon/Icon'
@@ -10,9 +10,17 @@ interface SortableBlockWrapperProps {
   id: string
   actions: BlockAction[]
   children: ReactNode
+  focusOnMount?: boolean
+  onFocused?: () => void
 }
 
-export function SortableBlockWrapper({ id, actions, children }: SortableBlockWrapperProps) {
+export function SortableBlockWrapper({
+  id,
+  actions,
+  children,
+  focusOnMount,
+  onFocused,
+}: SortableBlockWrapperProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
   })
@@ -21,6 +29,13 @@ export function SortableBlockWrapper({ id, actions, children }: SortableBlockWra
     setOpen: setMenuOpen,
     containerRef,
   } = useDismissableMenu<HTMLDivElement>()
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!focusOnMount) return
+    contentRef.current?.querySelector<HTMLElement>('.ProseMirror')?.focus()
+    onFocused?.()
+  }, [focusOnMount, onFocused])
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -50,7 +65,9 @@ export function SortableBlockWrapper({ id, actions, children }: SortableBlockWra
           {menuOpen && <BlockActionsMenu actions={actions} onClose={() => setMenuOpen(false)} />}
         </div>
       </div>
-      <div className={styles.content}>{children}</div>
+      <div className={styles.content} ref={contentRef}>
+        {children}
+      </div>
     </div>
   )
 }

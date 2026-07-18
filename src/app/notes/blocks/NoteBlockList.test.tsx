@@ -238,4 +238,71 @@ describe('NoteBlockList', () => {
     expect(reloaded.blocks[0].type).toBe('table')
     expect(screen.getAllByLabelText('Row 1, column 1')).toHaveLength(1)
   })
+
+  it('renders only one add-block button, after the trailing phantom block', async () => {
+    const docId = createId()
+    const { doc } = await loadNoteBlocks(docId)
+    await insertBlock(docId, doc, createEmptyBlock('text'), 0)
+    await insertBlock(docId, doc, createEmptyBlock('table'), 1)
+
+    render(<NoteBlockList noteId="note-1" blockDocId={docId} />)
+
+    await waitFor(() => expect(screen.getByLabelText('Row 1, column 1')).toBeInTheDocument())
+    expect(screen.getAllByLabelText('Add block')).toHaveLength(1)
+  })
+
+  it('pressing Enter in a real block inserts a new empty text block after it and focuses it', async () => {
+    const docId = createId()
+    const { doc } = await loadNoteBlocks(docId)
+    await insertBlock(docId, doc, createEmptyBlock('text'), 0)
+    const user = userEvent.setup()
+
+    render(<NoteBlockList noteId="note-1" blockDocId={docId} />)
+    await waitFor(() => {
+      expect(document.querySelectorAll('.ProseMirror').length).toBe(2)
+    })
+
+    const editable = document.querySelectorAll('.ProseMirror')[0] as HTMLElement
+    await user.click(editable)
+    await user.type(editable, 'Hello{Enter}')
+
+    await waitFor(() => {
+      expect(document.querySelectorAll('.ProseMirror').length).toBe(3)
+    })
+
+    const reloaded = await loadNoteBlocks(docId)
+    expect(reloaded.blocks).toHaveLength(2)
+    expect(reloaded.blocks[1].type).toBe('text')
+
+    await waitFor(() => {
+      const newBlockEditable = document.querySelectorAll('.ProseMirror')[1]
+      expect(document.activeElement).toBe(newBlockEditable)
+    })
+  })
+
+  it('pressing Enter in the trailing phantom promotes it and focuses a fresh phantom', async () => {
+    const docId = createId()
+    await loadNoteBlocks(docId)
+    const user = userEvent.setup()
+
+    render(<NoteBlockList noteId="note-1" blockDocId={docId} />)
+    await waitFor(() => expect(document.querySelector('.ProseMirror')).toBeTruthy())
+
+    const trailing = document.querySelector('.ProseMirror') as HTMLElement
+    await user.click(trailing)
+    await user.type(trailing, 'Hello{Enter}')
+
+    await waitFor(() => {
+      expect(document.querySelectorAll('.ProseMirror').length).toBe(2)
+    })
+
+    const reloaded = await loadNoteBlocks(docId)
+    expect(reloaded.blocks).toHaveLength(1)
+    expect(reloaded.blocks[0].type).toBe('text')
+
+    await waitFor(() => {
+      const newTrailing = document.querySelectorAll('.ProseMirror')[1]
+      expect(document.activeElement).toBe(newTrailing)
+    })
+  })
 })

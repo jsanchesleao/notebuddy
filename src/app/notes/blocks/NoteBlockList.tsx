@@ -47,6 +47,7 @@ export function NoteBlockList({ noteId, blockDocId }: NoteBlockListProps) {
   )
   const [phantomId, setPhantomId] = useState(() => createId())
   const [autoFocusTrailing, setAutoFocusTrailing] = useState(false)
+  const [focusBlockId, setFocusBlockId] = useState<string | null>(null)
 
   if (isLoading) return null
 
@@ -63,63 +64,67 @@ export function NoteBlockList({ noteId, blockDocId }: NoteBlockListProps) {
     if (index === blocks.length - 1) setAutoFocusTrailing(true)
   }
 
+  const handleSplitBlock = (index: number) => {
+    const newBlock = createEmptyBlock('text')
+    insertBlock(newBlock, index + 1)
+    setFocusBlockId(newBlock.id)
+  }
+
   return (
     <div className={styles.noteBlockList}>
-      <AddBlockMenu onInsert={(type: NoteBlockType) => insertBlock(createEmptyBlock(type), 0)} />
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext
           items={blocks.map((block) => block.id)}
           strategy={verticalListSortingStrategy}
         >
           {blocks.map((block, index) => (
-            <div key={block.id}>
-              <SortableBlockWrapper
-                id={block.id}
-                actions={[
-                  {
-                    key: 'delete',
-                    label: 'Delete',
-                    icon: 'delete',
-                    onSelect: () => deleteBlock(block.id),
-                    danger: true,
-                  },
-                ]}
-              >
-                {block.type === 'text' && (
-                  <TextBlock
-                    block={block}
-                    onUpdate={(patch) => updateBlock(block.id, patch)}
-                    onConvert={(type) => handleConvertBlock(block.id, index, type)}
-                  />
-                )}
-                {block.type === 'image' && (
-                  <ImageBlock
-                    block={block}
-                    noteId={noteId}
-                    onUpdate={(patch) => updateBlock(block.id, patch)}
-                  />
-                )}
-                {block.type === 'sketch' && (
-                  <SketchBlock block={block} onUpdate={(patch) => updateBlock(block.id, patch)} />
-                )}
-                {block.type === 'code' && (
-                  <CodeBlock block={block} onUpdate={(patch) => updateBlock(block.id, patch)} />
-                )}
-                {block.type === 'table' && (
-                  <TableBlock block={block} onUpdate={(patch) => updateBlock(block.id, patch)} />
-                )}
-                {block.type === 'embed' && (
-                  <EmbedBlock
-                    block={block}
-                    noteId={noteId}
-                    onUpdate={(patch) => updateBlock(block.id, patch)}
-                  />
-                )}
-              </SortableBlockWrapper>
-              <AddBlockMenu
-                onInsert={(type: NoteBlockType) => insertBlock(createEmptyBlock(type), index + 1)}
-              />
-            </div>
+            <SortableBlockWrapper
+              key={block.id}
+              id={block.id}
+              actions={[
+                {
+                  key: 'delete',
+                  label: 'Delete',
+                  icon: 'delete',
+                  onSelect: () => deleteBlock(block.id),
+                  danger: true,
+                },
+              ]}
+              focusOnMount={block.id === focusBlockId}
+              onFocused={() => setFocusBlockId(null)}
+            >
+              {block.type === 'text' && (
+                <TextBlock
+                  block={block}
+                  onUpdate={(patch) => updateBlock(block.id, patch)}
+                  onConvert={(type) => handleConvertBlock(block.id, index, type)}
+                  onSplit={() => handleSplitBlock(index)}
+                />
+              )}
+              {block.type === 'image' && (
+                <ImageBlock
+                  block={block}
+                  noteId={noteId}
+                  onUpdate={(patch) => updateBlock(block.id, patch)}
+                />
+              )}
+              {block.type === 'sketch' && (
+                <SketchBlock block={block} onUpdate={(patch) => updateBlock(block.id, patch)} />
+              )}
+              {block.type === 'code' && (
+                <CodeBlock block={block} onUpdate={(patch) => updateBlock(block.id, patch)} />
+              )}
+              {block.type === 'table' && (
+                <TableBlock block={block} onUpdate={(patch) => updateBlock(block.id, patch)} />
+              )}
+              {block.type === 'embed' && (
+                <EmbedBlock
+                  block={block}
+                  noteId={noteId}
+                  onUpdate={(patch) => updateBlock(block.id, patch)}
+                />
+              )}
+            </SortableBlockWrapper>
           ))}
         </SortableContext>
       </DndContext>
@@ -138,6 +143,9 @@ export function NoteBlockList({ noteId, blockDocId }: NoteBlockListProps) {
           setPhantomId(createId())
           setAutoFocusTrailing(true)
         }}
+      />
+      <AddBlockMenu
+        onInsert={(type: NoteBlockType) => insertBlock(createEmptyBlock(type), blocks.length)}
       />
     </div>
   )
