@@ -70,6 +70,18 @@ export async function deleteBlock(docId: string, doc: Y.Doc, blockId: string): P
   })
 }
 
+export async function deleteBlocks(docId: string, doc: Y.Doc, blockIds: string[]): Promise<void> {
+  await mutateAndPersist(docId, doc, () => {
+    const array = getBlocksArray(doc)
+    const idsToDelete = new Set(blockIds)
+    for (let index = array.length - 1; index >= 0; index -= 1) {
+      if (idsToDelete.has(array.get(index).get('id') as string)) {
+        array.delete(index, 1)
+      }
+    }
+  })
+}
+
 export async function replaceBlock(
   docId: string,
   doc: Y.Doc,

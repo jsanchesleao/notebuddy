@@ -4,7 +4,24 @@
   gap: var(--space-2);
 }
 
+.imageFrame {
+  position: relative;
+}
+
+.imageFrame.alignLeft {
+  align-self: flex-start;
+}
+
+.imageFrame.alignCenter {
+  align-self: center;
+}
+
+.imageFrame.alignRight {
+  align-self: flex-end;
+}
+
 .image {
+  display: block;
   max-width: 100%;
   border-radius: var(--radius-sm);
 }
@@ -15,7 +32,9 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
+  width: 16rem;
   height: 8rem;
+  max-width: 100%;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
   background: var(--color-bg-sidebar);
@@ -23,24 +42,61 @@
   border-radius: var(--radius-sm);
 }
 
-.controls {
+.toolbar {
+  position: absolute;
+  bottom: var(--space-2);
+  left: 50%;
+  z-index: 1;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
-}
-
-.chooseButton {
-  padding: var(--space-1) var(--space-2);
-  font-size: var(--font-size-xs);
-  color: var(--color-text);
+  gap: var(--space-1);
+  padding: var(--space-1);
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%);
+  transition: opacity 0.1s ease-in-out;
+}
+
+.imageBlock:hover .toolbar,
+.imageBlock:focus-within .toolbar {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.iconButton {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
 }
 
-.chooseButton:hover {
-  border-color: var(--color-accent);
+.iconButton:hover {
+  color: var(--color-text);
+  background: var(--color-bg-sidebar);
+}
+
+.iconButton[aria-pressed='true'] {
+  color: var(--color-accent-fg);
+  background: var(--color-accent);
+}
+
+.divider {
+  flex-shrink: 0;
+  width: 1px;
+  height: 1.25rem;
+  background: var(--color-border);
 }
 
 .hiddenInput {
@@ -53,6 +109,7 @@
 
 .widthPresets {
   display: flex;
+  flex-shrink: 0;
   gap: var(--space-1);
 }
 
@@ -72,12 +129,47 @@
   border-color: var(--color-accent);
 }
 
+.captionText {
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 0;
+  overflow: hidden;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: none;
+  border: none;
+  cursor: text;
+}
+
+.captionText:hover {
+  color: var(--color-text);
+}
+
+.imageBlock:focus-within .captionText {
+  display: none;
+}
+
 .captionInput {
-  padding: var(--space-1) var(--space-2);
+  height: 0;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
   font-size: var(--font-size-sm);
   color: var(--color-text);
   background: none;
   border: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.imageBlock:focus-within .captionInput {
+  height: auto;
+  padding: var(--space-1) var(--space-2);
+  opacity: 1;
+  pointer-events: auto;
   border-bottom: 1px solid var(--color-border);
 }
 

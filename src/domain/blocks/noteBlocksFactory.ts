@@ -21,7 +21,7 @@ export function createEmptyBlock(type: NoteBlockType): NoteBlock {
     case 'text':
       return { type, id, content: { type: 'doc', content: [{ type: 'paragraph' }] } }
     case 'image':
-      return { type, id, opfsPath: '' }
+      return { type, id, opfsPath: '', align: 'left' }
     case 'sketch':
       return { type, id, strokes: [], width: 600, height: 400 }
     case 'code':

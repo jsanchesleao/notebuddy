@@ -1,11 +1,21 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../../db/db'
 import { createId } from '../../../domain/ids'
 import { insertBlock, loadNoteBlocks } from '../../../domain/blocks/noteBlocksStore'
 import { createEmptyBlock } from '../../../domain/blocks/noteBlocksFactory'
 import { NoteBlockList } from './NoteBlockList'
+
+function textBlockWith(text: string) {
+  return {
+    ...createEmptyBlock('text'),
+    content: {
+      type: 'doc',
+      content: [{ type: 'paragraph', content: [{ type: 'text', text }] }],
+    },
+  }
+}
 
 beforeEach(async () => {
   await db.yjsUpdates.clear()
@@ -210,6 +220,90 @@ describe('NoteBlockList', () => {
     })
   })
 
+  it('focuses the new block and opens the file picker when an image is inserted via the add-block menu', async () => {
+    const docId = createId()
+    await loadNoteBlocks(docId)
+    const user = userEvent.setup()
+    const clickSpy = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {})
+
+    render(<NoteBlockList noteId="note-1" blockDocId={docId} />)
+    await waitFor(() => expect(screen.getByLabelText('Add block')).toBeInTheDocument())
+
+    await user.click(screen.getByLabelText('Add block'))
+    await user.click(screen.getByRole('button', { name: 'Image' }))
+
+    await waitFor(() => expect(screen.getByLabelText('Choose image file')).toBeInTheDocument())
+    const wrapper = screen
+      .getByLabelText('Choose image file')
+      .closest('[data-block-wrapper]') as HTMLElement
+
+    await waitFor(() => expect(document.activeElement).toBe(wrapper))
+    expect(clickSpy).toHaveBeenCalled()
+
+    clickSpy.mockRestore()
+  })
+
+  it('focuses the new block and opens the file picker when an image is inserted via the slash-command menu', async () => {
+    const docId = createId()
+    const { doc } = await loadNoteBlocks(docId)
+    await insertBlock(docId, doc, createEmptyBlock('text'), 0)
+    const user = userEvent.setup()
+    const clickSpy = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {})
+
+    render(<NoteBlockList noteId="note-1" blockDocId={docId} />)
+    await waitFor(() => {
+      expect(document.querySelector('.ProseMirror')).toBeTruthy()
+    })
+
+    const editable = document.querySelectorAll('.ProseMirror')[0] as HTMLElement
+    await user.click(editable)
+    await user.type(editable, '/image')
+    await user.click(screen.getByRole('menuitem', { name: 'Image' }))
+
+    await waitFor(() => expect(screen.getByLabelText('Choose image file')).toBeInTheDocument())
+    const wrapper = screen
+      .getByLabelText('Choose image file')
+      .closest('[data-block-wrapper]') as HTMLElement
+
+    await waitFor(() => expect(document.activeElement).toBe(wrapper))
+    expect(clickSpy).toHaveBeenCalled()
+
+    clickSpy.mockRestore()
+  })
+
+  it('focuses the new block and opens the file picker when the trailing phantom itself is converted to an image via slash-command', async () => {
+    // Regression test: promoting the empty trailing phantom (not a real
+    // pre-existing text block) goes through `onPromoteAsType`, a separate
+    // code path from `handleConvertBlock` — easy to wire the focus/auto-open
+    // behavior into one and forget the other.
+    const docId = createId()
+    await loadNoteBlocks(docId)
+    const user = userEvent.setup()
+    const clickSpy = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {})
+
+    render(<NoteBlockList noteId="note-1" blockDocId={docId} />)
+    await waitFor(() => expect(document.querySelector('.ProseMirror')).toBeTruthy())
+
+    const trailing = document.querySelector('.ProseMirror') as HTMLElement
+    await user.click(trailing)
+    await user.type(trailing, '/image')
+    await user.click(screen.getByRole('menuitem', { name: 'Image' }))
+
+    await waitFor(() => expect(screen.getByLabelText('Choose image file')).toBeInTheDocument())
+    const wrapper = screen
+      .getByLabelText('Choose image file')
+      .closest('[data-block-wrapper]') as HTMLElement
+
+    await waitFor(() => expect(document.activeElement).toBe(wrapper))
+    expect(clickSpy).toHaveBeenCalled()
+
+    const reloaded = await loadNoteBlocks(docId)
+    expect(reloaded.blocks).toHaveLength(1)
+    expect(reloaded.blocks[0].type).toBe('image')
+
+    clickSpy.mockRestore()
+  })
+
   it('converts the trailing phantom itself via slash-command without appending a duplicate block', async () => {
     // Regression test: converting the phantom before its own debounced save
     // fires used to leave a stale pending save that flushed on unmount,
@@ -304,5 +398,156 @@ describe('NoteBlockList', () => {
       const newTrailing = document.querySelectorAll('.ProseMirror')[1]
       expect(document.activeElement).toBe(newTrailing)
     })
+  })
+
+  it('ArrowDown at the end of a text block moves the cursor into the next text block', async () => {
+    const docId = createId()
+    const { doc } = await loadNoteBlocks(docId)
+    await insertBlock(docId, doc, createEmptyBlock('text'), 0)
+    await insertBlock(docId, doc, createEmptyBlock('text'), 1)
+    const user = userEvent.setup()
+
+    render(<NoteBlockList noteId="note-1" blockDocId={docId} />)
+    // 2 real text blocks + the trailing phantom.
+    await waitFor(() => expect(document.querySelectorAll('.ProseMirror').length).toBe(3))
+
+    const [first, second] = document.querySelectorAll('.ProseMirror')
+    await user.click(first as HTMLElement)
+    await user.keyboard('{ArrowDown}')
+
+    await waitFor(() => expect(document.activeElement).toBe(second))
+  })
+
+  it('ArrowDown from a text block into a non-text block selects it with a visible focus ring, and a further ArrowDown continues past it', async () => {
+    const docId = createId()
+    const { doc } = await loadNoteBlocks(docId)
+    await insertBlock(docId, doc, createEmptyBlock('text'), 0)
+    await insertBlock(docId, doc, createEmptyBlock('table'), 1)
+    const user = userEvent.setup()
+
+    render(<NoteBlockList noteId="note-1" blockDocId={docId} />)
+    await waitFor(() => expect(screen.getByLabelText('Row 1, column 1')).toBeInTheDocument())
+
+    const textEditable = document.querySelectorAll('.ProseMirror')[0] as HTMLElement
+    await user.click(textEditable)
+    await user.keyboard('{ArrowDown}')
+
+    const wrapper = document.querySelectorAll('[data-block-wrapper]')[1] as HTMLElement
+    await waitFor(() => {
+      expect(document.activeElement).toBe(wrapper)
+      expect(wrapper).toHaveAttribute('aria-selected', 'true')
+    })
+
+    // The table is the last real block, so continuing past it lands in the
+    // always-present trailing phantom.
+    await user.keyboard('{ArrowDown}')
+    const phantom = document.querySelectorAll('.ProseMirror')[1] as HTMLElement
+    await waitFor(() => expect(document.activeElement).toBe(phantom))
+  })
+
+  it('merges a text block into the previous one on Backspace at the start of non-empty content', async () => {
+    const docId = createId()
+    const { doc } = await loadNoteBlocks(docId)
+    await insertBlock(docId, doc, textBlockWith('Hello '), 0)
+    await insertBlock(docId, doc, textBlockWith('World'), 1)
+
+    render(<NoteBlockList noteId="note-1" blockDocId={docId} />)
+    await waitFor(() => expect(document.querySelectorAll('.ProseMirror').length).toBe(3))
+
+    // The second block has never been clicked, so ProseMirror's selection is
+    // still at its construction-time default (the document start) — exactly
+    // the "Backspace at start of non-empty text" case, without depending on
+    // jsdom's unsupported caret navigation to get there.
+    const second = document.querySelectorAll('.ProseMirror')[1] as HTMLElement
+    fireEvent.keyDown(second, { key: 'Backspace' })
+
+    await waitFor(() => expect(document.querySelectorAll('.ProseMirror').length).toBe(2))
+    await waitFor(async () => {
+      const reloaded = await loadNoteBlocks(docId)
+      expect(reloaded.blocks).toHaveLength(1)
+      expect(JSON.stringify(reloaded.blocks[0])).toContain('Hello World')
+    })
+  })
+
+  it('selects a non-text previous block on the first Backspace, and deletes it on a second Backspace', async () => {
+    const docId = createId()
+    const { doc } = await loadNoteBlocks(docId)
+    await insertBlock(docId, doc, createEmptyBlock('table'), 0)
+    await insertBlock(docId, doc, textBlockWith('Hi'), 1)
+
+    render(<NoteBlockList noteId="note-1" blockDocId={docId} />)
+    await waitFor(() => expect(screen.getByLabelText('Row 1, column 1')).toBeInTheDocument())
+
+    const textEditable = document.querySelector('.ProseMirror') as HTMLElement
+    fireEvent.keyDown(textEditable, { key: 'Backspace' })
+
+    const tableWrapper = document.querySelectorAll('[data-block-wrapper]')[0] as HTMLElement
+    await waitFor(() => {
+      expect(document.activeElement).toBe(tableWrapper)
+      expect(tableWrapper).toHaveAttribute('aria-selected', 'true')
+    })
+    // Nothing was deleted yet by the first press.
+    expect(screen.getByLabelText('Row 1, column 1')).toBeInTheDocument()
+
+    fireEvent.keyDown(tableWrapper, { key: 'Backspace' })
+
+    await waitFor(() => expect(screen.queryByLabelText('Row 1, column 1')).not.toBeInTheDocument())
+    const reloaded = await loadNoteBlocks(docId)
+    expect(reloaded.blocks).toHaveLength(1)
+    expect(reloaded.blocks[0].type).toBe('text')
+  })
+
+  it('Shift+ArrowDown builds a multi-block range, and Backspace deletes the whole range', async () => {
+    const docId = createId()
+    const { doc } = await loadNoteBlocks(docId)
+    await insertBlock(docId, doc, createEmptyBlock('text'), 0)
+    await insertBlock(docId, doc, createEmptyBlock('table'), 1)
+    await insertBlock(docId, doc, createEmptyBlock('code'), 2)
+    const user = userEvent.setup()
+
+    render(<NoteBlockList noteId="note-1" blockDocId={docId} />)
+    await waitFor(() => expect(screen.getByLabelText('Row 1, column 1')).toBeInTheDocument())
+
+    const textEditable = document.querySelectorAll('.ProseMirror')[0] as HTMLElement
+    await user.click(textEditable)
+    await user.keyboard('{ArrowDown}') // selects the table block
+
+    const wrappers = () => document.querySelectorAll('[data-block-wrapper]')
+    await waitFor(() => expect(wrappers()[1]).toHaveAttribute('aria-selected', 'true'))
+
+    await user.keyboard('{Shift>}{ArrowDown}{/Shift}') // extends the range onto the code block
+
+    await waitFor(() => {
+      expect(wrappers()[1]).toHaveAttribute('aria-selected', 'true')
+      expect(wrappers()[2]).toHaveAttribute('aria-selected', 'true')
+    })
+
+    await user.keyboard('{Backspace}')
+
+    await waitFor(() => expect(screen.queryByLabelText('Row 1, column 1')).not.toBeInTheDocument())
+    const reloaded = await loadNoteBlocks(docId)
+    expect(reloaded.blocks).toHaveLength(1)
+    expect(reloaded.blocks[0].type).toBe('text')
+
+    // Focus lands back on the remaining text block (before the deleted range).
+    await waitFor(() => expect(document.activeElement).toBe(document.querySelector('.ProseMirror')))
+  })
+
+  it('Backspace on the empty trailing phantom moves focus back without deleting or creating anything', async () => {
+    const docId = createId()
+    const { doc } = await loadNoteBlocks(docId)
+    await insertBlock(docId, doc, createEmptyBlock('text'), 0)
+
+    render(<NoteBlockList noteId="note-1" blockDocId={docId} />)
+    await waitFor(() => expect(document.querySelectorAll('.ProseMirror').length).toBe(2))
+
+    const phantom = document.querySelectorAll('.ProseMirror')[1] as HTMLElement
+    fireEvent.keyDown(phantom, { key: 'Backspace' })
+
+    const first = document.querySelectorAll('.ProseMirror')[0] as HTMLElement
+    await waitFor(() => expect(document.activeElement).toBe(first))
+
+    const reloaded = await loadNoteBlocks(docId)
+    expect(reloaded.blocks).toHaveLength(1)
   })
 })

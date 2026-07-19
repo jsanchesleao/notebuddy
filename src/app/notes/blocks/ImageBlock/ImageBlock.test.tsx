@@ -60,4 +60,74 @@ describe('ImageBlock', () => {
       timeout: 1000,
     })
   })
+
+  it('sets alignment and reflects the active alignment button', async () => {
+    const block = { ...createEmptyBlock('image'), align: 'center' as const }
+    const onUpdate = vi.fn()
+    const user = userEvent.setup()
+
+    render(<ImageBlock block={block} noteId="note-1" onUpdate={onUpdate} />)
+
+    expect(screen.getByRole('button', { name: 'Align center' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Align right' }))
+    expect(onUpdate).toHaveBeenCalledWith({ align: 'right' })
+  })
+
+  it('opens the file picker automatically when autoOpenPicker is set, once', () => {
+    const block = createEmptyBlock('image')
+    const onPickerOpened = vi.fn()
+    const clickSpy = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {})
+
+    const { rerender } = render(
+      <ImageBlock
+        block={block}
+        noteId="note-1"
+        onUpdate={vi.fn()}
+        autoOpenPicker
+        onPickerOpened={onPickerOpened}
+      />,
+    )
+
+    expect(clickSpy).toHaveBeenCalledTimes(1)
+    expect(onPickerOpened).toHaveBeenCalledTimes(1)
+
+    rerender(
+      <ImageBlock
+        block={block}
+        noteId="note-1"
+        onUpdate={vi.fn()}
+        autoOpenPicker={false}
+        onPickerOpened={onPickerOpened}
+      />,
+    )
+    expect(clickSpy).toHaveBeenCalledTimes(1)
+
+    clickSpy.mockRestore()
+  })
+
+  it('shows the caption as static text only when non-empty, and focuses the input on click', async () => {
+    const block = { ...createEmptyBlock('image'), caption: 'A cat napping' }
+    const user = userEvent.setup()
+
+    render(<ImageBlock block={block} noteId="note-1" onUpdate={vi.fn()} />)
+
+    const captionText = screen.getByText('A cat napping')
+    expect(screen.getByLabelText('Image caption')).not.toHaveFocus()
+
+    await user.click(captionText)
+    expect(screen.getByLabelText('Image caption')).toHaveFocus()
+  })
+
+  it('renders no static caption text when the caption is empty', () => {
+    const block = createEmptyBlock('image')
+    render(<ImageBlock block={block} noteId="note-1" onUpdate={vi.fn()} />)
+
+    // Toolbar-only buttons: replace, 4 width presets, 3 alignment — no caption button.
+    expect(screen.getAllByRole('button')).toHaveLength(8)
+    expect(screen.getByLabelText('Image caption')).toHaveValue('')
+  })
 })

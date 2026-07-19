@@ -3,6 +3,7 @@ import type * as Y from 'yjs'
 import {
   appendBlock as appendBlockInDoc,
   deleteBlock as deleteBlockInDoc,
+  deleteBlocks as deleteBlocksInDoc,
   getBlocksArray,
   insertBlock as insertBlockInDoc,
   loadNoteBlocks,
@@ -19,6 +20,7 @@ export interface UseNoteBlocksResult {
   insertBlock: (block: NoteBlock, index: number) => Promise<void>
   updateBlock: (blockId: string, patch: Partial<Omit<NoteBlock, 'id' | 'type'>>) => Promise<void>
   deleteBlock: (blockId: string) => Promise<void>
+  deleteBlocks: (blockIds: string[]) => Promise<void>
   moveBlock: (fromIndex: number, toIndex: number) => Promise<void>
   replaceBlock: (blockId: string, newBlock: NoteBlock) => Promise<void>
   appendBlock: (block: NoteBlock) => Promise<void>
@@ -83,6 +85,14 @@ export function useNoteBlocks(docId: string): UseNoteBlocksResult {
     [docId],
   )
 
+  const deleteBlocks = useCallback(
+    async (blockIds: string[]) => {
+      if (!docRef.current) return
+      await deleteBlocksInDoc(docId, docRef.current, blockIds)
+    },
+    [docId],
+  )
+
   const moveBlock = useCallback(
     async (fromIndex: number, toIndex: number) => {
       if (!docRef.current) return
@@ -113,6 +123,7 @@ export function useNoteBlocks(docId: string): UseNoteBlocksResult {
     insertBlock,
     updateBlock,
     deleteBlock,
+    deleteBlocks,
     moveBlock,
     replaceBlock,
     appendBlock,

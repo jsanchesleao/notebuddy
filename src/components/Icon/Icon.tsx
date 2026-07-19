@@ -25,6 +25,19 @@ import {
   Bold,
   Italic,
   Underline,
+  Heading1,
+  Heading2,
+  Heading3,
+  Heading4,
+  Pilcrow,
+  Quote,
+  List,
+  ListOrdered,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  ChevronDown,
 } from 'lucide-react'
 
 const ICONS = {
@@ -54,6 +67,19 @@ const ICONS = {
   bold: Bold,
   italic: Italic,
   underline: Underline,
+  heading1: Heading1,
+  heading2: Heading2,
+  heading3: Heading3,
+  heading4: Heading4,
+  paragraph: Pilcrow,
+  citation: Quote,
+  bulletList: List,
+  orderedList: ListOrdered,
+  alignLeft: AlignLeft,
+  alignCenter: AlignCenter,
+  alignRight: AlignRight,
+  alignJustify: AlignJustify,
+  chevronDown: ChevronDown,
 } as const
 
 export type IconName = keyof typeof ICONS

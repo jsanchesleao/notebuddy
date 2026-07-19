@@ -5,6 +5,7 @@ import { createEmptyBlock } from './noteBlocksFactory'
 import {
   appendBlock,
   deleteBlock,
+  deleteBlocks,
   insertBlock,
   loadNoteBlocks,
   moveBlock,
@@ -53,6 +54,20 @@ describe('noteBlocksStore', () => {
 
     const reloaded = await loadNoteBlocks(docId)
     expect(reloaded.blocks).toEqual([second])
+  })
+
+  it('deletes several blocks at once and survives a fresh reload', async () => {
+    const docId = createId()
+    const { doc } = await loadNoteBlocks(docId)
+    const blocks = [createEmptyBlock('text'), createEmptyBlock('table'), createEmptyBlock('code')]
+    for (let i = 0; i < blocks.length; i++) {
+      await insertBlock(docId, doc, blocks[i], i)
+    }
+
+    await deleteBlocks(docId, doc, [blocks[0].id, blocks[2].id])
+
+    const reloaded = await loadNoteBlocks(docId)
+    expect(reloaded.blocks).toEqual([blocks[1]])
   })
 
   it('replaces a block in place, preserving its index, and survives reload', async () => {

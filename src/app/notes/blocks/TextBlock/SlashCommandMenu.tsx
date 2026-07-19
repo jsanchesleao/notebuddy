@@ -1,17 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Icon } from '../../../../components/Icon/Icon'
-import type { NoteBlockType } from '../../../../domain/blocks/blocks.types'
-import { filterBlockTypes } from './slashCommand'
+import { filterSlashCommands, type SlashCommandEntry } from './slashCommand'
 import styles from './SlashCommandMenu.module.css'
 
 interface SlashCommandMenuProps {
   query: string
-  onSelect: (type: NoteBlockType) => void
+  onSelect: (entry: SlashCommandEntry) => void
   onClose: () => void
 }
 
 export function SlashCommandMenu({ query, onSelect, onClose }: SlashCommandMenuProps) {
-  const matches = filterBlockTypes(query)
+  const matches = filterSlashCommands(query)
   const [highlightedIndex, setHighlightedIndex] = useState(0)
   const [queryForHighlight, setQueryForHighlight] = useState(query)
 
@@ -32,7 +31,7 @@ export function SlashCommandMenu({ query, onSelect, onClose }: SlashCommandMenuP
         setHighlightedIndex((index) => (index - 1 + matches.length) % matches.length)
       } else if (event.key === 'Enter') {
         event.preventDefault()
-        onSelect(matches[highlightedIndex].type)
+        onSelect(matches[highlightedIndex])
       } else if (event.key === 'Escape') {
         event.preventDefault()
         onClose()
@@ -47,9 +46,9 @@ export function SlashCommandMenu({ query, onSelect, onClose }: SlashCommandMenuP
 
   return (
     <div role="menu" className={styles.menu}>
-      {matches.map(({ type, label, icon }, index) => (
+      {matches.map((entry, index) => (
         <button
-          key={type}
+          key={entry.kind === 'blockType' ? entry.type : entry.label}
           type="button"
           role="menuitem"
           className={
@@ -58,9 +57,9 @@ export function SlashCommandMenu({ query, onSelect, onClose }: SlashCommandMenuP
               : styles.menuItem
           }
           onMouseEnter={() => setHighlightedIndex(index)}
-          onClick={() => onSelect(type)}
+          onClick={() => onSelect(entry)}
         >
-          <Icon name={icon} size={14} /> {label}
+          <Icon name={entry.icon} size={14} /> {entry.label}
         </button>
       ))}
     </div>

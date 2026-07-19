@@ -12,7 +12,14 @@ export interface TableCell {
 
 export type NoteBlock =
   | { type: 'text'; id: string; content: JSONContent }
-  | { type: 'image'; id: string; opfsPath: string; caption?: string; width?: number }
+  | {
+      type: 'image'
+      id: string
+      opfsPath: string
+      caption?: string
+      width?: number
+      align?: 'left' | 'center' | 'right'
+    }
   | { type: 'sketch'; id: string; strokes: Stroke[]; width: number; height: number }
   | { type: 'code'; id: string; language: string; code: string }
   | { type: 'table'; id: string; rows: TableCell[][] }

@@ -1,23 +1,28 @@
-import { act, cleanup, render } from '@testing-library/react'
+import { act, cleanup, render, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 import { EditorContent, useEditor, type Editor } from '@tiptap/react'
 import { StarterKit } from '@tiptap/starter-kit'
 import { TextStyle } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
+import { TextAlign } from '@tiptap/extension-text-align'
 import { TextFormattingToolbar } from './TextFormattingToolbar'
 
 afterEach(() => {
   cleanup()
 })
 
-// `BubbleMenu` positions itself via floating-ui, which relies on layout
-// measurements jsdom doesn't provide, so it never becomes visible under
-// jsdom. These tests exercise `TextFormattingToolbar` directly against a
-// real editor instance instead of asserting on `BubbleMenu`'s visibility.
+// `TextFormattingToolbar` is normally rendered inside `TextBlock`'s own
+// pinned-toolbar wrapper; these tests exercise it directly against a real
+// editor instance instead, so its buttons can be asserted on in isolation.
 function Harness({ onReady }: { onReady: (editor: Editor) => void }) {
   const editor = useEditor({
-    extensions: [StarterKit, TextStyle, Color],
+    extensions: [
+      StarterKit,
+      TextStyle,
+      Color,
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
+    ],
     content: '<p>Hello world</p>',
   })
 
@@ -83,5 +88,28 @@ describe('TextFormattingToolbar', () => {
 
     await user.click(getByLabelText('Remove color'))
     expect(editor.getHTML()).not.toContain('color: rgb(192, 57, 43)')
+  })
+
+  it('sets text alignment on the current block', async () => {
+    const { editor, getByLabelText } = await setup()
+    const user = userEvent.setup()
+
+    await user.click(getByLabelText('Align center'))
+
+    expect(editor.isActive({ textAlign: 'center' })).toBe(true)
+    expect(editor.getHTML()).toContain('text-align: center')
+  })
+
+  it('reflects the active alignment via aria-pressed', async () => {
+    const { editor, getByLabelText } = await setup()
+    const user = userEvent.setup()
+
+    await user.click(getByLabelText('Align right'))
+
+    await waitFor(() => {
+      expect(getByLabelText('Align right')).toHaveAttribute('aria-pressed', 'true')
+    })
+    expect(getByLabelText('Align left')).toHaveAttribute('aria-pressed', 'false')
+    expect(editor.isActive({ textAlign: 'right' })).toBe(true)
   })
 })

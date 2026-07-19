@@ -15,6 +15,32 @@
   box-shadow: var(--shadow-md);
 }
 
+.selected {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.rangeTop,
+.rangeMiddle,
+.rangeBottom {
+  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  border-radius: 0;
+  /* The band itself is the selection indicator — suppress the browser's
+     default focus outline on whichever block in the range currently holds
+     DOM focus, so it doesn't show up as a stray extra rectangle. */
+  outline: none;
+}
+
+.rangeTop {
+  border-top-left-radius: var(--radius-md);
+  border-top-right-radius: var(--radius-md);
+}
+
+.rangeBottom {
+  border-bottom-left-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
+}
+
 .chrome {
   display: flex;
   flex-direction: column;

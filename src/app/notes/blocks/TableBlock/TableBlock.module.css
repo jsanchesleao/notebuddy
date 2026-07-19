@@ -14,7 +14,7 @@
 }
 
 .cell {
-  width: 8rem;
+  width: 100%;
   padding: var(--space-2);
   font-size: var(--font-size-sm);
   color: var(--color-text);
