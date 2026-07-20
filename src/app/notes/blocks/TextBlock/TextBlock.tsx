@@ -31,11 +31,17 @@ export interface TextBlockHandle {
   // cursor at the join point (where this block's original content used to
   // end). Used to implement cross-block text merging on Backspace/Delete.
   appendContent: (content: JSONContent) => void
+  hasFocus: () => boolean
 }
 
 interface TextBlockProps {
   block: Extract<NoteBlock, { type: 'text' }>
-  onUpdate: (patch: { content: JSONContent }) => void
+  // `meta.isIdleFlush` is set only when this fires from the idle save-debounce
+  // timer itself (the user went quiet mid-edit), as opposed to an explicit
+  // flush (Enter/Backspace/Delete/unmount) — callers that care about "is the
+  // user still actively mid-typing here" (the trailing phantom's promotion)
+  // use this to tell the two apart.
+  onUpdate: (patch: { content: JSONContent }, meta?: { isIdleFlush?: boolean }) => void
   onConvert: (type: NoteBlockType) => void
   // Optional: the trailing phantom block has no "next block" to create — Enter
   // there just flushes the pending save below, which already promotes it via
@@ -210,7 +216,7 @@ export function TextBlock({
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
       saveTimeoutRef.current = setTimeout(() => {
         hasPendingSaveRef.current = false
-        onUpdateRef.current({ content: editor.getJSON() })
+        onUpdateRef.current({ content: editor.getJSON() }, { isIdleFlush: true })
       }, SAVE_DEBOUNCE_MS)
     },
   })
@@ -280,6 +286,7 @@ export function TextBlock({
 
         editor.chain().focus().setTextSelection(joinPos).run()
       },
+      hasFocus: () => editor?.isFocused ?? false,
     }),
     [editor],
   )

@@ -9,7 +9,10 @@ interface TrailingTextBlockProps {
   blockId: string
   focusOnMount: boolean
   onFocused: () => void
-  onPromote: (block: Extract<NoteBlock, { type: 'text' }>) => void
+  onPromote: (
+    block: Extract<NoteBlock, { type: 'text' }>,
+    meta?: { isIdleFlush?: boolean },
+  ) => void
   onPromoteAsType: (type: NoteBlockType) => void
   onEscape?: (edge: BlockEdge, extendSelection: boolean) => void
   // The phantom isn't a persisted block, so there's nothing to "delete" —
@@ -43,7 +46,7 @@ export function TrailingTextBlock({
       <TextBlock
         ref={ref}
         block={block}
-        onUpdate={(patch) => onPromote({ ...block, ...patch })}
+        onUpdate={(patch, meta) => onPromote({ ...block, ...patch }, meta)}
         onConvert={onPromoteAsType}
         onEscape={onEscape}
         onBackspaceAtStart={onBackspaceAtStart}

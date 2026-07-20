@@ -172,7 +172,12 @@ describe('NoteBlockList', () => {
     expect(reloaded.blocks[0].type).toBe('text')
   })
 
-  it('focuses the new trailing phantom after promotion', async () => {
+  it('keeps focus on the promoted block when the idle debounce fires mid-typing', async () => {
+    // Regression test: promoting the phantom via the idle save-debounce
+    // (rather than an explicit Enter/Backspace/Delete/slash-selection) used
+    // to steal focus into the brand-new, unrelated empty phantom, cutting the
+    // user off mid-typing. Focus should stay on the block they were just
+    // typing in, which is now the real (non-trailing) block.
     const docId = createId()
     await loadNoteBlocks(docId)
     const user = userEvent.setup()
@@ -192,8 +197,8 @@ describe('NoteBlockList', () => {
     )
 
     await waitFor(() => {
-      const newTrailing = document.querySelectorAll('.ProseMirror')[1]
-      expect(document.activeElement).toBe(newTrailing)
+      const promoted = document.querySelectorAll('.ProseMirror')[0]
+      expect(document.activeElement).toBe(promoted)
     })
   })
 

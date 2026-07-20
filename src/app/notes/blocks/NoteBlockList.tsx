@@ -66,6 +66,11 @@ export function NoteBlockList({ noteId, blockDocId }: NoteBlockListProps) {
   const textBlockHandles = useRef(new Map<string, TextBlockHandle>())
   const wrapperHandles = useRef(new Map<string, SortableBlockWrapperHandle>())
   const phantomRef = useRef<TextBlockHandle>(null)
+  // Set by `onPromote` below when a just-promoted block should keep focus at
+  // its end instead of losing it to the new trailing phantom. Consumed
+  // imperatively from the block's own ref callback below (rather than a
+  // state + effect pair) once it actually mounts as a real block.
+  const pendingFocusEndIdRef = useRef<string | null>(null)
 
   if (isLoading) return null
 
@@ -290,8 +295,15 @@ export function NoteBlockList({ noteId, blockDocId }: NoteBlockListProps) {
               {block.type === 'text' && (
                 <TextBlock
                   ref={(handle) => {
-                    if (handle) textBlockHandles.current.set(block.id, handle)
-                    else textBlockHandles.current.delete(block.id)
+                    if (handle) {
+                      textBlockHandles.current.set(block.id, handle)
+                      if (pendingFocusEndIdRef.current === block.id) {
+                        handle.focusEnd()
+                        pendingFocusEndIdRef.current = null
+                      }
+                    } else {
+                      textBlockHandles.current.delete(block.id)
+                    }
                   }}
                   block={block}
                   onUpdate={(patch) => updateBlock(block.id, patch)}
@@ -339,10 +351,19 @@ export function NoteBlockList({ noteId, blockDocId }: NoteBlockListProps) {
         blockId={phantomId}
         focusOnMount={autoFocusTrailing}
         onFocused={() => setAutoFocusTrailing(false)}
-        onPromote={(newBlock) => {
+        onPromote={(newBlock, meta) => {
           appendBlock(newBlock)
           setPhantomId(createId())
-          setAutoFocusTrailing(true)
+          // If the debounce timer promoted this block while the user was
+          // still actively typing in it (as opposed to Enter/Backspace/
+          // Delete, which have their own deliberate "move on" semantics),
+          // keep their cursor on the now-real block instead of yanking focus
+          // to the new, unrelated empty phantom.
+          if (meta?.isIdleFlush && phantomRef.current?.hasFocus()) {
+            pendingFocusEndIdRef.current = newBlock.id
+          } else {
+            setAutoFocusTrailing(true)
+          }
         }}
         onPromoteAsType={(type) => {
           const newBlock = { ...createEmptyBlock(type), id: phantomId }
