@@ -538,6 +538,129 @@ describe('NoteBlockList', () => {
     await waitFor(() => expect(document.activeElement).toBe(document.querySelector('.ProseMirror')))
   })
 
+  it('dragging across blocks builds a range that persists after mouseup, and Backspace deletes it', async () => {
+    const docId = createId()
+    const { doc } = await loadNoteBlocks(docId)
+    await insertBlock(docId, doc, createEmptyBlock('text'), 0)
+    await insertBlock(docId, doc, createEmptyBlock('table'), 1)
+    await insertBlock(docId, doc, createEmptyBlock('code'), 2)
+
+    render(<NoteBlockList noteId="note-1" blockDocId={docId} />)
+    await waitFor(() => expect(screen.getByLabelText('Row 1, column 1')).toBeInTheDocument())
+
+    const wrappers = () => document.querySelectorAll('[data-block-wrapper]')
+    const content = (i: number) => wrappers()[i].querySelector('[data-block-content]') as HTMLElement
+
+    fireEvent.mouseDown(content(0), { button: 0 })
+    fireEvent.mouseEnter(content(1), { buttons: 1 })
+
+    await waitFor(() => {
+      expect(wrappers()[0]).toHaveAttribute('aria-selected', 'true')
+      expect(wrappers()[1]).toHaveAttribute('aria-selected', 'true')
+    })
+
+    fireEvent.mouseEnter(content(2), { buttons: 1 })
+    await waitFor(() => expect(wrappers()[2]).toHaveAttribute('aria-selected', 'true'))
+
+    fireEvent.mouseUp(window)
+
+    // Range persists after release, exactly like a keyboard-built one.
+    expect(wrappers()[0]).toHaveAttribute('aria-selected', 'true')
+    expect(wrappers()[1]).toHaveAttribute('aria-selected', 'true')
+    expect(wrappers()[2]).toHaveAttribute('aria-selected', 'true')
+
+    fireEvent.keyDown(wrappers()[2], { key: 'Backspace' })
+
+    await waitFor(() => expect(screen.queryByLabelText('Row 1, column 1')).not.toBeInTheDocument())
+    const reloaded = await loadNoteBlocks(docId)
+    expect(reloaded.blocks).toHaveLength(0)
+  })
+
+  it('a drag that never leaves its starting block selects nothing', async () => {
+    const docId = createId()
+    const { doc } = await loadNoteBlocks(docId)
+    await insertBlock(docId, doc, createEmptyBlock('text'), 0)
+    await insertBlock(docId, doc, createEmptyBlock('table'), 1)
+
+    render(<NoteBlockList noteId="note-1" blockDocId={docId} />)
+    await waitFor(() => expect(screen.getByLabelText('Row 1, column 1')).toBeInTheDocument())
+
+    const wrappers = () => document.querySelectorAll('[data-block-wrapper]')
+    const content = (i: number) => wrappers()[i].querySelector('[data-block-content]') as HTMLElement
+
+    fireEvent.mouseDown(content(0), { button: 0 })
+    fireEvent.mouseUp(window)
+
+    expect(wrappers()[0]).not.toHaveAttribute('aria-selected', 'true')
+    expect(wrappers()[1]).not.toHaveAttribute('aria-selected', 'true')
+
+    // The session is fully cleared — a later, unrelated mouseenter over
+    // another block must not retroactively start a range.
+    fireEvent.mouseEnter(content(1), { buttons: 1 })
+    expect(wrappers()[1]).not.toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('Shift+Click extends a range from the last-focused block, without placing a text caret', async () => {
+    const docId = createId()
+    const { doc } = await loadNoteBlocks(docId)
+    await insertBlock(docId, doc, createEmptyBlock('text'), 0)
+    await insertBlock(docId, doc, createEmptyBlock('table'), 1)
+    await insertBlock(docId, doc, createEmptyBlock('code'), 2)
+    const user = userEvent.setup()
+
+    render(<NoteBlockList noteId="note-1" blockDocId={docId} />)
+    await waitFor(() => expect(screen.getByLabelText('Row 1, column 1')).toBeInTheDocument())
+
+    const textEditable = document.querySelectorAll('.ProseMirror')[0] as HTMLElement
+    await user.click(textEditable)
+
+    const wrappers = () => document.querySelectorAll('[data-block-wrapper]')
+    const content = (i: number) => wrappers()[i].querySelector('[data-block-content]') as HTMLElement
+
+    fireEvent.mouseDown(content(2), { button: 0, shiftKey: true })
+
+    await waitFor(() => {
+      expect(wrappers()[0]).toHaveAttribute('aria-selected', 'true')
+      expect(wrappers()[1]).toHaveAttribute('aria-selected', 'true')
+      expect(wrappers()[2]).toHaveAttribute('aria-selected', 'true')
+    })
+    expect(document.activeElement).toBe(wrappers()[2])
+  })
+
+  it('a plain click selects a non-text block', async () => {
+    const docId = createId()
+    const { doc } = await loadNoteBlocks(docId)
+    await insertBlock(docId, doc, createEmptyBlock('table'), 0)
+
+    render(<NoteBlockList noteId="note-1" blockDocId={docId} />)
+    await waitFor(() => expect(screen.getByLabelText('Row 1, column 1')).toBeInTheDocument())
+
+    const wrapper = document.querySelector('[data-block-wrapper]') as HTMLElement
+    const content = wrapper.querySelector('[data-block-content]') as HTMLElement
+
+    fireEvent.mouseDown(content, { button: 0 })
+    fireEvent.mouseUp(window)
+    fireEvent.click(content)
+
+    await waitFor(() => expect(wrapper).toHaveAttribute('aria-selected', 'true'))
+    expect(document.activeElement).toBe(wrapper)
+  })
+
+  it('clicking an interactive control inside a block performs its action without selecting the block', async () => {
+    const docId = createId()
+    const { doc } = await loadNoteBlocks(docId)
+    await insertBlock(docId, doc, createEmptyBlock('table'), 0)
+    const user = userEvent.setup()
+
+    render(<NoteBlockList noteId="note-1" blockDocId={docId} />)
+    await waitFor(() => expect(screen.getByLabelText('Row 1, column 1')).toBeInTheDocument())
+
+    await user.click(screen.getByLabelText('Delete row 1'))
+
+    const wrapper = document.querySelector('[data-block-wrapper]') as HTMLElement
+    expect(wrapper).not.toHaveAttribute('aria-selected', 'true')
+  })
+
   it('Backspace on the empty trailing phantom moves focus back without deleting or creating anything', async () => {
     const docId = createId()
     const { doc } = await loadNoteBlocks(docId)

@@ -3,6 +3,7 @@ import {
   useImperativeHandle,
   useRef,
   type KeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
   type ReactNode,
   type Ref,
 } from 'react'
@@ -41,6 +42,15 @@ interface SortableBlockWrapperProps {
   // this block is keyboard-selected/focused as a whole), not ones bubbling
   // up from a focused descendant such as a text block's own editor.
   onBlockKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void
+  // Fired on the capture phase, before any native listener inside the block
+  // (notably ProseMirror's own mousedown handler) sees the event — lets a
+  // Shift+Click be preventDefault()-ed in time to stop a text caret from
+  // being placed.
+  onBlockMouseDown?: (event: ReactMouseEvent<HTMLDivElement>) => void
+  // Fired as the pointer enters this block's content while a mouse button is
+  // held down elsewhere — the signal used to grow a drag-selected range.
+  onBlockMouseEnter?: (event: ReactMouseEvent<HTMLDivElement>) => void
+  onBlockClick?: (event: ReactMouseEvent<HTMLDivElement>) => void
   ref?: Ref<SortableBlockWrapperHandle>
 }
 
@@ -53,6 +63,9 @@ export function SortableBlockWrapper({
   selected,
   rangePosition,
   onBlockKeyDown,
+  onBlockMouseDown,
+  onBlockMouseEnter,
+  onBlockClick,
   ref,
 }: SortableBlockWrapperProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -100,6 +113,7 @@ export function SortableBlockWrapper({
       aria-selected={selected || rangePosition != null}
       tabIndex={-1}
       data-block-wrapper="true"
+      data-block-id={id}
       onKeyDown={(event) => {
         // Ignore keydowns bubbling up from a focused descendant (e.g. typing
         // inside a text block's own editor) — only react when this wrapper
@@ -125,7 +139,17 @@ export function SortableBlockWrapper({
           {menuOpen && <BlockActionsMenu actions={actions} onClose={() => setMenuOpen(false)} />}
         </div>
       </div>
-      <div className={styles.content} ref={contentRef}>
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions --
+          These are mouse-only affordances layered on the parent wrapper div above, which is already the
+          keyboard-accessible interactive element (role="option", tabIndex, onKeyDown). */}
+      <div
+        className={styles.content}
+        ref={contentRef}
+        data-block-content="true"
+        onMouseDownCapture={onBlockMouseDown}
+        onMouseEnter={onBlockMouseEnter}
+        onClick={onBlockClick}
+      >
         {children}
       </div>
     </div>

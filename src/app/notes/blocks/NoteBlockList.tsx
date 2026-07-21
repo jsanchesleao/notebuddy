@@ -1,4 +1,4 @@
-import { useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import {
   closestCenter,
   DndContext,
@@ -25,6 +25,7 @@ import { EmbedBlock } from './EmbedBlock/EmbedBlock'
 import { TrailingTextBlock } from './TrailingTextBlock'
 import { computeMoveIndices } from './reorderBlocks'
 import { useBlockSelection, getRangePosition } from './useBlockSelection'
+import { isInteractiveBlockDescendant } from './blockInteractiveElements'
 import styles from './NoteBlockList.module.css'
 
 interface NoteBlockListProps {
@@ -71,6 +72,39 @@ export function NoteBlockList({ noteId, blockDocId }: NoteBlockListProps) {
   // imperatively from the block's own ref callback below (rather than a
   // state + effect pair) once it actually mounts as a real block.
   const pendingFocusEndIdRef = useRef<string | null>(null)
+
+  // Tracks an in-progress mouse drag-selection. Kept as a ref (not state)
+  // since `mouseenter` can fire many times per second while dragging, and
+  // none of this bookkeeping is itself render-worthy — only the resulting
+  // `selection.range` update (one per newly-entered block) is.
+  const dragSessionRef = useRef<{
+    anchorId: string
+    escalated: boolean
+    lastEnteredId: string
+  } | null>(null)
+  // The browser's `click` event that follows a mousedown/mouseup pair must be
+  // ignored whenever that pair already fully decided the selection itself —
+  // either a Shift+Click (handled synchronously in `handleBlockMouseDown`) or
+  // a drag that escalated into a range (decided across `handleBlockMouseEnter`
+  // calls, settled once `mouseup` fires). Read at click time, not re-derived
+  // from the click event's own modifier state, since e.g. releasing Shift a
+  // moment before releasing the mouse button would otherwise make a
+  // just-built Shift+Click range look like a plain click and collapse it.
+  const suppressNextClickRef = useRef(false)
+  // Whatever block last received focus by any means (click into a text
+  // block, a keyboard/mouse range landing on a wrapper, etc.) — used as the
+  // Shift+Click anchor fallback, since `selection.range` is frequently null
+  // at click time (a plain click already clears it via `onFocusCapture`).
+  const activeBlockIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      if (dragSessionRef.current?.escalated) suppressNextClickRef.current = true
+      dragSessionRef.current = null
+    }
+    window.addEventListener('mouseup', handleGlobalMouseUp)
+    return () => window.removeEventListener('mouseup', handleGlobalMouseUp)
+  }, [])
 
   if (isLoading) return null
 
@@ -218,6 +252,70 @@ export function NoteBlockList({ noteId, blockDocId }: NoteBlockListProps) {
     }
   }
 
+  const handleBlockMouseDown = (index: number, event: MouseEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return
+    const block = blocks[index]
+
+    if (event.shiftKey) {
+      // Whole-block gesture, like Shift+Arrow — never place a text caret.
+      event.preventDefault()
+      const anchorId = selection.range?.anchorId ?? activeBlockIdRef.current ?? block.id
+      if (block.id === anchorId) selection.clear()
+      else selection.extendTo(block.id, anchorId)
+      wrapperHandles.current.get(block.id)?.focus()
+      suppressNextClickRef.current = true
+      return
+    }
+
+    // Arm a potential drag-selection. No preventDefault: if this never
+    // escalates (drag stays inside this block, or it's a plain click),
+    // native behavior (caret placement, button focus, canvas drawing, etc.)
+    // is left completely untouched.
+    dragSessionRef.current = { anchorId: block.id, escalated: false, lastEnteredId: block.id }
+  }
+
+  const handleBlockMouseEnter = (index: number, event: MouseEvent<HTMLDivElement>) => {
+    const session = dragSessionRef.current
+    if (!session) return
+    // Defensive: the button was released outside the window (missed the
+    // global mouseup listener) and the pointer re-entered afterward.
+    if (event.buttons !== 1) {
+      dragSessionRef.current = null
+      return
+    }
+
+    const enteredId = blocks[index].id
+    if (enteredId === session.lastEnteredId) return
+    session.lastEnteredId = enteredId
+
+    if (!session.escalated) {
+      session.escalated = true
+      // Force-anchor on the mousedown block regardless of any selection
+      // clearing that already happened via `onFocusCapture` when native
+      // focus landed in its editor.
+      selection.selectBlock(session.anchorId)
+    }
+
+    // Cancel whatever native/ProseMirror selection formed while the pointer
+    // was still moving around inside the anchor block.
+    window.getSelection()?.removeAllRanges()
+    selection.extendTo(enteredId, session.anchorId)
+    wrapperHandles.current.get(enteredId)?.focus()
+  }
+
+  const handleBlockClick = (index: number, event: MouseEvent<HTMLDivElement>) => {
+    const suppressed = suppressNextClickRef.current
+    suppressNextClickRef.current = false
+    if (suppressed) return // a Shift+Click or an escalated drag already decided the selection
+
+    const block = blocks[index]
+    if (block.type === 'text') return // unchanged: native ProseMirror click-to-caret already ran
+    if (isInteractiveBlockDescendant(event.target)) return // let the control handle its own click
+
+    selection.selectBlock(block.id)
+    wrapperHandles.current.get(block.id)?.focus()
+  }
+
   const handleDragEnd = (event: DragEndEvent) => {
     const overId = event.over?.id
     if (overId === undefined) return
@@ -262,6 +360,8 @@ export function NoteBlockList({ noteId, blockDocId }: NoteBlockListProps) {
         // user moved on with the mouse/Tab, so any stale selection is cleared.
         const target = event.target as HTMLElement
         if (!target.hasAttribute('data-block-wrapper')) selection.clear()
+        const focusedId = target.closest('[data-block-wrapper]')?.getAttribute('data-block-id')
+        if (focusedId) activeBlockIdRef.current = focusedId
       }}
     >
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -291,6 +391,9 @@ export function NoteBlockList({ noteId, blockDocId }: NoteBlockListProps) {
               selected={selection.selectedIds.length === 1 && selection.selectedIds[0] === block.id}
               rangePosition={getRangePosition(selection.selectedIds, block.id)}
               onBlockKeyDown={(event) => handleWrapperKeyDown(index, event)}
+              onBlockMouseDown={(event) => handleBlockMouseDown(index, event)}
+              onBlockMouseEnter={(event) => handleBlockMouseEnter(index, event)}
+              onBlockClick={(event) => handleBlockClick(index, event)}
             >
               {block.type === 'text' && (
                 <TextBlock
