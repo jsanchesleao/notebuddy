@@ -4,10 +4,101 @@
   gap: var(--space-2);
 }
 
-.toolbar {
+.sketchFrame {
+  position: relative;
   display: flex;
+}
+
+.sketchFrame.alignLeft {
+  align-self: flex-start;
+}
+
+.sketchFrame.alignCenter {
+  align-self: center;
+}
+
+.sketchFrame.alignRight {
+  align-self: flex-end;
+}
+
+.toolbar {
+  position: absolute;
+  bottom: calc(100% - 0.5rem);
+  left: 50%;
+  z-index: 1;
+  display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   gap: var(--space-1);
+  padding: var(--space-1);
+  margin-bottom: var(--space-1);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%);
+  transition: opacity 0.1s ease-in-out;
+}
+
+.sketchFrame:hover .toolbar,
+.sketchFrame:focus-within .toolbar {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.divider {
+  flex-shrink: 0;
+  width: 1px;
+  height: 1.25rem;
+  background: var(--color-border);
+}
+
+.widthPresets {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-1);
+}
+
+.widthButton {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.widthButton.active {
+  color: var(--color-accent-fg);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.iconButton {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.iconButton:hover {
+  color: var(--color-text);
+  background: var(--color-bg-sidebar);
+}
+
+.iconButton[aria-pressed='true'] {
+  color: var(--color-accent-fg);
+  background: var(--color-accent);
 }
 
 .swatch {
@@ -44,7 +135,6 @@
 }
 
 .clearButton {
-  margin-left: auto;
   padding: var(--space-1) var(--space-2);
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);

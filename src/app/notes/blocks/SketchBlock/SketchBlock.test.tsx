@@ -38,7 +38,7 @@ describe('SketchBlock', () => {
     const onUpdate = vi.fn()
     render(<SketchBlock block={block} onUpdate={onUpdate} />)
 
-    fireEvent.click(screen.getByLabelText('Color #b3552a'))
+    fireEvent.click(screen.getByLabelText('Color #2f6f9e'))
     fireEvent.click(screen.getByLabelText('Stroke size 8'))
 
     const canvas = screen.getByRole('img', { name: 'Sketch canvas' })
@@ -47,7 +47,7 @@ describe('SketchBlock', () => {
     fireEvent.pointerUp(canvas, { clientX: 5, clientY: 5, pointerId: 1 })
 
     const [[patch]] = onUpdate.mock.calls
-    expect(patch.strokes[0]).toMatchObject({ color: '#b3552a', size: 8 })
+    expect(patch.strokes[0]).toMatchObject({ color: '#2f6f9e', size: 8 })
   })
 
   it('clears all strokes when Clear is clicked', () => {
@@ -76,5 +76,23 @@ describe('SketchBlock', () => {
     render(<SketchBlock block={block} onUpdate={vi.fn()} />)
 
     expect(screen.getByRole('button', { name: 'Clear' })).toBeDisabled()
+  })
+
+  it('updates displayWidth when a size preset is clicked', () => {
+    const block = createEmptyBlock('sketch')
+    const onUpdate = vi.fn()
+    render(<SketchBlock block={block} onUpdate={onUpdate} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'M' }))
+    expect(onUpdate).toHaveBeenCalledWith({ displayWidth: 480 })
+  })
+
+  it('updates align when an alignment button is clicked', () => {
+    const block = createEmptyBlock('sketch')
+    const onUpdate = vi.fn()
+    render(<SketchBlock block={block} onUpdate={onUpdate} />)
+
+    fireEvent.click(screen.getByLabelText('Align center'))
+    expect(onUpdate).toHaveBeenCalledWith({ align: 'center' })
   })
 })

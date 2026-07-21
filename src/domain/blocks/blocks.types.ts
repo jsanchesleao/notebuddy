@@ -20,7 +20,15 @@ export type NoteBlock =
       width?: number
       align?: 'left' | 'center' | 'right'
     }
-  | { type: 'sketch'; id: string; strokes: Stroke[]; width: number; height: number }
+  | {
+      type: 'sketch'
+      id: string
+      strokes: Stroke[]
+      width: number
+      height: number
+      displayWidth?: number
+      align?: 'left' | 'center' | 'right'
+    }
   | { type: 'code'; id: string; language: string; code: string }
   | { type: 'table'; id: string; rows: TableCell[][] }
   | { type: 'embed'; id: string; opfsPath: string; mimeType: string; caption?: string }
