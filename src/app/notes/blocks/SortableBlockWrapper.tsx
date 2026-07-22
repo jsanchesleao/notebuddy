@@ -12,6 +12,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { Icon } from '../../../components/Icon/Icon'
 import { useDismissableMenu } from '../../../components/Menu/useDismissableMenu'
 import { BlockActionsMenu, type BlockAction } from './BlockActionsMenu'
+import { isTextEntryElement } from './blockInteractiveElements'
 import styles from './SortableBlockWrapper.module.css'
 
 export type BlockRangePosition = 'top' | 'middle' | 'bottom'
@@ -38,9 +39,12 @@ interface SortableBlockWrapperProps {
   // This block's position within an active multi-block range selection —
   // draws a contiguous highlighted band instead of the single-block ring.
   rangePosition?: BlockRangePosition | null
-  // Only fires for keydowns that land directly on the wrapper itself (i.e.
-  // this block is keyboard-selected/focused as a whole), not ones bubbling
-  // up from a focused descendant such as a text block's own editor.
+  // Fires for keydowns anywhere within this block — the wrapper itself, the
+  // drag handle, a menu item, a toolbar button — so arrow-key/Backspace/
+  // Delete block navigation keeps working no matter which of the block's own
+  // controls currently has focus. The one exception is a genuine text-entry
+  // descendant (an input/textarea/select, or a text block's own editor),
+  // where arrow keys already have their own native meaning.
   onBlockKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void
   // Fired on the capture phase, before any native listener inside the block
   // (notably ProseMirror's own mousedown handler) sees the event — lets a
@@ -115,10 +119,12 @@ export function SortableBlockWrapper({
       data-block-wrapper="true"
       data-block-id={id}
       onKeyDown={(event) => {
-        // Ignore keydowns bubbling up from a focused descendant (e.g. typing
-        // inside a text block's own editor) — only react when this wrapper
-        // itself is the focused element.
-        if (event.target !== event.currentTarget) return
+        // Ignore keydowns from a focused text-entry descendant (typing inside
+        // a text block's own editor, an image caption, a code textarea, a
+        // table cell, etc.) — arrow keys there mean caret/selection movement,
+        // not block navigation. Any other descendant (buttons, the drag
+        // handle, menu items) still forwards up to block-level navigation.
+        if (isTextEntryElement(event.target)) return
         onBlockKeyDown?.(event)
       }}
     >

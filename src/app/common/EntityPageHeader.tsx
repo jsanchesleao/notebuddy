@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Icon, type IconName } from '../../components/Icon/Icon'
+import { useIsDesktop } from '../useIsDesktop'
 import styles from './EntityPageHeader.module.css'
 
 interface EntityPageHeaderProps {
@@ -8,6 +9,7 @@ interface EntityPageHeaderProps {
   entityLabel: string
   onRename: (title: string) => void | Promise<void>
   onDelete: () => void | Promise<void>
+  wideMode?: { isWide: boolean; onToggle: () => void }
 }
 
 export function EntityPageHeader({
@@ -16,8 +18,10 @@ export function EntityPageHeader({
   entityLabel,
   onRename,
   onDelete,
+  wideMode,
 }: EntityPageHeaderProps) {
   const [isRenaming, setIsRenaming] = useState(false)
+  const isDesktop = useIsDesktop()
   const [draftTitle, setDraftTitle] = useState(title)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
 
@@ -72,6 +76,16 @@ export function EntityPageHeader({
         <Icon name={icon} />
       </span>
       <h1 className={styles.title}>{title}</h1>
+      {wideMode && isDesktop && (
+        <button
+          type="button"
+          className={styles.iconButton}
+          aria-label={wideMode.isWide ? 'Use normal width' : 'Use wide width'}
+          onClick={wideMode.onToggle}
+        >
+          <Icon name={wideMode.isWide ? 'collapse' : 'expand'} />
+        </button>
+      )}
       <button
         type="button"
         className={styles.iconButton}

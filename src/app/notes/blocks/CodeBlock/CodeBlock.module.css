@@ -7,7 +7,7 @@
 .languageSelect {
   align-self: flex-start;
   padding: var(--space-1) var(--space-2);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-md);
   font-family: var(--font-ui);
   color: var(--color-text-muted);
   background: var(--color-bg-elevated);
@@ -28,7 +28,7 @@
   margin: 0;
   padding: var(--space-3);
   font-family: var(--font-mono);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-md);
   line-height: var(--line-height-normal);
   white-space: pre;
   tab-size: 2;

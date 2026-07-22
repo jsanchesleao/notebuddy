@@ -5,12 +5,14 @@ import { deleteNote, getNote, renameNote } from '../../domain/notes/noteReposito
 import { EntityPageHeader } from '../common/EntityPageHeader'
 import { Icon } from '../../components/Icon/Icon'
 import { NoteBlockList } from '../notes/blocks/NoteBlockList'
+import { useWideMode } from './useWideMode'
 import styles from './NotePage.module.css'
 
 export function NotePage() {
   const { noteId } = useParams<{ noteId: string }>()
   const navigate = useNavigate()
   const isDeletingRef = useRef(false)
+  const { isWide, toggleWide } = useWideMode()
 
   const note = useLiveQuery(
     () => (noteId ? getNote(noteId).then((found) => found ?? null) : Promise.resolve(null)),
@@ -30,7 +32,7 @@ export function NotePage() {
   const backTo = note.notebookId ? `/notebooks/${note.notebookId}` : '/'
 
   return (
-    <div className={styles.page}>
+    <div className={isWide ? `${styles.page} ${styles.pageWide}` : styles.page}>
       <Link to={backTo} className={styles.breadcrumb}>
         <Icon name="back" size={14} /> Back
       </Link>
@@ -44,6 +46,7 @@ export function NotePage() {
           await deleteNote(note.id)
           navigate(backTo, { replace: true })
         }}
+        wideMode={{ isWide, onToggle: toggleWide }}
       />
       <NoteBlockList key={note.blockDocId} noteId={note.id} blockDocId={note.blockDocId} />
     </div>

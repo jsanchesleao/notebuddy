@@ -3,6 +3,10 @@
   margin-inline: auto;
 }
 
+.pageWide {
+  max-width: 960px;
+}
+
 .breadcrumb {
   display: inline-block;
   font-size: var(--font-size-sm);

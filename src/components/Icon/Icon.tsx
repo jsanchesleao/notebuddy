@@ -38,6 +38,8 @@ import {
   AlignRight,
   AlignJustify,
   ChevronDown,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react'
 
 const ICONS = {
@@ -80,6 +82,8 @@ const ICONS = {
   alignRight: AlignRight,
   alignJustify: AlignJustify,
   chevronDown: ChevronDown,
+  expand: Maximize2,
+  collapse: Minimize2,
 } as const
 
 export type IconName = keyof typeof ICONS

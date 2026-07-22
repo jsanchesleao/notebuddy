@@ -502,6 +502,41 @@ describe('NoteBlockList', () => {
     expect(reloaded.blocks[0].type).toBe('text')
   })
 
+  it('ArrowDown fired from a non-text block\'s own control (not the wrapper) still navigates to the next block', async () => {
+    const docId = createId()
+    const { doc } = await loadNoteBlocks(docId)
+    await insertBlock(docId, doc, createEmptyBlock('table'), 0)
+    await insertBlock(docId, doc, textBlockWith('Hi'), 1)
+
+    render(<NoteBlockList noteId="note-1" blockDocId={docId} />)
+    await waitFor(() => expect(screen.getByLabelText('Row 1, column 1')).toBeInTheDocument())
+
+    // Fired on an internal control (the row-delete button), not the wrapper
+    // div itself — simulates focus having Tab-ed into the block's own chrome.
+    const deleteRowButton = screen.getByLabelText('Delete row 1')
+    fireEvent.keyDown(deleteRowButton, { key: 'ArrowDown' })
+
+    await waitFor(() => {
+      expect(document.activeElement?.closest('.ProseMirror')).toBeTruthy()
+    })
+  })
+
+  it('ArrowDown inside a table cell input does not navigate away from it', async () => {
+    const docId = createId()
+    const { doc } = await loadNoteBlocks(docId)
+    await insertBlock(docId, doc, createEmptyBlock('table'), 0)
+    await insertBlock(docId, doc, textBlockWith('Hi'), 1)
+
+    render(<NoteBlockList noteId="note-1" blockDocId={docId} />)
+    const cellInput = await screen.findByLabelText('Row 1, column 1')
+    cellInput.focus()
+
+    fireEvent.keyDown(cellInput, { key: 'ArrowDown' })
+
+    expect(document.activeElement).toBe(cellInput)
+    expect(document.querySelectorAll('[data-block-wrapper][aria-selected="true"]').length).toBe(0)
+  })
+
   it('Shift+ArrowDown builds a multi-block range, and Backspace deletes the whole range', async () => {
     const docId = createId()
     const { doc } = await loadNoteBlocks(docId)
