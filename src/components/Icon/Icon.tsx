@@ -40,6 +40,8 @@ import {
   ChevronDown,
   Maximize2,
   Minimize2,
+  Lock,
+  Unlock,
 } from 'lucide-react'
 
 const ICONS = {
@@ -84,6 +86,8 @@ const ICONS = {
   chevronDown: ChevronDown,
   expand: Maximize2,
   collapse: Minimize2,
+  lock: Lock,
+  unlock: Unlock,
 } as const
 
 export type IconName = keyof typeof ICONS

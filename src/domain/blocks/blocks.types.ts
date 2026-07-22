@@ -28,6 +28,7 @@ export type NoteBlock =
       height: number
       displayWidth?: number
       align?: 'left' | 'center' | 'right'
+      locked?: boolean
     }
   | { type: 'code'; id: string; language: string; code: string }
   | { type: 'table'; id: string; rows: TableCell[][] }

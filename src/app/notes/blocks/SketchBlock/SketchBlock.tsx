@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { strokeToPath } from './strokeToPath'
 import { TEXT_COLOR_PRESETS } from '../TextBlock/textColorPresets'
@@ -32,15 +32,72 @@ const ALIGN_CLASS: Record<Alignment, string> = {
 
 interface SketchBlockProps {
   block: Extract<NoteBlock, { type: 'sketch' }>
-  onUpdate: (patch: { strokes?: Stroke[]; displayWidth?: number; align?: Alignment }) => void
+  onUpdate: (patch: {
+    strokes?: Stroke[]
+    displayWidth?: number
+    align?: Alignment
+    locked?: boolean
+  }) => void
 }
 
 export function SketchBlock({ block, onUpdate }: SketchBlockProps) {
   const [color, setColor] = useState(DEFAULT_COLORS[0])
   const [size, setSize] = useState(DEFAULT_SIZES[1])
   const [drawingPoints, setDrawingPoints] = useState<Stroke['points'] | null>(null)
+  const [isFocused, setIsFocused] = useState(false)
   const svgRef = useRef<SVGSVGElement>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const drawingPointsRef = useRef<Stroke['points'] | null>(null)
+  // Mirrors color/size so a blur-triggered commit (fired from a document-level
+  // listener whose closure isn't refreshed on every render) always uses the
+  // stroke's actual color/size rather than whatever was current when that
+  // listener was last (re)attached.
+  const styleRef = useRef({ color, size })
   const align = block.align ?? 'left'
+  const locked = block.locked ?? false
+
+  useEffect(() => {
+    styleRef.current = { color, size }
+  })
+
+  const updateDrawingPoints = (points: Stroke['points'] | null) => {
+    drawingPointsRef.current = points
+    setDrawingPoints(points)
+  }
+
+  const commitDrawing = () => {
+    const points = drawingPointsRef.current
+    if (!points || points.length === 0) {
+      updateDrawingPoints(null)
+      return
+    }
+    const stroke: Stroke = { points, color: styleRef.current.color, size: styleRef.current.size }
+    updateDrawingPoints(null)
+    onUpdate({ strokes: [...block.strokes, stroke] })
+  }
+
+  // Kept current every render so the outside-pointerdown effect below can
+  // call the latest commitDrawing (closing over the latest block/onUpdate)
+  // without needing to tear down and re-add its document listener whenever
+  // those change.
+  const commitDrawingRef = useRef(commitDrawing)
+  useEffect(() => {
+    commitDrawingRef.current = commitDrawing
+  })
+
+  // Mirrors the capture-phase document pointerdown pattern in
+  // useDismissableMenu: while armed, any pointerdown outside the block blurs
+  // it (and commits an in-progress stroke, rather than discarding it).
+  useEffect(() => {
+    if (!isFocused) return
+    const handleOutsidePointerDown = (event: PointerEvent) => {
+      if (wrapperRef.current?.contains(event.target as Node)) return
+      if (drawingPointsRef.current) commitDrawingRef.current()
+      setIsFocused(false)
+    }
+    document.addEventListener('pointerdown', handleOutsidePointerDown, true)
+    return () => document.removeEventListener('pointerdown', handleOutsidePointerDown, true)
+  }, [isFocused])
 
   const toLocalPoint = (event: ReactPointerEvent<SVGSVGElement>): [number, number, number] => {
     const rect = svgRef.current?.getBoundingClientRect()
@@ -51,31 +108,42 @@ export function SketchBlock({ block, onUpdate }: SketchBlockProps) {
     return [x, y, event.pressure || 0.5]
   }
 
+  const handleWrapperPointerDown = () => {
+    setIsFocused(true)
+  }
+
   const handlePointerDown = (event: ReactPointerEvent<SVGSVGElement>) => {
+    if (locked) return
     event.preventDefault()
+    if (!isFocused) {
+      // First tap only arms the block for drawing -- it must never start a
+      // stroke itself, so an accidental scroll/select gesture can't leave a mark.
+      setIsFocused(true)
+      return
+    }
     event.currentTarget.setPointerCapture(event.pointerId)
-    setDrawingPoints([toLocalPoint(event)])
+    updateDrawingPoints([toLocalPoint(event)])
   }
 
   const handlePointerMove = (event: ReactPointerEvent<SVGSVGElement>) => {
-    if (!drawingPoints) return
+    if (locked || !drawingPoints) return
     event.preventDefault()
-    setDrawingPoints([...drawingPoints, toLocalPoint(event)])
+    updateDrawingPoints([...drawingPoints, toLocalPoint(event)])
   }
 
   const handlePointerUp = () => {
-    if (!drawingPoints || drawingPoints.length === 0) {
-      setDrawingPoints(null)
-      return
-    }
-    const stroke: Stroke = { points: drawingPoints, color, size }
-    setDrawingPoints(null)
-    onUpdate({ strokes: [...block.strokes, stroke] })
+    commitDrawing()
+  }
+
+  const handleToggleLock = () => {
+    onUpdate({ locked: !locked })
   }
 
   return (
-    <div className={styles.sketchBlock}>
-      <div className={`${styles.sketchFrame} ${ALIGN_CLASS[align]}`}>
+    <div ref={wrapperRef} className={styles.sketchBlock} onPointerDown={handleWrapperPointerDown}>
+      <div
+        className={`${styles.sketchFrame} ${ALIGN_CLASS[align]} ${isFocused ? styles.focused : ''}`}
+      >
         <div className={styles.toolbar}>
           {DEFAULT_COLORS.map((swatch) => (
             <button
@@ -85,6 +153,7 @@ export function SketchBlock({ block, onUpdate }: SketchBlockProps) {
               style={{ background: swatch }}
               aria-label={`Color ${swatch}`}
               onClick={() => setColor(swatch)}
+              disabled={locked}
             />
           ))}
           {DEFAULT_SIZES.map((option) => (
@@ -96,6 +165,7 @@ export function SketchBlock({ block, onUpdate }: SketchBlockProps) {
               }
               aria-label={`Stroke size ${option}`}
               onClick={() => setSize(option)}
+              disabled={locked}
             >
               {option}
             </button>
@@ -104,7 +174,7 @@ export function SketchBlock({ block, onUpdate }: SketchBlockProps) {
             type="button"
             className={styles.clearButton}
             onClick={() => onUpdate({ strokes: [] })}
-            disabled={block.strokes.length === 0}
+            disabled={locked || block.strokes.length === 0}
           >
             Clear
           </button>
@@ -120,6 +190,7 @@ export function SketchBlock({ block, onUpdate }: SketchBlockProps) {
                     : styles.widthButton
                 }
                 onClick={() => onUpdate({ displayWidth: preset.value })}
+                disabled={locked}
               >
                 {preset.label}
               </button>
@@ -134,14 +205,25 @@ export function SketchBlock({ block, onUpdate }: SketchBlockProps) {
               aria-label={option.label}
               aria-pressed={align === option.value}
               onClick={() => onUpdate({ align: option.value })}
+              disabled={locked}
             >
               <Icon name={option.icon} size={14} />
             </button>
           ))}
+          <div className={styles.divider} />
+          <button
+            type="button"
+            className={styles.iconButton}
+            aria-label={locked ? 'Unlock sketch' : 'Lock sketch'}
+            aria-pressed={locked}
+            onClick={handleToggleLock}
+          >
+            <Icon name={locked ? 'unlock' : 'lock'} size={14} />
+          </button>
         </div>
         <svg
           ref={svgRef}
-          className={styles.canvas}
+          className={`${styles.canvas} ${isFocused && !locked ? styles.focused : ''} ${locked ? styles.locked : ''}`}
           width={block.width}
           height={block.height}
           viewBox={`0 0 ${block.width} ${block.height}`}
@@ -161,6 +243,11 @@ export function SketchBlock({ block, onUpdate }: SketchBlockProps) {
             <path d={strokeToPath({ points: drawingPoints, size })} fill={color} />
           )}
         </svg>
+        {locked && (
+          <div className={styles.lockWatermark}>
+            <Icon name="lock" size={48} />
+          </div>
+        )}
       </div>
     </div>
   )
