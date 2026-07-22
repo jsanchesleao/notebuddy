@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { createLocalStorageKey } from '../lib/storage/localStorageKey'
+import { useIsMobile } from './useIsMobile'
 
 type SidebarOpenValue = 'open' | 'closed'
 
@@ -13,12 +14,6 @@ const mobileStorage = createLocalStorageKey<SidebarOpenValue>(
   'notebuddy:sidebar-open-mobile',
   SIDEBAR_OPEN_VALUES,
 )
-
-const DESKTOP_MEDIA_QUERY = '(min-width: 768px)'
-
-function isDesktopViewport(): boolean {
-  return window.matchMedia(DESKTOP_MEDIA_QUERY).matches
-}
 
 function storageFor(isDesktop: boolean) {
   return isDesktop ? desktopStorage : mobileStorage
@@ -35,18 +30,15 @@ interface SidebarOpenState {
 }
 
 export function useSidebarOpen(): SidebarOpenState {
-  const [isDesktop, setIsDesktop] = useState(isDesktopViewport)
+  const isMobile = useIsMobile()
+  const isDesktop = !isMobile
+  const [breakpointDesktop, setBreakpointDesktop] = useState(isDesktop)
   const [open, setOpenState] = useState(() => readOpen(isDesktop))
 
-  useEffect(() => {
-    const mediaQuery = window.matchMedia(DESKTOP_MEDIA_QUERY)
-    const handleChange = (event: MediaQueryListEvent) => {
-      setIsDesktop(event.matches)
-      setOpenState(readOpen(event.matches))
-    }
-    mediaQuery.addEventListener('change', handleChange)
-    return () => mediaQuery.removeEventListener('change', handleChange)
-  }, [])
+  if (isDesktop !== breakpointDesktop) {
+    setBreakpointDesktop(isDesktop)
+    setOpenState(readOpen(isDesktop))
+  }
 
   const setOpen = (value: boolean) => {
     storageFor(isDesktop).set(value ? 'open' : 'closed')

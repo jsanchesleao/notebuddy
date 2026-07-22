@@ -91,7 +91,7 @@ describe('AppShell FAB visibility', () => {
 
 describe('AppShell sidebar toggle persistence', () => {
   it('defaults open on desktop and persists closing it to the desktop key only', async () => {
-    const restore = stubMatchMedia(true)
+    const restore = stubMatchMedia(false)
     const user = userEvent.setup()
 
     renderAppShell(['/'])
@@ -109,7 +109,7 @@ describe('AppShell sidebar toggle persistence', () => {
   })
 
   it('defaults closed on mobile and persists opening it to the mobile key only', async () => {
-    const restore = stubMatchMedia(false)
+    const restore = stubMatchMedia(true)
     const user = userEvent.setup()
 
     renderAppShell(['/'])

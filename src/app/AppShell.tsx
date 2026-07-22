@@ -1,9 +1,12 @@
+import { useRef } from 'react'
 import { Sidebar } from './Sidebar/Sidebar'
 import { Fab } from './Fab/Fab'
 import { ThemeToggle } from '../theme/ThemeToggle'
 import { AppRoutes } from './routes'
 import { useCurrentRouteContext } from './routeContext'
 import { useSidebarOpen } from './useSidebarOpen'
+import { useIsMobile } from './useIsMobile'
+import { useHeaderCompact } from './useHeaderCompact'
 import { Icon } from '../components/Icon/Icon'
 import styles from './AppShell.module.css'
 
@@ -11,9 +14,12 @@ export function AppShell() {
   const { open: sidebarOpen, toggle: toggleSidebar, setOpen: setSidebarOpen } = useSidebarOpen()
   const { routeKind, folderId, notebookId, noteId } = useCurrentRouteContext()
   const showFab = routeKind === 'home' || routeKind === 'folder' || routeKind === 'notebook'
+  const mainRef = useRef<HTMLElement>(null)
+  const isMobile = useIsMobile()
+  const headerCompact = useHeaderCompact(mainRef, isMobile)
 
   return (
-    <div className={styles.shell}>
+    <div className={`${styles.shell} ${headerCompact ? styles.headerCompact : ''}`}>
       <header className={styles.header}>
         <button
           type="button"
@@ -40,7 +46,7 @@ export function AppShell() {
           notebookId={notebookId}
           noteId={noteId}
         />
-        <main className={styles.main}>
+        <main className={styles.main} ref={mainRef}>
           <AppRoutes />
         </main>
       </div>
