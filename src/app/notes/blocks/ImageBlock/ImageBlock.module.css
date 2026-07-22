@@ -69,6 +69,15 @@
   pointer-events: auto;
 }
 
+@media (max-width: 767px) {
+  .toolbar {
+    left: 0;
+    max-width: calc(100vw - 2 * var(--space-3));
+    flex-wrap: wrap;
+    transform: none;
+  }
+}
+
 .iconButton {
   display: inline-flex;
   flex-shrink: 0;

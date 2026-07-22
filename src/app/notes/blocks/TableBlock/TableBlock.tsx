@@ -62,50 +62,52 @@ export function TableBlock({ block, onUpdate }: TableBlockProps) {
 
   return (
     <div className={styles.tableBlock}>
-      <table className={styles.table}>
-        <tbody>
-          {rows.map((row, rowIndex) => (
-            <tr key={rowIndex}>
-              {row.map((cell, colIndex) => (
-                <td key={colIndex}>
-                  <input
-                    className={styles.cell}
-                    value={cell.value}
-                    onChange={(event) => setCell(rowIndex, colIndex, event.target.value)}
-                    aria-label={`Row ${rowIndex + 1}, column ${colIndex + 1}`}
-                  />
+      <div className={styles.tableScroll}>
+        <table className={styles.table}>
+          <tbody>
+            {rows.map((row, rowIndex) => (
+              <tr key={rowIndex}>
+                {row.map((cell, colIndex) => (
+                  <td key={colIndex}>
+                    <input
+                      className={styles.cell}
+                      value={cell.value}
+                      onChange={(event) => setCell(rowIndex, colIndex, event.target.value)}
+                      aria-label={`Row ${rowIndex + 1}, column ${colIndex + 1}`}
+                    />
+                  </td>
+                ))}
+                <td className={styles.rowAction}>
+                  <button
+                    type="button"
+                    className={styles.smallButton}
+                    onClick={() => removeRow(rowIndex)}
+                    aria-label={`Delete row ${rowIndex + 1}`}
+                    disabled={rows.length <= 1}
+                  >
+                    <Icon name="delete" size={12} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+            <tr>
+              {Array.from({ length: columnCount }, (_, colIndex) => (
+                <td key={colIndex} className={styles.columnAction}>
+                  <button
+                    type="button"
+                    className={styles.smallButton}
+                    onClick={() => removeColumn(colIndex)}
+                    aria-label={`Delete column ${colIndex + 1}`}
+                    disabled={columnCount <= 1}
+                  >
+                    <Icon name="delete" size={12} />
+                  </button>
                 </td>
               ))}
-              <td className={styles.rowAction}>
-                <button
-                  type="button"
-                  className={styles.smallButton}
-                  onClick={() => removeRow(rowIndex)}
-                  aria-label={`Delete row ${rowIndex + 1}`}
-                  disabled={rows.length <= 1}
-                >
-                  <Icon name="delete" size={12} />
-                </button>
-              </td>
             </tr>
-          ))}
-          <tr>
-            {Array.from({ length: columnCount }, (_, colIndex) => (
-              <td key={colIndex} className={styles.columnAction}>
-                <button
-                  type="button"
-                  className={styles.smallButton}
-                  onClick={() => removeColumn(colIndex)}
-                  aria-label={`Delete column ${colIndex + 1}`}
-                  disabled={columnCount <= 1}
-                >
-                  <Icon name="delete" size={12} />
-                </button>
-              </td>
-            ))}
-          </tr>
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
       <div className={styles.footer}>
         <button type="button" className={styles.addButton} onClick={addRow}>
           <Icon name="add" size={12} /> Row

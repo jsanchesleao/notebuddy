@@ -66,6 +66,10 @@
   .menuButton {
     display: inline-flex;
   }
+
+  .main {
+    padding: var(--space-3);
+  }
 }
 
 @media (min-width: 768px) {
