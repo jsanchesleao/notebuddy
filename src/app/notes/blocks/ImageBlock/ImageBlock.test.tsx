@@ -122,12 +122,34 @@ describe('ImageBlock', () => {
     expect(screen.getByLabelText('Image caption')).toHaveFocus()
   })
 
-  it('renders no static caption text when the caption is empty', () => {
+  it('renders an "Add caption" button instead of static caption text when the caption is empty', () => {
     const block = createEmptyBlock('image')
     render(<ImageBlock block={block} noteId="note-1" onUpdate={vi.fn()} />)
 
-    // Toolbar-only buttons: replace, 4 width presets, 3 alignment — no caption button.
-    expect(screen.getAllByRole('button')).toHaveLength(8)
+    // Toolbar buttons: replace, 4 width presets, 3 alignment, plus the add-caption button.
+    expect(screen.getAllByRole('button')).toHaveLength(9)
+    expect(screen.getByRole('button', { name: 'Add caption' })).toBeInTheDocument()
     expect(screen.getByLabelText('Image caption')).toHaveValue('')
+  })
+
+  it('focuses the caption input when the "Add caption" button is clicked', async () => {
+    const block = createEmptyBlock('image')
+    const user = userEvent.setup()
+
+    render(<ImageBlock block={block} noteId="note-1" onUpdate={vi.fn()} />)
+
+    expect(screen.getByLabelText('Image caption')).not.toHaveFocus()
+    await user.click(screen.getByRole('button', { name: 'Add caption' }))
+    expect(screen.getByLabelText('Image caption')).toHaveFocus()
+  })
+
+  it('keeps the rest of the toolbar out of the tab order until the block is hovered or focused, but always leaves the choose-image button reachable', () => {
+    const block = createEmptyBlock('image')
+    render(<ImageBlock block={block} noteId="note-1" onUpdate={vi.fn()} />)
+
+    expect(screen.getByRole('button', { name: 'Choose image' })).not.toHaveAttribute('tabIndex')
+    expect(screen.getByRole('button', { name: 'M' })).toHaveAttribute('tabIndex', '-1')
+    expect(screen.getByRole('button', { name: 'Align center' })).toHaveAttribute('tabIndex', '-1')
+    expect(screen.getByRole('button', { name: 'Add caption' })).toHaveAttribute('tabIndex', '-1')
   })
 })

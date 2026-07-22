@@ -20,7 +20,7 @@ describe('Sidebar', () => {
   it('shows empty-state text when there is no data', async () => {
     render(
       <MemoryRouter>
-        <Sidebar open={false} currentFolderId={null} />
+        <Sidebar open={false} routeKind="home" folderId={null} notebookId={null} noteId={null} />
       </MemoryRouter>,
     )
 
@@ -32,7 +32,7 @@ describe('Sidebar', () => {
   it('does not show an up-link at the root', async () => {
     render(
       <MemoryRouter>
-        <Sidebar open={false} currentFolderId={null} />
+        <Sidebar open={false} routeKind="home" folderId={null} notebookId={null} noteId={null} />
       </MemoryRouter>,
     )
 
@@ -43,7 +43,7 @@ describe('Sidebar', () => {
   it('reactively lists root-level folders and notebooks as they are created elsewhere', async () => {
     render(
       <MemoryRouter>
-        <Sidebar open={false} currentFolderId={null} />
+        <Sidebar open={false} routeKind="home" folderId={null} notebookId={null} noteId={null} />
       </MemoryRouter>,
     )
 
@@ -70,7 +70,13 @@ describe('Sidebar', () => {
 
     render(
       <MemoryRouter>
-        <Sidebar open={false} currentFolderId={subfolder.id} />
+        <Sidebar
+          open={false}
+          routeKind="folder"
+          folderId={subfolder.id}
+          notebookId={null}
+          noteId={null}
+        />
       </MemoryRouter>,
     )
 
@@ -87,7 +93,13 @@ describe('Sidebar', () => {
 
     render(
       <MemoryRouter>
-        <Sidebar open={false} currentFolderId={folder.id} />
+        <Sidebar
+          open={false}
+          routeKind="folder"
+          folderId={folder.id}
+          notebookId={null}
+          noteId={null}
+        />
       </MemoryRouter>,
     )
 

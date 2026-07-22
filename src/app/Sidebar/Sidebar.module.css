@@ -5,6 +5,9 @@
   border-right: 1px solid var(--color-border);
   padding: var(--space-4);
   overflow-y: auto;
+  transition:
+    width 0.2s ease,
+    padding 0.2s ease;
 }
 
 .empty {
@@ -44,6 +47,31 @@
 
 .link:hover {
   color: var(--color-accent);
+}
+
+.currentNotebook {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.activeLink {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+@media (min-width: 768px) {
+  .sidebar:not(.open) {
+    width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    border-right-width: 0;
+    overflow: hidden;
+  }
 }
 
 @media (max-width: 767px) {

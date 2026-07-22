@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type MouseEvent } from 'react'
+import { useEffect, useRef, useState, type FocusEvent, type MouseEvent } from 'react'
 import { createId } from '../../../../domain/ids'
 import { buildAssetPath } from '../../../../lib/opfs/opfsPaths'
 import { getOpfsDriver } from '../../../../lib/opfs/opfsDriver'
@@ -51,11 +51,14 @@ export function ImageBlock({
   onPickerOpened,
 }: ImageBlockProps) {
   const [caption, setCaption] = useState(block.caption ?? '')
+  const [hovered, setHovered] = useState(false)
+  const [focused, setFocused] = useState(false)
   const captionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const captionInputRef = useRef<HTMLInputElement>(null)
   const url = useOpfsBlobUrl(block.opfsPath)
   const align = block.align ?? 'left'
+  const revealed = hovered || focused
 
   useEffect(() => {
     if (!autoOpenPicker) return
@@ -70,7 +73,15 @@ export function ImageBlock({
   }
 
   return (
-    <div className={styles.imageBlock}>
+    <div
+      className={styles.imageBlock}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocus={() => setFocused(true)}
+      onBlur={(event: FocusEvent<HTMLDivElement>) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false)
+      }}
+    >
       <div className={`${styles.imageFrame} ${ALIGN_CLASS[align]}`}>
         {url ? (
           <img
@@ -126,6 +137,7 @@ export function ImageBlock({
                     ? `${styles.widthButton} ${styles.active}`
                     : styles.widthButton
                 }
+                tabIndex={revealed ? 0 : -1}
                 onClick={() => onUpdate({ width: preset.value })}
               >
                 {preset.label}
@@ -140,6 +152,7 @@ export function ImageBlock({
               className={styles.iconButton}
               aria-label={label}
               aria-pressed={align === value}
+              tabIndex={revealed ? 0 : -1}
               onClick={() => onUpdate({ align: value })}
             >
               <Icon name={icon} size={14} />
@@ -147,7 +160,7 @@ export function ImageBlock({
           ))}
         </div>
       </div>
-      {caption && (
+      {caption ? (
         <button
           type="button"
           className={styles.captionText}
@@ -159,6 +172,17 @@ export function ImageBlock({
           onClick={() => captionInputRef.current?.focus()}
         >
           {caption}
+        </button>
+      ) : (
+        <button
+          type="button"
+          className={styles.addCaptionButton}
+          tabIndex={revealed ? 0 : -1}
+          onMouseDown={(event: MouseEvent) => event.preventDefault()}
+          onClick={() => captionInputRef.current?.focus()}
+        >
+          <Icon name="add" size={12} />
+          Add caption
         </button>
       )}
       <input

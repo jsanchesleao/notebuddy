@@ -1,83 +1,27 @@
-import { useLiveQuery } from 'dexie-react-hooks'
-import { Link } from 'react-router-dom'
-import { SidebarSection } from './SidebarSection'
-import { getFolder, listFoldersByParent } from '../../domain/folders/folderRepository'
-import { listNotebooksByFolder } from '../../domain/notebooks/notebookRepository'
-import { listBoardsByFolder } from '../../domain/boards/boardRepository'
-import { Icon } from '../../components/Icon/Icon'
+import type { RouteKind } from '../routeContext'
+import { SidebarFolderView } from './SidebarFolderView'
+import { SidebarNotebookView } from './SidebarNotebookView'
+import { SidebarNoteResolver } from './SidebarNoteResolver'
 import styles from './Sidebar.module.css'
 
 interface SidebarProps {
   open: boolean
-  currentFolderId: string | null
+  routeKind: RouteKind
+  folderId: string | null
+  notebookId: string | null
+  noteId: string | null
 }
 
-export function Sidebar({ open, currentFolderId }: SidebarProps) {
-  const folders = useLiveQuery(() => listFoldersByParent(currentFolderId), [currentFolderId])
-  const notebooks = useLiveQuery(() => listNotebooksByFolder(currentFolderId), [currentFolderId])
-  const boards = useLiveQuery(() => listBoardsByFolder(currentFolderId), [currentFolderId])
-  const currentFolder = useLiveQuery(
-    () => (currentFolderId ? getFolder(currentFolderId) : Promise.resolve(null)),
-    [currentFolderId],
-  )
-
-  const upTo =
-    currentFolderId && currentFolder
-      ? currentFolder.parentFolderId
-        ? `/folders/${currentFolder.parentFolderId}`
-        : '/'
-      : null
-
+export function Sidebar({ open, routeKind, folderId, notebookId, noteId }: SidebarProps) {
   return (
     <nav className={`${styles.sidebar} ${open ? styles.open : ''}`} aria-label="Primary">
-      {upTo && (
-        <Link to={upTo} className={styles.upLink}>
-          <Icon name="up" size={14} /> Up
-        </Link>
+      {routeKind === 'notebook' && notebookId ? (
+        <SidebarNotebookView notebookId={notebookId} activeNoteId={null} />
+      ) : routeKind === 'note' && noteId ? (
+        <SidebarNoteResolver noteId={noteId} />
+      ) : (
+        <SidebarFolderView currentFolderId={folderId} />
       )}
-      <SidebarSection title="Folders">
-        {folders?.length ? (
-          <ul className={styles.list}>
-            {folders.map((folder) => (
-              <li key={folder.id}>
-                <Link to={`/folders/${folder.id}`} className={styles.link}>
-                  {folder.title}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className={styles.empty}>No folders yet</p>
-        )}
-      </SidebarSection>
-      <SidebarSection title="Notebooks">
-        {notebooks?.length ? (
-          <ul className={styles.list}>
-            {notebooks.map((notebook) => (
-              <li key={notebook.id}>
-                <Link to={`/notebooks/${notebook.id}`} className={styles.link}>
-                  {notebook.title}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className={styles.empty}>No notebooks yet</p>
-        )}
-      </SidebarSection>
-      <SidebarSection title="Boards">
-        {boards?.length ? (
-          <ul className={styles.list}>
-            {boards.map((board) => (
-              <li key={board.id}>
-                <span className={styles.link}>{board.title}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className={styles.empty}>No boards yet</p>
-        )}
-      </SidebarSection>
     </nav>
   )
 }
