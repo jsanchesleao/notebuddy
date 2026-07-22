@@ -80,7 +80,13 @@ export function TextBlock({
   const onDeleteAtEndRef = useRef(onDeleteAtEnd)
   const [slashQuery, setSlashQuery] = useState<string | null>(null)
   const slashQueryRef = useRef(slashQuery)
+  // Remembers the exact query string that was showing when the user
+  // Escape-dismissed the slash menu, so a second Escape (with no typing in
+  // between) can bring back that same menu rather than requiring the query
+  // to be re-typed.
+  const dismissedSlashQueryRef = useRef<string | null>(null)
   const [isFocused, setIsFocused] = useState(false)
+  const [isToolbarDismissed, setIsToolbarDismissed] = useState(false)
   useEffect(() => {
     onUpdateRef.current = onUpdate
     onConvertRef.current = onConvert
@@ -120,6 +126,15 @@ export function TextBlock({
         // Let the slash-command menu's own keyboard handling (navigate/select
         // the menu, or edit the "/xxx" query text) win over all of the below.
         if (slashQueryRef.current !== null) return false
+
+        // A pending Escape-dismissed slash query takes priority over the
+        // toolbar toggle below — it's the more recent/specific dismissal.
+        if (event.key === 'Escape' && dismissedSlashQueryRef.current !== null) {
+          event.preventDefault()
+          setSlashQuery(dismissedSlashQueryRef.current)
+          dismissedSlashQueryRef.current = null
+          return true
+        }
 
         const flushPendingSave = () => {
           if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
@@ -180,6 +195,12 @@ export function TextBlock({
           return true
         }
 
+        if (noModifiers && !event.shiftKey && event.key === 'Escape') {
+          event.preventDefault()
+          setIsToolbarDismissed((dismissed) => !dismissed)
+          return true
+        }
+
         if (noModifiers && !event.shiftKey && event.key === 'Backspace') {
           // Inside a list item, defer to the ListKeymap extension's own
           // Backspace handling (outdent one level, or dissolve to a plain
@@ -210,7 +231,14 @@ export function TextBlock({
       },
     },
     onUpdate: ({ editor }) => {
-      setSlashQuery(parseSlashQuery(editor.getText()))
+      const parsedSlashQuery = parseSlashQuery(editor.getText())
+      // Keep the menu hidden only while the parsed query still matches what
+      // was Escape-dismissed — typing something that changes the query (e.g.
+      // "/tod" -> "/toda") clears the dismissal and shows the menu again.
+      if (parsedSlashQuery !== dismissedSlashQueryRef.current) {
+        dismissedSlashQueryRef.current = null
+      }
+      setSlashQuery(dismissedSlashQueryRef.current !== null ? null : parsedSlashQuery)
 
       hasPendingSaveRef.current = true
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
@@ -234,7 +262,11 @@ export function TextBlock({
     if (!editor) return
 
     const handleFocus = () => setIsFocused(true)
-    const handleBlur = () => setIsFocused(false)
+    const handleBlur = () => {
+      setIsFocused(false)
+      setIsToolbarDismissed(false)
+      dismissedSlashQueryRef.current = null
+    }
     editor.on('focus', handleFocus)
     editor.on('blur', handleBlur)
     return () => {
@@ -293,7 +325,7 @@ export function TextBlock({
 
   return (
     <div className={styles.textBlock}>
-      {editor && isFocused && (
+      {editor && isFocused && !isToolbarDismissed && (
         <div className={styles.pinnedToolbar}>
           <TextFormattingToolbar editor={editor} />
         </div>
@@ -333,7 +365,10 @@ export function TextBlock({
             hasPendingSaveRef.current = false
             onUpdateRef.current({ content: editor.getJSON() })
           }}
-          onClose={() => setSlashQuery(null)}
+          onClose={() => {
+            dismissedSlashQueryRef.current = slashQuery
+            setSlashQuery(null)
+          }}
         />
       )}
     </div>

@@ -58,4 +58,34 @@ describe('useDismissableMenu', () => {
     })
     expect(queryByTestId('menu')).not.toBeInTheDocument()
   })
+
+  it('reopens on a second Escape after being closed by Escape', async () => {
+    const user = userEvent.setup()
+    const { getByText, queryByTestId } = render(<Harness />)
+
+    await user.click(getByText('Open'))
+    await act(async () => {
+      await user.keyboard('{Escape}')
+    })
+    expect(queryByTestId('menu')).not.toBeInTheDocument()
+
+    await act(async () => {
+      await user.keyboard('{Escape}')
+    })
+    expect(queryByTestId('menu')).toBeInTheDocument()
+  })
+
+  it('does not reopen on Escape after being closed by an outside click', async () => {
+    const user = userEvent.setup()
+    const { getByText, getByTestId, queryByTestId } = render(<Harness />)
+
+    await user.click(getByText('Open'))
+    await user.click(getByTestId('outside'))
+    expect(queryByTestId('menu')).not.toBeInTheDocument()
+
+    await act(async () => {
+      await user.keyboard('{Escape}')
+    })
+    expect(queryByTestId('menu')).not.toBeInTheDocument()
+  })
 })

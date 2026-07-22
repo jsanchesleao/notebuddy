@@ -112,6 +112,84 @@ describe('TextBlock', () => {
     expect(queryByLabelText('Bold')).not.toBeInTheDocument()
   })
 
+  it('hides the formatting toolbar on Escape, and restores it on a second Escape', async () => {
+    const block = createEmptyBlock('text')
+    const user = userEvent.setup()
+
+    const { container, queryByLabelText, getByLabelText } = render(
+      <TextBlock block={block} onUpdate={vi.fn()} onConvert={vi.fn()} onSplit={vi.fn()} />,
+    )
+    const editable = container.querySelector('.ProseMirror') as HTMLElement
+
+    await user.click(editable)
+    expect(getByLabelText('Bold')).toBeInTheDocument()
+
+    await user.keyboard('{Escape}')
+    expect(queryByLabelText('Bold')).not.toBeInTheDocument()
+
+    await user.keyboard('{Escape}')
+    expect(getByLabelText('Bold')).toBeInTheDocument()
+  })
+
+  it('shows the formatting toolbar fresh (not dismissed) after blurring and refocusing', async () => {
+    const block = createEmptyBlock('text')
+    const user = userEvent.setup()
+
+    const { container, queryByLabelText, getByLabelText, getByText } = render(
+      <div>
+        <TextBlock block={block} onUpdate={vi.fn()} onConvert={vi.fn()} onSplit={vi.fn()} />
+        <button type="button">elsewhere</button>
+      </div>,
+    )
+    const editable = container.querySelector('.ProseMirror') as HTMLElement
+
+    await user.click(editable)
+    await user.keyboard('{Escape}')
+    expect(queryByLabelText('Bold')).not.toBeInTheDocument()
+
+    await user.click(getByText('elsewhere'))
+    await user.click(editable)
+    expect(getByLabelText('Bold')).toBeInTheDocument()
+  })
+
+  it('hides the slash-command menu on Escape, and restores the same query on a second Escape', async () => {
+    const block = createEmptyBlock('text')
+    const user = userEvent.setup()
+
+    const { container, queryByRole, getByRole } = render(
+      <TextBlock block={block} onUpdate={vi.fn()} onConvert={vi.fn()} onSplit={vi.fn()} />,
+    )
+    const editable = container.querySelector('.ProseMirror') as HTMLElement
+
+    await user.click(editable)
+    await user.type(editable, '/tab')
+    expect(getByRole('menuitem', { name: 'Table' })).toBeInTheDocument()
+
+    await user.keyboard('{Escape}')
+    expect(queryByRole('menu')).not.toBeInTheDocument()
+
+    await user.keyboard('{Escape}')
+    expect(getByRole('menuitem', { name: 'Table' })).toBeInTheDocument()
+  })
+
+  it('shows the menu for a new query instead of staying dismissed when typing continues after Escape', async () => {
+    const block = createEmptyBlock('text')
+    const user = userEvent.setup()
+
+    const { container, queryByRole, getByRole } = render(
+      <TextBlock block={block} onUpdate={vi.fn()} onConvert={vi.fn()} onSplit={vi.fn()} />,
+    )
+    const editable = container.querySelector('.ProseMirror') as HTMLElement
+
+    await user.click(editable)
+    await user.type(editable, '/tab')
+    await user.keyboard('{Escape}')
+    expect(queryByRole('menu')).not.toBeInTheDocument()
+
+    await user.type(editable, 'le')
+    expect(getByRole('menuitem', { name: 'Table' })).toBeInTheDocument()
+  })
+
   it('applies a text-format slash-command entry to the current block instead of converting it', async () => {
     const block = createEmptyBlock('text')
     const onConvert = vi.fn()
