@@ -245,7 +245,7 @@ export function SketchBlock({ block, onUpdate }: SketchBlockProps) {
         </svg>
         {locked && (
           <div className={styles.lockWatermark}>
-            <Icon name="lock" size={48} />
+            <Icon name="lock" size={36} />
           </div>
         )}
       </div>
