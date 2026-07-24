@@ -39,6 +39,16 @@ if (!window.Element.prototype.releasePointerCapture) {
   window.Element.prototype.releasePointerCapture = () => {}
 }
 
+// jsdom doesn't implement ResizeObserver, used by the code block to sync its
+// wrapper's height with the textarea's native resize handle.
+if (!window.ResizeObserver) {
+  window.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof ResizeObserver
+}
+
 if (!window.matchMedia) {
   window.matchMedia = (query: string) =>
     ({

@@ -15,11 +15,31 @@ export function CodeBlock({ block, onUpdate }: CodeBlockProps) {
   const [language, setLanguage] = useState(block.language)
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const preRef = useRef<HTMLPreElement>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     return () => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
     }
+  }, [])
+
+  useEffect(() => {
+    const textarea = textareaRef.current
+    const wrapper = wrapperRef.current
+    if (!textarea || !wrapper) return
+
+    let tallestSeen = 0
+    const observer = new ResizeObserver(([entry]) => {
+      const height = entry.borderBoxSize?.[0]?.blockSize ?? entry.contentRect.height
+      if (height > tallestSeen) {
+        tallestSeen = height
+        wrapper.style.minHeight = `${height}px`
+      }
+    })
+    observer.observe(textarea)
+
+    return () => observer.disconnect()
   }, [])
 
   const handleCodeChange = (value: string) => {
@@ -47,7 +67,7 @@ export function CodeBlock({ block, onUpdate }: CodeBlockProps) {
           </option>
         ))}
       </select>
-      <div className={styles.editorWrapper}>
+      <div ref={wrapperRef} className={styles.editorWrapper}>
         <pre
           ref={preRef}
           className={styles.highlight}
@@ -55,6 +75,7 @@ export function CodeBlock({ block, onUpdate }: CodeBlockProps) {
           dangerouslySetInnerHTML={{ __html: `${highlightCode(code, language)}\n` }}
         />
         <textarea
+          ref={textareaRef}
           className={styles.textarea}
           value={code}
           spellCheck={false}
