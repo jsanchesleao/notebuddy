@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { deleteNote, getNote, renameNote } from '../../domain/notes/noteRepository'
 import { EntityPageHeader } from '../common/EntityPageHeader'
 import { Icon } from '../../components/Icon/Icon'
 import { NoteBlockList } from '../notes/blocks/NoteBlockList'
+import { PropertiesDrawer } from '../notes/PropertiesDrawer/PropertiesDrawer'
 import { useWideMode } from './useWideMode'
 import styles from './NotePage.module.css'
 
@@ -13,6 +14,7 @@ export function NotePage() {
   const navigate = useNavigate()
   const isDeletingRef = useRef(false)
   const { isWide, toggleWide } = useWideMode()
+  const [propertiesOpen, setPropertiesOpen] = useState(false)
 
   const note = useLiveQuery(
     () => (noteId ? getNote(noteId).then((found) => found ?? null) : Promise.resolve(null)),
@@ -47,8 +49,14 @@ export function NotePage() {
           navigate(backTo, { replace: true })
         }}
         wideMode={{ isWide, onToggle: toggleWide }}
+        onToggleProperties={() => setPropertiesOpen((open) => !open)}
       />
       <NoteBlockList key={note.blockDocId} noteId={note.id} blockDocId={note.blockDocId} />
+      <PropertiesDrawer
+        note={note}
+        open={propertiesOpen}
+        onClose={() => setPropertiesOpen(false)}
+      />
     </div>
   )
 }

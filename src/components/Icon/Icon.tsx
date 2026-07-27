@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   ArrowUp,
   GripVertical,
+  ArrowDown,
   Image,
   PenTool,
   Code,
@@ -42,6 +43,9 @@ import {
   Minimize2,
   Lock,
   Unlock,
+  Tags,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 
 const ICONS = {
@@ -60,6 +64,7 @@ const ICONS = {
   add: Plus,
   back: ArrowLeft,
   up: ArrowUp,
+  down: ArrowDown,
   grip: GripVertical,
   image: Image,
   sketch: PenTool,
@@ -88,6 +93,9 @@ const ICONS = {
   collapse: Minimize2,
   lock: Lock,
   unlock: Unlock,
+  properties: Tags,
+  chevronLeft: ChevronLeft,
+  chevronRight: ChevronRight,
 } as const
 
 export type IconName = keyof typeof ICONS

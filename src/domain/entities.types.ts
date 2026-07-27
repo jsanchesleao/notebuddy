@@ -27,7 +27,65 @@ export interface Board {
   columns: BoardColumn[]
 }
 
-export type PropertyValue = unknown
+export type PrimitiveKind =
+  | 'text'
+  | 'date'
+  | 'time'
+  | 'datetime'
+  | 'boolean'
+  | 'number'
+  | 'select'
+  | 'link'
+  | 'color'
+
+export interface SelectOption {
+  id: string
+  label: string
+  value: string
+}
+
+// Recursive schema shape — used both by CustomDataType.schema and by ad hoc note properties
+export type DataTypeRef =
+  | { kind: 'primitive'; primitive: PrimitiveKind; options?: SelectOption[] }
+  | { kind: 'list'; itemType: DataTypeRef; maxSize?: number }
+  | { kind: 'set'; itemType: DataTypeRef }
+  | { kind: 'tuple'; itemTypes: DataTypeRef[] }
+  | { kind: 'dictionary'; fields: DictionaryField[] }
+  | { kind: 'customTypeRef'; customTypeId: string }
+
+export interface DictionaryField {
+  key: string
+  typeRef: DataTypeRef
+}
+
+export interface CustomDataType {
+  id: string
+  name: string
+  schema: DataTypeRef
+  createdAt: string
+  updatedAt: string
+}
+
+export interface NoteType {
+  id: string
+  name: string
+  customTypeId: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type PropertyValueData =
+  | string
+  | number
+  | boolean
+  | null
+  | PropertyValueData[]
+  | { [key: string]: PropertyValueData }
+
+export interface PropertyValue {
+  typeRef: DataTypeRef
+  value: PropertyValueData
+}
 
 export interface NoteMetadata {
   tags: string[]

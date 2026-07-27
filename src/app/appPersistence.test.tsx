@@ -48,8 +48,8 @@ describe('offline persistence acceptance', () => {
     await user.click(await screen.findByRole('button', { name: 'Create' }))
     await user.click(screen.getByRole('button', { name: 'New Note' }))
     await user.type(screen.getByLabelText('New note title'), 'First entry')
-    await user.click(screen.getByRole('button', { name: 'Add' }))
-    await main.findByRole('link', { name: 'First entry' })
+    await user.click(screen.getByRole('button', { name: 'Create note' }))
+    await screen.findByRole('heading', { name: 'First entry' })
 
     unmount()
 

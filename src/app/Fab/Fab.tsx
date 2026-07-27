@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { createFolder } from '../../domain/folders/folderRepository'
 import { createNotebook } from '../../domain/notebooks/notebookRepository'
-import { createNote } from '../../domain/notes/noteRepository'
 import { Icon } from '../../components/Icon/Icon'
+import { NoteCreateModal } from '../notes/NoteCreateModal'
 import styles from './Fab.module.css'
 
 interface FabProps {
@@ -10,22 +10,20 @@ interface FabProps {
   notebookId: string | null
 }
 
-type CreateAction = 'folder' | 'notebook' | 'note'
+type CreateAction = 'folder' | 'notebook'
 
 const ACTION_LABELS: Record<CreateAction, string> = {
   folder: 'Folder',
   notebook: 'Notebook',
-  note: 'Note',
 }
 
 export function Fab({ folderId, notebookId }: FabProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeAction, setActiveAction] = useState<CreateAction | null>(null)
   const [title, setTitle] = useState('')
+  const [noteModalOpen, setNoteModalOpen] = useState(false)
 
-  const availableActions: CreateAction[] = notebookId
-    ? ['folder', 'notebook', 'note']
-    : ['folder', 'notebook']
+  const showNoteAction = Boolean(notebookId)
 
   const closeAll = () => {
     setMenuOpen(false)
@@ -45,10 +43,8 @@ export function Fab({ folderId, notebookId }: FabProps) {
 
     if (activeAction === 'folder') {
       await createFolder({ parentFolderId: folderId, title: trimmed })
-    } else if (activeAction === 'notebook') {
+    } else {
       await createNotebook({ folderId, title: trimmed })
-    } else if (notebookId) {
-      await createNote({ notebookId, title: trimmed })
     }
 
     closeAll()
@@ -67,7 +63,6 @@ export function Fab({ folderId, notebookId }: FabProps) {
             if (event.key === 'Escape') backToMenu()
           }}
           aria-label={`New ${ACTION_LABELS[activeAction].toLowerCase()} title`}
-          autoFocus
         />
         <button type="submit" className={styles.submit}>
           Add
@@ -83,7 +78,7 @@ export function Fab({ folderId, notebookId }: FabProps) {
     <div className={styles.container}>
       {menuOpen && (
         <div className={styles.menu}>
-          {availableActions.map((action) => (
+          {(['folder', 'notebook'] as const).map((action) => (
             <button
               key={action}
               type="button"
@@ -93,6 +88,18 @@ export function Fab({ folderId, notebookId }: FabProps) {
               <Icon name="add" size={14} /> New {ACTION_LABELS[action]}
             </button>
           ))}
+          {showNoteAction && (
+            <button
+              type="button"
+              className={styles.menuItem}
+              onClick={() => {
+                setMenuOpen(false)
+                setNoteModalOpen(true)
+              }}
+            >
+              <Icon name="add" size={14} /> New Note
+            </button>
+          )}
         </div>
       )}
       <button
@@ -104,6 +111,13 @@ export function Fab({ folderId, notebookId }: FabProps) {
       >
         <Icon name="add" />
       </button>
+      {showNoteAction && (
+        <NoteCreateModal
+          open={noteModalOpen}
+          onClose={() => setNoteModalOpen(false)}
+          notebookId={notebookId}
+        />
+      )}
     </div>
   )
 }

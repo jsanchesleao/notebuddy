@@ -1,0 +1,68 @@
+.calendar {
+  width: 14rem;
+  padding: var(--space-1);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.header button {
+  display: inline-flex;
+  padding: var(--space-1);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.header button:hover {
+  color: var(--color-text);
+  background: var(--color-bg-sidebar);
+}
+
+.weekdayRow,
+.weekRow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.weekdayRow span {
+  padding: var(--space-1) 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.day,
+.dayMuted {
+  aspect-ratio: 1;
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.dayMuted {
+  color: var(--color-text-muted);
+  opacity: 0.5;
+}
+
+.day:hover,
+.dayMuted:hover {
+  background: var(--color-bg-sidebar);
+}
+
+.day[aria-pressed='true'] {
+  color: var(--color-accent-fg);
+  background: var(--color-accent);
+}

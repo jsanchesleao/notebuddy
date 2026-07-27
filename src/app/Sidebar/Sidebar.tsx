@@ -1,7 +1,9 @@
+import { Link } from 'react-router-dom'
 import type { RouteKind } from '../routeContext'
 import { SidebarFolderView } from './SidebarFolderView'
 import { SidebarNotebookView } from './SidebarNotebookView'
 import { SidebarNoteResolver } from './SidebarNoteResolver'
+import { Icon } from '../../components/Icon/Icon'
 import styles from './Sidebar.module.css'
 
 interface SidebarProps {
@@ -22,6 +24,12 @@ export function Sidebar({ open, routeKind, folderId, notebookId, noteId }: Sideb
       ) : (
         <SidebarFolderView currentFolderId={folderId} />
       )}
+      <Link
+        to="/data-types"
+        className={routeKind === 'dataTypes' ? `${styles.dataTypesLink} ${styles.activeLink}` : styles.dataTypesLink}
+      >
+        <Icon name="properties" size={14} /> Data Types
+      </Link>
     </nav>
   )
 }

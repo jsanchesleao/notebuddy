@@ -53,6 +53,26 @@ describe('NotePage', () => {
     expect(await screen.findByRole('heading', { name: 'New title' })).toBeInTheDocument()
   })
 
+  it('opens the properties drawer via the header toggle', async () => {
+    const notebook = await createNotebook({ folderId: null, title: 'Notebook' })
+    const note = await createNote({ notebookId: notebook.id, title: 'My note' })
+    const user = userEvent.setup()
+
+    render(
+      <MemoryRouter initialEntries={[`/notes/${note.id}`]}>
+        <AppRoutes />
+      </MemoryRouter>,
+    )
+
+    await screen.findByRole('heading', { name: 'My note' })
+    const drawer = screen.getByRole('dialog', { hidden: true })
+    expect(drawer).toHaveAttribute('aria-hidden', 'true')
+
+    await user.click(screen.getByRole('button', { name: 'Toggle properties' }))
+    expect(drawer).toHaveAttribute('aria-hidden', 'false')
+    expect(screen.getByRole('heading', { name: 'Properties', level: 2 })).toBeInTheDocument()
+  })
+
   it('navigates to the parent notebook after deleting the note', async () => {
     const notebook = await createNotebook({ folderId: null, title: 'Notebook' })
     const note = await createNote({ notebookId: notebook.id, title: 'Note' })

@@ -50,6 +50,16 @@ describe('useCurrentRouteContext', () => {
     })
   })
 
+  it('reports dataTypes for /data-types', () => {
+    const { result } = renderAt('/data-types')
+    expect(result.current).toEqual({
+      routeKind: 'dataTypes',
+      folderId: null,
+      notebookId: null,
+      noteId: null,
+    })
+  })
+
   it('reports notFound for an unmatched route', () => {
     const { result } = renderAt('/nonexistent')
     expect(result.current).toEqual({

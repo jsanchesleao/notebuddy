@@ -10,6 +10,7 @@ interface EntityPageHeaderProps {
   onRename: (title: string) => void | Promise<void>
   onDelete: () => void | Promise<void>
   wideMode?: { isWide: boolean; onToggle: () => void }
+  onToggleProperties?: () => void
 }
 
 export function EntityPageHeader({
@@ -19,6 +20,7 @@ export function EntityPageHeader({
   onRename,
   onDelete,
   wideMode,
+  onToggleProperties,
 }: EntityPageHeaderProps) {
   const [isRenaming, setIsRenaming] = useState(false)
   const isDesktop = useIsDesktop()
@@ -84,6 +86,16 @@ export function EntityPageHeader({
           onClick={wideMode.onToggle}
         >
           <Icon name={wideMode.isWide ? 'collapse' : 'expand'} />
+        </button>
+      )}
+      {onToggleProperties && (
+        <button
+          type="button"
+          className={styles.iconButton}
+          aria-label="Toggle properties"
+          onClick={onToggleProperties}
+        >
+          <Icon name="properties" />
         </button>
       )}
       <button

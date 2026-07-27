@@ -1,0 +1,82 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.listRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.removeButton {
+  display: inline-flex;
+  padding: var(--space-1);
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.removeButton:hover:not(:disabled) {
+  color: var(--color-text);
+  background: var(--color-bg-sidebar);
+}
+
+.removeButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.addButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  align-self: flex-start;
+  padding: 0 var(--space-2);
+  height: 1.75rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.addButton:hover:not(:disabled) {
+  background: var(--color-bg-sidebar);
+}
+
+.addButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.tuple {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.dictionary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.dictionaryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.dictionaryLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}

@@ -1,0 +1,6 @@
+.preview {
+  padding: var(--space-3);
+  background: var(--color-bg);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+}

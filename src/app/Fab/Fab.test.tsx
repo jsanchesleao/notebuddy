@@ -94,7 +94,7 @@ describe('Fab', () => {
     })
   })
 
-  it('creates a note in the current notebook', async () => {
+  it('creates a note in the current notebook via the note creation modal', async () => {
     const user = userEvent.setup()
     const notebook = await createNotebook({ folderId: null, title: 'Journal' })
 
@@ -106,12 +106,36 @@ describe('Fab', () => {
 
     await user.click(screen.getByRole('button', { name: 'Create' }))
     await user.click(screen.getByRole('button', { name: 'New Note' }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+
     await user.type(screen.getByLabelText('New note title'), 'First entry')
-    await user.click(screen.getByRole('button', { name: 'Add' }))
+    await user.click(screen.getByRole('button', { name: 'Create note' }))
 
     await waitFor(async () => {
       const notes = await db.notes.where('notebookId').equals(notebook.id).toArray()
       expect(notes.map((note) => note.title)).toContain('First entry')
     })
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('lets the note creation modal be cancelled without creating a note', async () => {
+    const user = userEvent.setup()
+    const notebook = await createNotebook({ folderId: null, title: 'Journal' })
+
+    render(
+      <MemoryRouter>
+        <Fab folderId={null} notebookId={notebook.id} />
+      </MemoryRouter>,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Create' }))
+    await user.click(screen.getByRole('button', { name: 'New Note' }))
+    await user.type(screen.getByLabelText('New note title'), 'Discarded')
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    const notes = await db.notes.where('notebookId').equals(notebook.id).toArray()
+    expect(notes).toHaveLength(0)
   })
 })

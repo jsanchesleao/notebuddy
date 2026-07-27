@@ -1,0 +1,5 @@
+.combined {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-1);
+}

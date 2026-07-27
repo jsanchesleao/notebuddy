@@ -1,0 +1,99 @@
+.node {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.nested {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  margin-left: var(--space-2);
+  border-left: 2px solid var(--color-border);
+}
+
+.fieldLabel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.maxSizeInput {
+  height: 1.75rem;
+  padding: 0 var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.slot {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.slotLabel {
+  padding-top: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.fieldNameInput {
+  height: 1.75rem;
+  padding: 0 var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.fieldNameInput.duplicate {
+  border-color: var(--color-danger);
+}
+
+.removeButton {
+  display: inline-flex;
+  padding: var(--space-1);
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.removeButton:hover {
+  color: var(--color-text);
+  background: var(--color-bg-sidebar);
+}
+
+.addButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  align-self: flex-start;
+  padding: 0 var(--space-2);
+  height: 1.75rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.addButton:hover {
+  background: var(--color-bg-sidebar);
+}
+
+.warning {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+}

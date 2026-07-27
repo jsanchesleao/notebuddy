@@ -6,3 +6,9 @@ export const SCHEMA_V1 = {
   settings: 'key',
   yjsUpdates: '++id, docId',
 }
+
+export const SCHEMA_V2 = {
+  notes: 'id, notebookId, boardId, noteTypeId',
+  customDataTypes: 'id, name',
+  noteTypes: 'id, customTypeId',
+}

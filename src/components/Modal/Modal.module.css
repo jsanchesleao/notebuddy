@@ -1,0 +1,22 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 41;
+  width: calc(100% - var(--space-6));
+  max-width: 28rem;
+  max-height: calc(100vh - var(--space-6));
+  overflow-y: auto;
+  padding: var(--space-5);
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  transform: translate(-50%, -50%);
+}

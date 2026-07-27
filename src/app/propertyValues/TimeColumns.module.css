@@ -1,0 +1,32 @@
+.columns {
+  display: flex;
+  gap: var(--space-1);
+  max-height: 12rem;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  min-width: 3rem;
+}
+
+.option {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  text-align: center;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.option:hover {
+  background: var(--color-bg-sidebar);
+}
+
+.option[aria-pressed='true'] {
+  color: var(--color-accent-fg);
+  background: var(--color-accent);
+}
