@@ -46,6 +46,7 @@ import {
   Tags,
   ChevronLeft,
   ChevronRight,
+  PictureInPicture,
 } from 'lucide-react'
 
 const ICONS = {
@@ -96,6 +97,7 @@ const ICONS = {
   properties: Tags,
   chevronLeft: ChevronLeft,
   chevronRight: ChevronRight,
+  detach: PictureInPicture,
 } as const
 
 export type IconName = keyof typeof ICONS

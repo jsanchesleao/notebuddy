@@ -80,3 +80,103 @@
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
 }
+
+.dictionaryEntryRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-1);
+  padding: var(--space-1) 0;
+}
+
+.dictionaryEntryRow.dragging {
+  opacity: 0.6;
+  box-shadow: var(--shadow-md);
+}
+
+.dictionaryEntryRow + .dictionaryEntryRow {
+  border-top: 1px solid var(--color-border);
+}
+
+.dictionaryEntryContent {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.dictionaryEntryTopLine,
+.dictionaryEntryBottomLine {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.dictionaryValueSlot {
+  flex: 1;
+  min-width: 0;
+}
+
+.dictionaryKeyInput {
+  min-width: 4rem;
+  flex: 1;
+  height: 1.75rem;
+  padding: 0 var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.dragHandle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: var(--space-1);
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: grab;
+  touch-action: none;
+}
+
+.dragHandle:hover:not(:disabled) {
+  color: var(--color-text);
+  background: var(--color-bg-sidebar);
+}
+
+.dragHandle:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.moveButton {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: var(--space-1);
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.moveButton:hover:not(:disabled) {
+  color: var(--color-text);
+  background: var(--color-bg-sidebar);
+}
+
+.moveButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.warning {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+}

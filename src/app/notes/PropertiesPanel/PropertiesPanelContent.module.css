@@ -11,7 +11,13 @@
   font-size: var(--font-size-lg);
 }
 
-.closeButton {
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.iconButton {
   display: inline-flex;
   padding: var(--space-1);
   color: var(--color-text-muted);
@@ -21,7 +27,7 @@
   cursor: pointer;
 }
 
-.closeButton:hover {
+.iconButton:hover {
   color: var(--color-text);
   background: var(--color-bg-sidebar);
 }

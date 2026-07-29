@@ -15,7 +15,11 @@ interface AddPropertyControlProps {
 
 const DEFAULT_TYPE: DataTypeRef = { kind: 'primitive', primitive: 'text' }
 
-export function AddPropertyControl({ noteId, existingKeys, availableCustomTypes }: AddPropertyControlProps) {
+export function AddPropertyControl({
+  noteId,
+  existingKeys,
+  availableCustomTypes,
+}: AddPropertyControlProps) {
   const [key, setKey] = useState('')
   const [typeRef, setTypeRef] = useState<DataTypeRef>(DEFAULT_TYPE)
   const [error, setError] = useState<string | null>(null)

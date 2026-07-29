@@ -189,3 +189,147 @@ describe('PropertyValueEditor — composites', () => {
     expect(screen.getByDisplayValue('Bake')).toBeInTheDocument()
   })
 })
+
+describe('PropertyValueEditor — dictionary schema editing (onSchemaChange)', () => {
+  function DictionaryHarness({
+    initialTypeRef,
+    initialValue,
+  }: {
+    initialTypeRef: DataTypeRef
+    initialValue: PropertyValueData
+  }) {
+    const [typeRef, setTypeRef] = useState(initialTypeRef)
+    const [value, setValue] = useState(initialValue)
+    return (
+      <PropertyValueEditor
+        typeRef={typeRef}
+        value={value}
+        onChange={setValue}
+        onSchemaChange={(nextTypeRef, nextValue) => {
+          setTypeRef(nextTypeRef)
+          setValue(nextValue)
+        }}
+        resolveCustomType={noCustomTypes}
+      />
+    )
+  }
+
+  it('shows just the add-entry button on an empty dictionary', () => {
+    render(<DictionaryHarness initialTypeRef={{ kind: 'dictionary', fields: [] }} initialValue={{}} />)
+    expect(screen.getByRole('button', { name: 'Add entry' })).toBeInTheDocument()
+  })
+
+  it('adds an entry defaulting to Text, renames its key, and edits its value', async () => {
+    const user = userEvent.setup()
+    render(<DictionaryHarness initialTypeRef={{ kind: 'dictionary', fields: [] }} initialValue={{}} />)
+
+    await user.click(screen.getByRole('button', { name: 'Add entry' }))
+    const keyInput = screen.getByLabelText('Entry key 1')
+    expect(keyInput).toHaveValue('')
+
+    await user.type(keyInput, 'color')
+    expect(screen.getByLabelText('Entry key 1')).toHaveValue('color')
+
+    const valueInput = screen.getAllByRole('textbox').find((el) => el !== screen.getByLabelText('Entry key 1'))
+    await user.type(valueInput!, 'blue')
+    expect(valueInput).toHaveValue('blue')
+  })
+
+  it('retypes an entry, resetting its value to the new type default', async () => {
+    const user = userEvent.setup()
+    render(
+      <DictionaryHarness
+        initialTypeRef={{
+          kind: 'dictionary',
+          fields: [{ key: 'count', typeRef: { kind: 'primitive', primitive: 'text' } }],
+        }}
+        initialValue={{ count: 'three' }}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: /^Text/ }))
+    await user.click(screen.getByRole('menuitemradio', { name: 'Number' }))
+
+    expect(screen.getByRole('spinbutton')).toHaveValue(null)
+  })
+
+  it('removes an entry', async () => {
+    const user = userEvent.setup()
+    render(
+      <DictionaryHarness
+        initialTypeRef={{
+          kind: 'dictionary',
+          fields: [{ key: 'color', typeRef: { kind: 'primitive', primitive: 'text' } }],
+        }}
+        initialValue={{ color: 'blue' }}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Remove entry 1' }))
+    expect(screen.queryByLabelText('Entry key 1')).not.toBeInTheDocument()
+  })
+
+  it('reorders entries via the move-down/move-up buttons', async () => {
+    const user = userEvent.setup()
+    render(
+      <DictionaryHarness
+        initialTypeRef={{
+          kind: 'dictionary',
+          fields: [
+            { key: 'first', typeRef: { kind: 'primitive', primitive: 'text' } },
+            { key: 'second', typeRef: { kind: 'primitive', primitive: 'text' } },
+          ],
+        }}
+        initialValue={{ first: '1', second: '2' }}
+      />,
+    )
+
+    expect(screen.getByLabelText('Entry key 1')).toHaveValue('first')
+    await user.click(screen.getByRole('button', { name: 'Move entry 1 down' }))
+    expect(screen.getByLabelText('Entry key 1')).toHaveValue('second')
+    expect(screen.getByLabelText('Entry key 2')).toHaveValue('first')
+  })
+
+  it('flags duplicate keys without blocking editing', async () => {
+    const user = userEvent.setup()
+    render(
+      <DictionaryHarness
+        initialTypeRef={{
+          kind: 'dictionary',
+          fields: [{ key: 'a', typeRef: { kind: 'primitive', primitive: 'text' } }],
+        }}
+        initialValue={{ a: '' }}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Add entry' }))
+    await user.type(screen.getByLabelText('Entry key 2'), 'a')
+
+    expect(screen.getByText('Field names must be unique.')).toBeInTheDocument()
+  })
+
+  it('does not forward schema editing through a customTypeRef boundary', () => {
+    const inner: CustomDataType = {
+      id: 'inner',
+      name: 'Inner',
+      schema: {
+        kind: 'dictionary',
+        fields: [{ key: 'note', typeRef: { kind: 'primitive', primitive: 'text' } }],
+      },
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    }
+    render(
+      <PropertyValueEditor
+        typeRef={{ kind: 'customTypeRef', customTypeId: 'inner' }}
+        value={{ note: 'hi' }}
+        onChange={() => {}}
+        onSchemaChange={() => {}}
+        resolveCustomType={(id) => (id === 'inner' ? inner : undefined)}
+      />,
+    )
+
+    expect(screen.queryByRole('button', { name: 'Add entry' })).not.toBeInTheDocument()
+    expect(screen.getByText('note')).toBeInTheDocument()
+  })
+})

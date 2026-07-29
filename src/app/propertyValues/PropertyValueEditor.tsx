@@ -17,6 +17,10 @@ export interface PropertyValueEditorProps {
   typeRef: DataTypeRef
   value: PropertyValueData
   onChange: (value: PropertyValueData) => void
+  // Only set for a dictionary property whose schema is privately owned by the note (never
+  // forwarded across a customTypeRef boundary) — lets the dictionary editor add/rename/
+  // retype/remove/reorder its own fields, persisting typeRef and value together.
+  onSchemaChange?: (typeRef: DataTypeRef, value: PropertyValueData) => void
   disabled?: boolean
   resolveCustomType: (id: string) => CustomDataType | undefined
 }
@@ -25,6 +29,7 @@ export function PropertyValueEditor({
   typeRef,
   value,
   onChange,
+  onSchemaChange,
   disabled,
   resolveCustomType,
 }: PropertyValueEditorProps) {
@@ -88,6 +93,11 @@ export function PropertyValueEditor({
           fields={typeRef.fields}
           value={value && typeof value === 'object' && !Array.isArray(value) ? value : {}}
           onChange={onChange}
+          onFieldsChange={
+            onSchemaChange
+              ? (nextFields, nextValue) => onSchemaChange({ ...typeRef, fields: nextFields }, nextValue)
+              : undefined
+          }
           disabled={disabled}
           resolveCustomType={resolveCustomType}
         />

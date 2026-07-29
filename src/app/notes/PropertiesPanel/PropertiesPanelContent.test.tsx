@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../../db/db'
 import { createNotebook } from '../../../domain/notebooks/notebookRepository'
 import { createNote, getNote } from '../../../domain/notes/noteRepository'
-import { PropertiesDrawer } from './PropertiesDrawer'
+import { PropertiesPanel } from './PropertiesPanel'
 import type { Note } from '../../../domain/entities.types'
 
 beforeEach(async () => {
@@ -24,22 +24,22 @@ async function createTestNote(): Promise<Note> {
   return createNote({ notebookId: notebook.id, title: 'A note' })
 }
 
-// PropertiesDrawer takes a `note` snapshot as a prop, same as NotePage passes it in
+// PropertiesPanel takes a `note` snapshot as a prop, same as NotePage passes it in
 // the real app via useLiveQuery — this harness mirrors that so edits made through the
-// drawer (which write to Dexie) are reflected back into the rendered props, instead of
+// panel (which write to Dexie) are reflected back into the rendered props, instead of
 // testing against a single frozen snapshot.
-function PropertiesDrawerHarness({ noteId }: { noteId: string }) {
+function PropertiesPanelHarness({ noteId }: { noteId: string }) {
   const note = useLiveQuery(() => getNote(noteId), [noteId])
   if (!note) return null
-  return <PropertiesDrawer note={note} open onClose={() => {}} />
+  return <PropertiesPanel note={note} open onClose={() => {}} />
 }
 
-describe('PropertiesDrawer', () => {
+describe('PropertiesPanelContent', () => {
   it('adds and removes tags', async () => {
     const user = userEvent.setup()
     const note = await createTestNote()
 
-    render(<PropertiesDrawerHarness noteId={note.id} />)
+    render(<PropertiesPanelHarness noteId={note.id} />)
     await screen.findByRole('heading', { name: 'Properties', level: 2 })
 
     await user.type(screen.getByLabelText('New tag'), 'recipe')
@@ -63,7 +63,7 @@ describe('PropertiesDrawer', () => {
     const user = userEvent.setup()
     const note = await createTestNote()
 
-    render(<PropertiesDrawerHarness noteId={note.id} />)
+    render(<PropertiesPanelHarness noteId={note.id} />)
     await screen.findByRole('heading', { name: 'Properties', level: 2 })
 
     await user.type(screen.getByLabelText('New property name'), 'favorite')
@@ -84,7 +84,7 @@ describe('PropertiesDrawer', () => {
     const user = userEvent.setup()
     const note = await createTestNote()
 
-    render(<PropertiesDrawerHarness noteId={note.id} />)
+    render(<PropertiesPanelHarness noteId={note.id} />)
     await screen.findByRole('heading', { name: 'Properties', level: 2 })
 
     await user.type(screen.getByLabelText('New property name'), 'favorite')
@@ -101,7 +101,7 @@ describe('PropertiesDrawer', () => {
     const user = userEvent.setup()
     const note = await createTestNote()
 
-    render(<PropertiesDrawerHarness noteId={note.id} />)
+    render(<PropertiesPanelHarness noteId={note.id} />)
     await screen.findByRole('heading', { name: 'Properties', level: 2 })
 
     await user.type(screen.getByLabelText('New property name'), 'favorite')
@@ -121,7 +121,7 @@ describe('PropertiesDrawer', () => {
     const note = await createTestNote()
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    render(<PropertiesDrawerHarness noteId={note.id} />)
+    render(<PropertiesPanelHarness noteId={note.id} />)
     await screen.findByRole('heading', { name: 'Properties', level: 2 })
 
     await user.type(screen.getByLabelText('New property name'), 'website')
@@ -146,5 +146,49 @@ describe('PropertiesDrawer', () => {
     expect(screen.queryByText(/valid URL/i)).not.toBeInTheDocument()
 
     consoleError.mockRestore()
+  })
+
+  it('adds, renames, and removes entries on a Dictionary property (acceptance scenario)', async () => {
+    const user = userEvent.setup()
+    const note = await createTestNote()
+
+    render(<PropertiesPanelHarness noteId={note.id} />)
+    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+
+    await user.type(screen.getByLabelText('New property name'), 'meta')
+    await user.click(screen.getByRole('button', { name: /^Text/ }))
+    await user.click(screen.getByRole('menuitemradio', { name: 'Dictionary' }))
+    await user.click(screen.getByRole('button', { name: 'Add property' }))
+    await screen.findByText('meta')
+
+    // Empty dictionary shows only the add-entry affordance — this is the reported bug.
+    const propertiesSection = screen.getByRole('heading', { name: 'Properties', level: 3 }).closest('section')!
+    await user.click(within(propertiesSection).getByRole('button', { name: 'Add entry' }))
+    const keyInput = within(propertiesSection).getByLabelText('Entry key 1')
+    await user.type(keyInput, 'color')
+
+    const namedInputs = new Set([keyInput, within(propertiesSection).getByLabelText('New property name')])
+    const valueInput = within(propertiesSection)
+      .getAllByRole('textbox')
+      .find((el) => !namedInputs.has(el))
+    await user.type(valueInput!, 'blue')
+
+    await waitFor(async () => {
+      const updated = await getNote(note.id)
+      expect(updated?.metadata.properties.meta).toEqual({
+        typeRef: { kind: 'dictionary', fields: [{ key: 'color', typeRef: { kind: 'primitive', primitive: 'text' } }] },
+        value: { color: 'blue' },
+      })
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Remove entry 1' }))
+
+    await waitFor(async () => {
+      const updated = await getNote(note.id)
+      expect(updated?.metadata.properties.meta).toEqual({
+        typeRef: { kind: 'dictionary', fields: [] },
+        value: {},
+      })
+    })
   })
 })

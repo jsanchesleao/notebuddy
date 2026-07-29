@@ -5,7 +5,7 @@ import { deleteNote, getNote, renameNote } from '../../domain/notes/noteReposito
 import { EntityPageHeader } from '../common/EntityPageHeader'
 import { Icon } from '../../components/Icon/Icon'
 import { NoteBlockList } from '../notes/blocks/NoteBlockList'
-import { PropertiesDrawer } from '../notes/PropertiesDrawer/PropertiesDrawer'
+import { PropertiesPanel } from '../notes/PropertiesPanel/PropertiesPanel'
 import { useWideMode } from './useWideMode'
 import styles from './NotePage.module.css'
 
@@ -52,11 +52,7 @@ export function NotePage() {
         onToggleProperties={() => setPropertiesOpen((open) => !open)}
       />
       <NoteBlockList key={note.blockDocId} noteId={note.id} blockDocId={note.blockDocId} />
-      <PropertiesDrawer
-        note={note}
-        open={propertiesOpen}
-        onClose={() => setPropertiesOpen(false)}
-      />
+      <PropertiesPanel note={note} open={propertiesOpen} onClose={() => setPropertiesOpen(false)} />
     </div>
   )
 }

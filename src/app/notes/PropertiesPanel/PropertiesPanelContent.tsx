@@ -1,40 +1,63 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { listCustomDataTypes } from '../../../domain/dataTypes/dataTypeRepository'
-import { Drawer } from '../../../components/Drawer/Drawer'
 import { Icon } from '../../../components/Icon/Icon'
 import { TagsEditor } from './TagsEditor'
 import { PropertyRow } from './PropertyRow'
 import { AddPropertyControl } from './AddPropertyControl'
 import type { Note } from '../../../domain/entities.types'
-import styles from './PropertiesDrawer.module.css'
+import styles from './PropertiesPanelContent.module.css'
 
-const TITLE_ID = 'properties-drawer-title'
-
-interface PropertiesDrawerProps {
+interface PropertiesPanelContentProps {
   note: Note
-  open: boolean
+  mode: 'drawer' | 'modal'
+  onDetach: () => void
   onClose: () => void
+  showDetachToggle: boolean
+  titleId: string
 }
 
-export function PropertiesDrawer({ note, open, onClose }: PropertiesDrawerProps) {
+export function PropertiesPanelContent({
+  note,
+  mode,
+  onDetach,
+  onClose,
+  showDetachToggle,
+  titleId,
+}: PropertiesPanelContentProps) {
   const customTypes = useLiveQuery(() => listCustomDataTypes(), [], [])
   const resolveCustomType = (id: string) => customTypes?.find((type) => type.id === id)
   const propertyEntries = Object.entries(note.metadata.properties)
 
   return (
-    <Drawer open={open} onClose={onClose} labelledBy={TITLE_ID}>
+    <>
       <div className={styles.header}>
-        <h2 id={TITLE_ID} className={styles.heading}>
+        <h2 id={titleId} className={styles.heading}>
           Properties
         </h2>
-        <button
-          type="button"
-          className={styles.closeButton}
-          aria-label="Close properties"
-          onClick={onClose}
-        >
-          <Icon name="close" size={16} />
-        </button>
+        <div className={styles.actions}>
+          {showDetachToggle && (
+            <button
+              type="button"
+              className={styles.iconButton}
+              aria-label={
+                mode === 'drawer'
+                  ? 'Open properties in a separate window'
+                  : 'Dock properties to sidebar'
+              }
+              onClick={onDetach}
+            >
+              <Icon name="detach" size={16} />
+            </button>
+          )}
+          <button
+            type="button"
+            className={styles.iconButton}
+            aria-label="Close properties"
+            onClick={onClose}
+          >
+            <Icon name="close" size={16} />
+          </button>
+        </div>
       </div>
 
       <section className={styles.section}>
@@ -60,6 +83,6 @@ export function PropertiesDrawer({ note, open, onClose }: PropertiesDrawerProps)
           availableCustomTypes={customTypes ?? []}
         />
       </section>
-    </Drawer>
+    </>
   )
 }

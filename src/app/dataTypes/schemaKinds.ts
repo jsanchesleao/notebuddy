@@ -111,3 +111,12 @@ export function buildSchemaKindOptions({
 
   return [...primitiveOptions, ...compositeOptions, ...referenceOptions]
 }
+
+export function filterSchemaKindOptions(
+  options: SchemaKindOption[],
+  query: string,
+): SchemaKindOption[] {
+  const normalized = query.trim().toLowerCase()
+  if (!normalized) return options
+  return options.filter((option) => option.label.toLowerCase().includes(normalized))
+}
