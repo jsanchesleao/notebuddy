@@ -1,6 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react'
 import { removeNoteProperty, setNoteProperty } from '../../../domain/notes/noteRepository'
 import { PropertyValueEditor } from '../../propertyValues/PropertyValueEditor'
+import { PrimitiveValueDisplay } from '../../propertyValues/PrimitiveValueDisplay'
+import {
+  resolveSimplePrimitiveKind,
+  type SimplePrimitiveKind,
+} from '../../propertyValues/resolveSimplePrimitiveKind'
+import { TextValueEditor } from '../../propertyValues/TextValueEditor'
+import { NumberValueEditor } from '../../propertyValues/NumberValueEditor'
+import { LinkValueEditor } from '../../propertyValues/LinkValueEditor'
 import { Icon } from '../../../components/Icon/Icon'
 import type {
   CustomDataType,
@@ -15,6 +23,66 @@ interface PropertyRowProps {
   propertyKey: string
   property: PropertyValue
   resolveCustomType: (id: string) => CustomDataType | undefined
+  mode: 'drawer' | 'modal'
+}
+
+export function PropertyRow({
+  noteId,
+  propertyKey,
+  property,
+  resolveCustomType,
+  mode,
+}: PropertyRowProps) {
+  const simpleKind = resolveSimplePrimitiveKind(property.typeRef, resolveCustomType)
+
+  if (simpleKind) {
+    return (
+      <SimplePropertyRow
+        noteId={noteId}
+        propertyKey={propertyKey}
+        property={property}
+        kind={simpleKind}
+        mode={mode}
+      />
+    )
+  }
+
+  return (
+    <LiveEditPropertyRow
+      noteId={noteId}
+      propertyKey={propertyKey}
+      property={property}
+      resolveCustomType={resolveCustomType}
+      mode={mode}
+    />
+  )
+}
+
+// Shared row chrome: key label + value area on one line (in modal mode) or stacked below them
+// (in drawer mode — the drawer is always narrow, so it never gets the inline layout, see
+// PropertyRow.module.css) with a hover/touch-revealed actions group, and an optional error line
+// underneath.
+interface PropertyRowLayoutProps {
+  propertyKey: string
+  value: ReactNode
+  actions: ReactNode
+  error: string | null
+  mode: 'drawer' | 'modal'
+}
+
+function PropertyRowLayout({ propertyKey, value, actions, error, mode }: PropertyRowLayoutProps) {
+  return (
+    <div className={styles.row} data-mode={mode}>
+      <div className={styles.mainLine}>
+        <div className={styles.content}>
+          <span className={styles.key}>{propertyKey}</span>
+          <div className={styles.value}>{value}</div>
+        </div>
+        <div className={styles.actions}>{actions}</div>
+      </div>
+      {error && <p className={styles.error}>{error}</p>}
+    </div>
+  )
 }
 
 // `localValue`/`localTypeRef` are intentionally initialized once and never resynced from the
@@ -23,11 +91,14 @@ interface PropertyRowProps {
 // Resyncing on every prop change would race the async round-trip through
 // setNoteProperty/useLiveQuery: a stale echo of an earlier keystroke could land after a later
 // one and clobber it, dropping characters while typing quickly into an auto-saving field.
-export function PropertyRow({
+// This applies to boolean/select/date/time/datetime/color and composite properties, all of
+// which stay always-live (no view/edit split) — see SimplePropertyRow for text/number/link.
+function LiveEditPropertyRow({
   noteId,
   propertyKey,
   property,
   resolveCustomType,
+  mode,
 }: PropertyRowProps) {
   const [localValue, setLocalValue] = useState(property.value)
   const [localTypeRef, setLocalTypeRef] = useState(property.typeRef)
@@ -58,26 +129,160 @@ export function PropertyRow({
   }
 
   return (
-    <div className={styles.row}>
-      <div className={styles.rowHeader}>
-        <span className={styles.key}>{propertyKey}</span>
+    <PropertyRowLayout
+      propertyKey={propertyKey}
+      value={
+        <PropertyValueEditor
+          typeRef={localTypeRef}
+          value={localValue}
+          onChange={handleChange}
+          onSchemaChange={handleSchemaChange}
+          resolveCustomType={resolveCustomType}
+        />
+      }
+      actions={
         <button
           type="button"
-          className={styles.removeButton}
+          className={styles.actionButton}
           aria-label={`Remove property ${propertyKey}`}
           onClick={() => removeNoteProperty(noteId, propertyKey)}
         >
           <Icon name="close" size={12} />
         </button>
-      </div>
-      <PropertyValueEditor
-        typeRef={localTypeRef}
-        value={localValue}
-        onChange={handleChange}
-        onSchemaChange={handleSchemaChange}
-        resolveCustomType={resolveCustomType}
-      />
-      {error && <p className={styles.error}>{error}</p>}
-    </div>
+      }
+      error={error}
+      mode={mode}
+    />
   )
+}
+
+// Text/Number/Link properties render as plain content (or a clickable link) by default and only
+// mount an input once the user clicks the edit icon. Edits are a discrete draft, committed on
+// blur/Enter and discarded on Escape — since view mode always reads the live `property` prop
+// directly, there's no stale-resync hazard to guard against here (unlike LiveEditPropertyRow).
+interface SimplePropertyRowProps {
+  noteId: string
+  propertyKey: string
+  property: PropertyValue
+  kind: SimplePrimitiveKind
+  mode: 'drawer' | 'modal'
+}
+
+function SimplePropertyRow({ noteId, propertyKey, property, kind, mode }: SimplePropertyRowProps) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [draftValue, setDraftValue] = useState<PropertyValueData>(property.value)
+  const [error, setError] = useState<string | null>(null)
+  const formRef = useRef<HTMLFormElement>(null)
+  const cancelledRef = useRef(false)
+
+  useEffect(() => {
+    if (!isEditing) return
+    const input = formRef.current?.querySelector('input')
+    input?.focus()
+    input?.select()
+  }, [isEditing])
+
+  const startEditing = () => {
+    setDraftValue(property.value)
+    setError(null)
+    cancelledRef.current = false
+    setIsEditing(true)
+  }
+
+  const commit = async (): Promise<boolean> => {
+    try {
+      await setNoteProperty(noteId, propertyKey, { typeRef: property.typeRef, value: draftValue })
+      setError(null)
+      return true
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Invalid value')
+      return false
+    }
+  }
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault()
+    if (await commit()) setIsEditing(false)
+  }
+
+  const handleBlur = async () => {
+    if (cancelledRef.current) {
+      cancelledRef.current = false
+      return
+    }
+    if (await commit()) setIsEditing(false)
+  }
+
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      cancelledRef.current = true
+      setError(null)
+      setIsEditing(false)
+    }
+  }
+
+  return (
+    <PropertyRowLayout
+      propertyKey={propertyKey}
+      value={
+        isEditing ? (
+          /* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions --
+             onBlur/onKeyDown manage the commit/cancel lifecycle of the actual interactive
+             element (the <input> rendered inside by SimplePrimitiveEditor), not the form itself. */
+          <form
+            ref={formRef}
+            noValidate
+            onSubmit={handleSubmit}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+          >
+            <SimplePrimitiveEditor kind={kind} value={draftValue} onChange={setDraftValue} />
+          </form>
+        ) : (
+          <PrimitiveValueDisplay kind={kind} value={property.value} />
+        )
+      }
+      actions={
+        <>
+          {!isEditing && (
+            <button
+              type="button"
+              className={styles.actionButton}
+              aria-label={`Edit property ${propertyKey}`}
+              onClick={startEditing}
+            >
+              <Icon name="edit" size={12} />
+            </button>
+          )}
+          <button
+            type="button"
+            className={styles.actionButton}
+            aria-label={`Remove property ${propertyKey}`}
+            onClick={() => removeNoteProperty(noteId, propertyKey)}
+          >
+            <Icon name="close" size={12} />
+          </button>
+        </>
+      }
+      error={error}
+      mode={mode}
+    />
+  )
+}
+
+interface SimplePrimitiveEditorProps {
+  kind: SimplePrimitiveKind
+  value: PropertyValueData
+  onChange: (value: PropertyValueData) => void
+}
+
+function SimplePrimitiveEditor({ kind, value, onChange }: SimplePrimitiveEditorProps) {
+  switch (kind) {
+    case 'text':
+      return <TextValueEditor value={typeof value === 'string' ? value : ''} onChange={onChange} />
+    case 'number':
+      return <NumberValueEditor value={typeof value === 'number' ? value : null} onChange={onChange} />
+    case 'link':
+      return <LinkValueEditor value={typeof value === 'string' ? value : ''} onChange={onChange} />
+  }
 }

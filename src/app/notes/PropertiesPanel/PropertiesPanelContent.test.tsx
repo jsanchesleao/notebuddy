@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../../db/db'
 import { createNotebook } from '../../../domain/notebooks/notebookRepository'
-import { createNote, getNote } from '../../../domain/notes/noteRepository'
+import { createNote, getNote, setNoteProperty } from '../../../domain/notes/noteRepository'
 import { PropertiesPanel } from './PropertiesPanel'
 import type { Note } from '../../../domain/entities.types'
 
@@ -116,6 +116,33 @@ describe('PropertiesPanelContent', () => {
     })
   })
 
+  it('shows Text/Number/Link properties as plain content until edited, with links clickable', async () => {
+    const user = userEvent.setup()
+    const note = await createTestNote()
+    await setNoteProperty(note.id, 'website', {
+      typeRef: { kind: 'primitive', primitive: 'link' },
+      value: 'https://example.com',
+    })
+    await setNoteProperty(note.id, 'nickname', {
+      typeRef: { kind: 'primitive', primitive: 'text' },
+      value: '',
+    })
+
+    render(<PropertiesPanelHarness noteId={note.id} />)
+    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+
+    const link = await screen.findByRole('link', { name: 'https://example.com' })
+    expect(link).toHaveAttribute('href', 'https://example.com')
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+
+    expect(screen.getAllByText('Not set').length).toBeGreaterThan(0)
+    expect(screen.queryByPlaceholderText('https://example.com')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Edit property website' }))
+    expect(await screen.findByPlaceholderText('https://example.com')).toHaveValue('https://example.com')
+  })
+
   it('blocks an invalid value on a single row without affecting others, then succeeds once corrected', async () => {
     const user = userEvent.setup()
     const note = await createTestNote()
@@ -131,13 +158,14 @@ describe('PropertiesPanelContent', () => {
     await user.click(screen.getByRole('button', { name: 'Add property' }))
     await screen.findByText('website')
 
+    await user.click(screen.getByRole('button', { name: 'Edit property website' }))
     const linkInput = screen.getByPlaceholderText('https://example.com')
-    await user.type(linkInput, 'not a url')
+    await user.type(linkInput, 'not a url{Enter}')
 
     expect(await screen.findByText(/valid URL/i)).toBeInTheDocument()
 
     await user.clear(linkInput)
-    await user.type(linkInput, 'https://example.com')
+    await user.type(linkInput, 'https://example.com{Enter}')
 
     await waitFor(async () => {
       const updated = await getNote(note.id)

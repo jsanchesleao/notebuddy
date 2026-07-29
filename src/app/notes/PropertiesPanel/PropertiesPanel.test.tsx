@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../../db/db'
 import { createNotebook } from '../../../domain/notebooks/notebookRepository'
-import { createNote, getNote } from '../../../domain/notes/noteRepository'
+import { createNote, getNote, setNoteProperty } from '../../../domain/notes/noteRepository'
 import { PropertiesPanel } from './PropertiesPanel'
 import type { Note } from '../../../domain/entities.types'
 
@@ -112,6 +112,29 @@ describe('PropertiesPanel', () => {
     expect(
       screen.queryByRole('button', { name: 'Open properties in a separate window' }),
     ).not.toBeInTheDocument()
+
+    restoreMatchMedia()
+  })
+
+  it('always stacks property rows in the drawer, even at a desktop viewport, and switches to inline rows once detached to a modal', async () => {
+    const restoreMatchMedia = stubMatchMedia(true)
+    const user = userEvent.setup()
+    const note = await createTestNote()
+    await setNoteProperty(note.id, 'favorite', {
+      typeRef: { kind: 'primitive', primitive: 'text' },
+      value: 'blue',
+    })
+
+    render(<ToggleableHarness noteId={note.id} />)
+    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+
+    const row = (await screen.findByText('favorite')).closest('[data-mode]')
+    expect(row).toHaveAttribute('data-mode', 'drawer')
+
+    await user.click(screen.getByRole('button', { name: 'Open properties in a separate window' }))
+
+    const modalRow = (await screen.findByText('favorite')).closest('[data-mode]')
+    expect(modalRow).toHaveAttribute('data-mode', 'modal')
 
     restoreMatchMedia()
   })

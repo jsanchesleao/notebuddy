@@ -75,6 +75,7 @@ export function PropertiesPanelContent({
             propertyKey={key}
             property={property}
             resolveCustomType={resolveCustomType}
+            mode={mode}
           />
         ))}
         <AddPropertyControl
