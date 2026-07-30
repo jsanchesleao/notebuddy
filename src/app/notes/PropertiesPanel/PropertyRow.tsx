@@ -19,6 +19,8 @@ import { NumberValueEditor } from '../../propertyValues/NumberValueEditor'
 import { LinkValueEditor } from '../../propertyValues/LinkValueEditor'
 import { DismissableDropdown } from '../../../components/Menu/DismissableDropdown'
 import { Icon } from '../../../components/Icon/Icon'
+import { SchemaKindMenu } from '../../dataTypes/SchemaKindMenu'
+import { buildItemTypeOptions, kindKeyFor } from '../../dataTypes/schemaKinds'
 import type {
   CustomDataType,
   DataTypeRef,
@@ -117,6 +119,7 @@ function LiveEditPropertyRow({
   const [localValue, setLocalValue] = useState(property.value)
   const [localTypeRef, setLocalTypeRef] = useState(property.typeRef)
   const [error, setError] = useState<string | null>(null)
+  const [showTupleItemTypes, setShowTupleItemTypes] = useState(false)
 
   const handleChange = async (nextValue: PropertyValueData) => {
     setLocalValue(nextValue)
@@ -158,6 +161,16 @@ function LiveEditPropertyRow({
     handleSchemaChange(nextTypeRef, stillValid ? localValue : null)
   }
 
+  // Only List/Set have a single item type to swap — Tuple has one type per slot, so it gets
+  // a show/hide toggle instead (see showTupleItemTypes below), not a single popover.
+  const itemType =
+    localTypeRef.kind === 'list' || localTypeRef.kind === 'set' ? localTypeRef.itemType : null
+
+  const handleItemTypeChange = (nextItemType: DataTypeRef) => {
+    if (localTypeRef.kind !== 'list' && localTypeRef.kind !== 'set') return
+    handleSchemaChange({ ...localTypeRef, itemType: nextItemType }, [])
+  }
+
   return (
     <PropertyRowLayout
       propertyKey={propertyKey}
@@ -167,12 +180,52 @@ function LiveEditPropertyRow({
           value={localValue}
           onChange={handleChange}
           onSchemaChange={handleSchemaChange}
+          showTupleItemTypes={showTupleItemTypes}
           resolveCustomType={resolveCustomType}
           availableCustomTypes={availableCustomTypes}
         />
       }
       actions={
         <>
+          {itemType && (
+            <DismissableDropdown
+              trigger={({ toggle, open }) => (
+                <button
+                  type="button"
+                  className={styles.actionButton}
+                  aria-label={`Edit item type for ${propertyKey}`}
+                  aria-expanded={open}
+                  onClick={toggle}
+                >
+                  <Icon name="edit" size={12} />
+                </button>
+              )}
+              menuClassName={styles.itemTypePopover}
+            >
+              {({ close }) => (
+                <SchemaKindMenu
+                  options={buildItemTypeOptions(availableCustomTypes)}
+                  activeKey={kindKeyFor(itemType)}
+                  onSelect={(option) => {
+                    handleItemTypeChange(option.build())
+                    close()
+                  }}
+                  onClose={close}
+                />
+              )}
+            </DismissableDropdown>
+          )}
+          {localTypeRef.kind === 'tuple' && (
+            <button
+              type="button"
+              className={styles.actionButton}
+              aria-label={`Edit item types for ${propertyKey}`}
+              aria-pressed={showTupleItemTypes}
+              onClick={() => setShowTupleItemTypes((value) => !value)}
+            >
+              <Icon name="edit" size={12} />
+            </button>
+          )}
           {isAdHocSelect && (
             <DismissableDropdown
               trigger={({ toggle, open }) => (

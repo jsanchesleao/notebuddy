@@ -11,6 +11,7 @@ interface TupleValueEditorProps {
   value: PropertyValueData[]
   onChange: (value: PropertyValueData[]) => void
   onItemTypesChange?: (itemTypes: DataTypeRef[], value: PropertyValueData[]) => void
+  showItemTypes?: boolean
   disabled?: boolean
   resolveCustomType: (id: string) => CustomDataType | undefined
   availableCustomTypes: CustomDataType[]
@@ -21,6 +22,7 @@ export function TupleValueEditor({
   value,
   onChange,
   onItemTypesChange,
+  showItemTypes = false,
   disabled,
   resolveCustomType,
   availableCustomTypes,
@@ -77,11 +79,13 @@ export function TupleValueEditor({
     <div className={styles.tupleEditable}>
       {itemTypes.map((itemType, index) => (
         <div key={index} className={styles.tupleSlotRow}>
-          <SchemaKindSelect
-            value={itemType}
-            options={itemTypeOptions}
-            onChange={(next) => retypeSlot(index, next)}
-          />
+          {showItemTypes && (
+            <SchemaKindSelect
+              value={itemType}
+              options={itemTypeOptions}
+              onChange={(next) => retypeSlot(index, next)}
+            />
+          )}
           <div className={styles.tupleValueSlot}>
             <PropertyValueEditor
               typeRef={itemType}

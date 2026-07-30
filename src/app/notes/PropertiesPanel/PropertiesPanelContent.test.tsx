@@ -412,4 +412,105 @@ describe('PropertiesPanelContent', () => {
 
     expect(await screen.findByText('Not set')).toBeInTheDocument()
   })
+
+  it('edits a List item type via the pencil icon, resetting its items', async () => {
+    const user = userEvent.setup()
+    const note = await createTestNote()
+    await setNoteProperty(note.id, 'scores', {
+      typeRef: { kind: 'list', itemType: { kind: 'primitive', primitive: 'text' } },
+      value: ['a', 'b'],
+    })
+
+    render(<PropertiesPanelHarness noteId={note.id} />)
+    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+
+    expect(screen.getByRole('button', { name: 'a' })).toBeInTheDocument()
+    expect(screen.queryByText('Item type')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Edit item type for scores' }))
+    await user.click(screen.getByRole('menuitemradio', { name: 'Number' }))
+
+    await waitFor(async () => {
+      const updated = await getNote(note.id)
+      expect(updated?.metadata.properties.scores).toEqual({
+        typeRef: { kind: 'list', itemType: { kind: 'primitive', primitive: 'number' } },
+        value: [],
+      })
+    })
+
+    expect(screen.queryByRole('button', { name: 'a' })).not.toBeInTheDocument()
+  })
+
+  it('edits a Set item type via the pencil icon, resetting its items', async () => {
+    const user = userEvent.setup()
+    const note = await createTestNote()
+    await setNoteProperty(note.id, 'tags2', {
+      typeRef: { kind: 'set', itemType: { kind: 'primitive', primitive: 'text' } },
+      value: ['a', 'b'],
+    })
+
+    render(<PropertiesPanelHarness noteId={note.id} />)
+    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+
+    await user.click(screen.getByRole('button', { name: 'Edit item type for tags2' }))
+    await user.click(screen.getByRole('menuitemradio', { name: 'Boolean' }))
+
+    await waitFor(async () => {
+      const updated = await getNote(note.id)
+      expect(updated?.metadata.properties.tags2).toEqual({
+        typeRef: { kind: 'set', itemType: { kind: 'primitive', primitive: 'boolean' } },
+        value: [],
+      })
+    })
+  })
+
+  it('toggles per-slot Tuple type pickers and retypes a slot', async () => {
+    const user = userEvent.setup()
+    const note = await createTestNote()
+    await setNoteProperty(note.id, 'range', {
+      typeRef: {
+        kind: 'tuple',
+        itemTypes: [
+          { kind: 'primitive', primitive: 'text' },
+          { kind: 'primitive', primitive: 'number' },
+        ],
+      },
+      value: ['x', 5],
+    })
+
+    render(<PropertiesPanelHarness noteId={note.id} />)
+    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+
+    // The "Add property" compose form has its own always-visible "Text" type trigger, so
+    // assert counts/unique labels rather than mere presence of "Text" to avoid colliding with it.
+    expect(screen.getAllByRole('button', { name: 'Text' })).toHaveLength(1)
+    expect(screen.queryByRole('button', { name: 'Number' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove position 1' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Edit item types for range' }))
+
+    expect(screen.getAllByRole('button', { name: 'Text' })).toHaveLength(2)
+    await user.click(screen.getByRole('button', { name: 'Number' }))
+    await user.click(screen.getByRole('menuitemradio', { name: 'Boolean' }))
+
+    await waitFor(async () => {
+      const updated = await getNote(note.id)
+      expect(updated?.metadata.properties.range).toEqual({
+        typeRef: {
+          kind: 'tuple',
+          itemTypes: [
+            { kind: 'primitive', primitive: 'text' },
+            { kind: 'primitive', primitive: 'boolean' },
+          ],
+        },
+        value: ['x', false],
+      })
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Edit item types for range' }))
+
+    expect(screen.getAllByRole('button', { name: 'Text' })).toHaveLength(1)
+    expect(screen.queryByRole('button', { name: 'Boolean' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove position 1' })).toBeInTheDocument()
+  })
 })

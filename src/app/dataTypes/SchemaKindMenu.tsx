@@ -44,7 +44,7 @@ export function SchemaKindMenu({ options, activeKey, onSelect, onClose }: Schema
   }
 
   return (
-    <div role="menu" className={styles.menu}>
+    <>
       <input
         ref={inputRef}
         type="text"
@@ -78,6 +78,6 @@ export function SchemaKindMenu({ options, activeKey, onSelect, onClose }: Schema
           ))}
         </div>
       )}
-    </div>
+    </>
   )
 }

@@ -21,6 +21,10 @@ export interface PropertyValueEditorProps {
   // across a customTypeRef boundary) — lets list/set/tuple/dictionary editors add/retype/
   // remove/reorder their own item type(s) or fields, persisting typeRef and value together.
   onSchemaChange?: (typeRef: DataTypeRef, value: PropertyValueData) => void
+  // Only meaningful for a `tuple` typeRef: reveals per-slot type pickers as a group (see
+  // LiveEditPropertyRow's `showItemTypes` toggle). Defaults to hidden so other callers
+  // (SamplePreview, DictionaryValueEditor) render tuples exactly as before.
+  showTupleItemTypes?: boolean
   disabled?: boolean
   resolveCustomType: (id: string) => CustomDataType | undefined
   availableCustomTypes: CustomDataType[]
@@ -31,6 +35,7 @@ export function PropertyValueEditor({
   value,
   onChange,
   onSchemaChange,
+  showTupleItemTypes,
   disabled,
   resolveCustomType,
   availableCustomTypes,
@@ -66,11 +71,6 @@ export function PropertyValueEditor({
           maxSize={typeRef.maxSize}
           value={Array.isArray(value) ? value : []}
           onChange={onChange}
-          onItemTypeChange={
-            onSchemaChange
-              ? (nextItemType) => onSchemaChange({ ...typeRef, itemType: nextItemType }, [])
-              : undefined
-          }
           disabled={disabled}
           resolveCustomType={resolveCustomType}
           availableCustomTypes={availableCustomTypes}
@@ -82,11 +82,6 @@ export function PropertyValueEditor({
           itemType={typeRef.itemType}
           value={Array.isArray(value) ? value : []}
           onChange={onChange}
-          onItemTypeChange={
-            onSchemaChange
-              ? (nextItemType) => onSchemaChange({ ...typeRef, itemType: nextItemType }, [])
-              : undefined
-          }
           disabled={disabled}
           resolveCustomType={resolveCustomType}
           availableCustomTypes={availableCustomTypes}
@@ -104,6 +99,7 @@ export function PropertyValueEditor({
                   onSchemaChange({ ...typeRef, itemTypes: nextItemTypes }, nextValue)
               : undefined
           }
+          showItemTypes={showTupleItemTypes ?? false}
           disabled={disabled}
           resolveCustomType={resolveCustomType}
           availableCustomTypes={availableCustomTypes}

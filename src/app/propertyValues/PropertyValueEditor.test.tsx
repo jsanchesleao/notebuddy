@@ -414,110 +414,6 @@ describe('PropertyValueEditor — dictionary schema editing (onSchemaChange)', (
   })
 })
 
-describe('PropertyValueEditor — list/set item type editing (onSchemaChange)', () => {
-  function ItemTypeHarness({
-    initialTypeRef,
-    initialValue,
-    availableCustomTypes = [],
-  }: {
-    initialTypeRef: DataTypeRef
-    initialValue: PropertyValueData
-    availableCustomTypes?: CustomDataType[]
-  }) {
-    const [typeRef, setTypeRef] = useState(initialTypeRef)
-    const [value, setValue] = useState(initialValue)
-    return (
-      <PropertyValueEditor
-        typeRef={typeRef}
-        value={value}
-        onChange={setValue}
-        onSchemaChange={(nextTypeRef, nextValue) => {
-          setTypeRef(nextTypeRef)
-          setValue(nextValue)
-        }}
-        resolveCustomType={(id) => availableCustomTypes.find((type) => type.id === id)}
-        availableCustomTypes={availableCustomTypes}
-      />
-    )
-  }
-
-  it('retypes a list item type and clears existing items', async () => {
-    const user = userEvent.setup()
-    render(
-      <ItemTypeHarness
-        initialTypeRef={{ kind: 'list', itemType: { kind: 'primitive', primitive: 'text' } }}
-        initialValue={['a', 'b']}
-      />,
-    )
-
-    expect(screen.getByRole('button', { name: 'a' })).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /^Text/ }))
-    await user.click(screen.getByRole('menuitemradio', { name: 'Number' }))
-
-    expect(screen.queryByRole('button', { name: 'a' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
-  })
-
-  it('retypes a set item type and clears existing items', async () => {
-    const user = userEvent.setup()
-    render(
-      <ItemTypeHarness
-        initialTypeRef={{ kind: 'set', itemType: { kind: 'primitive', primitive: 'text' } }}
-        initialValue={['a', 'b']}
-      />,
-    )
-
-    await user.click(screen.getByRole('button', { name: /^Text/ }))
-    await user.click(screen.getByRole('menuitemradio', { name: 'Number' }))
-
-    expect(screen.queryByRole('button', { name: 'a' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
-  })
-
-  it('offers a custom type as a selectable list item type', async () => {
-    const user = userEvent.setup()
-    const address: CustomDataType = {
-      id: 'addr',
-      name: 'Address',
-      schema: { kind: 'primitive', primitive: 'text' },
-      createdAt: '2026-01-01T00:00:00.000Z',
-      updatedAt: '2026-01-01T00:00:00.000Z',
-    }
-    render(
-      <ItemTypeHarness
-        initialTypeRef={{ kind: 'list', itemType: { kind: 'primitive', primitive: 'number' } }}
-        initialValue={[]}
-        availableCustomTypes={[address]}
-      />,
-    )
-
-    await user.click(screen.getByRole('button', { name: /^Number/ }))
-    expect(screen.getByRole('menuitemradio', { name: 'Address' })).toBeInTheDocument()
-  })
-
-  it('does not show an item-type picker for a list reached through a customTypeRef', () => {
-    const inner: CustomDataType = {
-      id: 'inner',
-      name: 'Inner',
-      schema: { kind: 'list', itemType: { kind: 'primitive', primitive: 'text' } },
-      createdAt: '2026-01-01T00:00:00.000Z',
-      updatedAt: '2026-01-01T00:00:00.000Z',
-    }
-    render(
-      <PropertyValueEditor
-        typeRef={{ kind: 'customTypeRef', customTypeId: 'inner' }}
-        value={[]}
-        onChange={() => {}}
-        onSchemaChange={() => {}}
-        resolveCustomType={(id) => (id === 'inner' ? inner : undefined)}
-        availableCustomTypes={[]}
-      />,
-    )
-
-    expect(screen.queryByText('Item type')).not.toBeInTheDocument()
-  })
-})
-
 describe('PropertyValueEditor — tuple slot editing (onSchemaChange)', () => {
   const textType: DataTypeRef = { kind: 'primitive', primitive: 'text' }
   const numberType: DataTypeRef = { kind: 'primitive', primitive: 'number' }
@@ -525,9 +421,11 @@ describe('PropertyValueEditor — tuple slot editing (onSchemaChange)', () => {
   function TupleHarness({
     initialTypeRef,
     initialValue,
+    showTupleItemTypes = true,
   }: {
     initialTypeRef: DataTypeRef
     initialValue: PropertyValueData
+    showTupleItemTypes?: boolean
   }) {
     const [typeRef, setTypeRef] = useState(initialTypeRef)
     const [value, setValue] = useState(initialValue)
@@ -540,6 +438,7 @@ describe('PropertyValueEditor — tuple slot editing (onSchemaChange)', () => {
           setTypeRef(nextTypeRef)
           setValue(nextValue)
         }}
+        showTupleItemTypes={showTupleItemTypes}
         resolveCustomType={noCustomTypes}
         availableCustomTypes={[]}
       />
@@ -591,6 +490,21 @@ describe('PropertyValueEditor — tuple slot editing (onSchemaChange)', () => {
 
     expect(screen.queryByDisplayValue('x')).not.toBeInTheDocument()
     expect(screen.getByRole('spinbutton')).toHaveValue(5)
+  })
+
+  it('hides per-slot type pickers when showTupleItemTypes is not set', () => {
+    render(
+      <TupleHarness
+        initialTypeRef={{ kind: 'tuple', itemTypes: [textType, numberType] }}
+        initialValue={['x', 5]}
+        showTupleItemTypes={false}
+      />,
+    )
+
+    expect(screen.queryByRole('button', { name: /^Text/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Number/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add position' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove position 1' })).toBeInTheDocument()
   })
 
   it('renders a tuple read-only with no controls when onSchemaChange is absent', () => {

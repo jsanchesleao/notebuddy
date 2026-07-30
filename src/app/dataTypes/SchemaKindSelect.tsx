@@ -1,4 +1,5 @@
-import { useDismissableMenu } from '../../components/Menu/useDismissableMenu'
+import { DismissableDropdown } from '../../components/Menu/DismissableDropdown'
+import dropdownStyles from '../../components/Menu/DismissableDropdown.module.css'
 import { Icon } from '../../components/Icon/Icon'
 import { SchemaKindMenu } from './SchemaKindMenu'
 import { kindKeyFor, type SchemaKindOption } from './schemaKinds'
@@ -12,32 +13,35 @@ interface SchemaKindSelectProps {
 }
 
 export function SchemaKindSelect({ value, options, onChange }: SchemaKindSelectProps) {
-  const { open, setOpen, containerRef } = useDismissableMenu<HTMLDivElement>()
   const activeKey = kindKeyFor(value)
   const active = options.find((option) => option.key === activeKey)
 
   return (
-    <div className={styles.container} ref={containerRef}>
-      <button
-        type="button"
-        className={styles.trigger}
-        aria-expanded={open}
-        onClick={() => setOpen(!open)}
-      >
-        <span className={styles.triggerLabel}>{active?.label ?? 'Choose type'}</span>
-        <Icon name="chevronDown" size={12} />
-      </button>
-      {open && (
+    <DismissableDropdown
+      menuClassName={styles.menu}
+      trigger={({ toggle, open }) => (
+        <button
+          type="button"
+          className={dropdownStyles.trigger}
+          aria-expanded={open}
+          onClick={toggle}
+        >
+          <span className={styles.triggerLabel}>{active?.label ?? 'Choose type'}</span>
+          <Icon name="chevronDown" size={12} />
+        </button>
+      )}
+    >
+      {({ close }) => (
         <SchemaKindMenu
           options={options}
           activeKey={activeKey}
           onSelect={(option) => {
             onChange(option.build())
-            setOpen(false)
+            close()
           }}
-          onClose={() => setOpen(false)}
+          onClose={close}
         />
       )}
-    </div>
+    </DismissableDropdown>
   )
 }
