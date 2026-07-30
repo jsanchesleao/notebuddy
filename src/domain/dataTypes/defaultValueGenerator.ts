@@ -1,10 +1,18 @@
-import type { CustomDataType, DataTypeRef, PrimitiveKind, PropertyValueData } from '../entities.types'
+import type {
+  CustomDataType,
+  DataTypeRef,
+  PrimitiveKind,
+  PropertyValueData,
+} from '../entities.types'
 
 export interface DefaultValueContext {
   resolveCustomType: (id: string) => CustomDataType | undefined
 }
 
-export function createDefaultValue(typeRef: DataTypeRef, ctx: DefaultValueContext): PropertyValueData {
+export function createDefaultValue(
+  typeRef: DataTypeRef,
+  ctx: DefaultValueContext,
+): PropertyValueData {
   switch (typeRef.kind) {
     case 'primitive':
       return createPrimitiveDefault(typeRef.primitive)

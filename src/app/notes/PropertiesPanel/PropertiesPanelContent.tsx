@@ -75,6 +75,7 @@ export function PropertiesPanelContent({
             propertyKey={key}
             property={property}
             resolveCustomType={resolveCustomType}
+            availableCustomTypes={customTypes ?? []}
             mode={mode}
           />
         ))}

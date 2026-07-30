@@ -17,12 +17,13 @@ export interface PropertyValueEditorProps {
   typeRef: DataTypeRef
   value: PropertyValueData
   onChange: (value: PropertyValueData) => void
-  // Only set for a dictionary property whose schema is privately owned by the note (never
-  // forwarded across a customTypeRef boundary) — lets the dictionary editor add/rename/
-  // retype/remove/reorder its own fields, persisting typeRef and value together.
+  // Only set for a property whose schema is privately owned by the note (never forwarded
+  // across a customTypeRef boundary) — lets list/set/tuple/dictionary editors add/retype/
+  // remove/reorder their own item type(s) or fields, persisting typeRef and value together.
   onSchemaChange?: (typeRef: DataTypeRef, value: PropertyValueData) => void
   disabled?: boolean
   resolveCustomType: (id: string) => CustomDataType | undefined
+  availableCustomTypes: CustomDataType[]
 }
 
 export function PropertyValueEditor({
@@ -32,6 +33,7 @@ export function PropertyValueEditor({
   onSchemaChange,
   disabled,
   resolveCustomType,
+  availableCustomTypes,
 }: PropertyValueEditorProps) {
   switch (typeRef.kind) {
     case 'primitive':
@@ -53,6 +55,7 @@ export function PropertyValueEditor({
           onChange={onChange}
           disabled={disabled}
           resolveCustomType={resolveCustomType}
+          availableCustomTypes={availableCustomTypes}
         />
       )
     }
@@ -63,8 +66,14 @@ export function PropertyValueEditor({
           maxSize={typeRef.maxSize}
           value={Array.isArray(value) ? value : []}
           onChange={onChange}
+          onItemTypeChange={
+            onSchemaChange
+              ? (nextItemType) => onSchemaChange({ ...typeRef, itemType: nextItemType }, [])
+              : undefined
+          }
           disabled={disabled}
           resolveCustomType={resolveCustomType}
+          availableCustomTypes={availableCustomTypes}
         />
       )
     case 'set':
@@ -73,8 +82,14 @@ export function PropertyValueEditor({
           itemType={typeRef.itemType}
           value={Array.isArray(value) ? value : []}
           onChange={onChange}
+          onItemTypeChange={
+            onSchemaChange
+              ? (nextItemType) => onSchemaChange({ ...typeRef, itemType: nextItemType }, [])
+              : undefined
+          }
           disabled={disabled}
           resolveCustomType={resolveCustomType}
+          availableCustomTypes={availableCustomTypes}
         />
       )
     case 'tuple':
@@ -83,8 +98,15 @@ export function PropertyValueEditor({
           itemTypes={typeRef.itemTypes}
           value={Array.isArray(value) ? value : []}
           onChange={onChange}
+          onItemTypesChange={
+            onSchemaChange
+              ? (nextItemTypes, nextValue) =>
+                  onSchemaChange({ ...typeRef, itemTypes: nextItemTypes }, nextValue)
+              : undefined
+          }
           disabled={disabled}
           resolveCustomType={resolveCustomType}
+          availableCustomTypes={availableCustomTypes}
         />
       )
     case 'dictionary':
@@ -95,11 +117,13 @@ export function PropertyValueEditor({
           onChange={onChange}
           onFieldsChange={
             onSchemaChange
-              ? (nextFields, nextValue) => onSchemaChange({ ...typeRef, fields: nextFields }, nextValue)
+              ? (nextFields, nextValue) =>
+                  onSchemaChange({ ...typeRef, fields: nextFields }, nextValue)
               : undefined
           }
           disabled={disabled}
           resolveCustomType={resolveCustomType}
+          availableCustomTypes={availableCustomTypes}
         />
       )
   }
@@ -112,11 +136,20 @@ interface PrimitiveValueEditorProps {
   disabled?: boolean
 }
 
-function PrimitiveValueEditor({ primitiveType, value, onChange, disabled }: PrimitiveValueEditorProps) {
+function PrimitiveValueEditor({
+  primitiveType,
+  value,
+  onChange,
+  disabled,
+}: PrimitiveValueEditorProps) {
   switch (primitiveType.primitive) {
     case 'text':
       return (
-        <TextValueEditor value={typeof value === 'string' ? value : ''} onChange={onChange} disabled={disabled} />
+        <TextValueEditor
+          value={typeof value === 'string' ? value : ''}
+          onChange={onChange}
+          disabled={disabled}
+        />
       )
     case 'number':
       return (
@@ -130,11 +163,19 @@ function PrimitiveValueEditor({ primitiveType, value, onChange, disabled }: Prim
       return <BooleanToggle value={value === true} onChange={onChange} disabled={disabled} />
     case 'link':
       return (
-        <LinkValueEditor value={typeof value === 'string' ? value : ''} onChange={onChange} disabled={disabled} />
+        <LinkValueEditor
+          value={typeof value === 'string' ? value : ''}
+          onChange={onChange}
+          disabled={disabled}
+        />
       )
     case 'color':
       return (
-        <ColorValueEditor value={typeof value === 'string' ? value : ''} onChange={onChange} disabled={disabled} />
+        <ColorValueEditor
+          value={typeof value === 'string' ? value : ''}
+          onChange={onChange}
+          disabled={disabled}
+        />
       )
     case 'date':
       return (

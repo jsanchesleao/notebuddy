@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { assertValid, SchemaValidationError, validateValue, type ValidationContext } from './schemaValidator'
+import {
+  assertValid,
+  SchemaValidationError,
+  validateValue,
+  type ValidationContext,
+} from './schemaValidator'
 import type { CustomDataType, DataTypeRef } from '../entities.types'
 
 const noCustomTypes: ValidationContext = { resolveCustomType: () => undefined }
@@ -115,9 +120,9 @@ describe('validateValue — composites', () => {
     }
     expect(validateValue(type, { name: 'Ada', age: 30 }, noCustomTypes)).toEqual([])
     expect(validateValue(type, { name: 'Ada' }, noCustomTypes)).not.toEqual([]) // missing key
-    expect(
-      validateValue(type, { name: 'Ada', age: 30, extra: true }, noCustomTypes),
-    ).not.toEqual([]) // extra key
+    expect(validateValue(type, { name: 'Ada', age: 30, extra: true }, noCustomTypes)).not.toEqual(
+      [],
+    ) // extra key
     expect(validateValue(type, { name: 'Ada', age: 'thirty' }, noCustomTypes)).not.toEqual([]) // wrong nested type
   })
 
@@ -157,7 +162,9 @@ describe('validateValue — composites', () => {
       createdAt: '2026-01-01T00:00:00.000Z',
       updatedAt: '2026-01-01T00:00:00.000Z',
     }
-    const ctx: ValidationContext = { resolveCustomType: (id) => (id === 'inner' ? inner : undefined) }
+    const ctx: ValidationContext = {
+      resolveCustomType: (id) => (id === 'inner' ? inner : undefined),
+    }
     const type: DataTypeRef = { kind: 'customTypeRef', customTypeId: 'inner' }
 
     expect(validateValue(type, 'hello', ctx)).toEqual([])

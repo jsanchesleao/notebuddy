@@ -1,0 +1,126 @@
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 1.75rem;
+  padding: 0 var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  white-space: nowrap;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.trigger:hover,
+.trigger[aria-expanded='true'] {
+  background: var(--color-bg-sidebar);
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 16rem;
+}
+
+.empty {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.item {
+  padding: var(--space-1);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.selectButton {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-1) var(--space-2);
+  overflow: hidden;
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.selectButton:hover {
+  background: var(--color-bg-sidebar);
+}
+
+.selectButton[aria-checked='true'] {
+  color: var(--color-accent-fg);
+  background: var(--color-accent);
+}
+
+.iconButton {
+  display: inline-flex;
+  padding: var(--space-1);
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.iconButton:hover {
+  color: var(--color-text);
+  background: var(--color-bg-sidebar);
+}
+
+.confirmDelete {
+  padding: 0 var(--space-2);
+  height: 1.5rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-accent-fg);
+  white-space: nowrap;
+  background: var(--color-danger);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.addButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  background: none;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.addButton:hover {
+  background: var(--color-bg-sidebar);
+}
+
+.error {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+}

@@ -35,6 +35,7 @@ interface DictionaryValueEditorProps {
   onFieldsChange?: (fields: DictionaryField[], value: Record<string, PropertyValueData>) => void
   disabled?: boolean
   resolveCustomType: (id: string) => CustomDataType | undefined
+  availableCustomTypes: CustomDataType[]
 }
 
 const PRIMITIVE_TYPE_OPTIONS = buildSchemaKindOptions({
@@ -50,6 +51,7 @@ export function DictionaryValueEditor({
   onFieldsChange,
   disabled,
   resolveCustomType,
+  availableCustomTypes,
 }: DictionaryValueEditorProps) {
   // Ephemeral, component-local identity for React keys / dnd-kit sortable ids — dictionary
   // fields have no persisted id of their own, and none is needed: every mutation below
@@ -77,6 +79,7 @@ export function DictionaryValueEditor({
               onChange={(next) => updateValue(field.key, next)}
               disabled={disabled}
               resolveCustomType={resolveCustomType}
+              availableCustomTypes={availableCustomTypes}
             />
           </div>
         ))}
@@ -116,7 +119,10 @@ export function DictionaryValueEditor({
   const retypeField = (index: number, nextTypeRef: DataTypeRef) => {
     const field = fields[index]
     const nextFields = fields.map((f, i) => (i === index ? { ...f, typeRef: nextTypeRef } : f))
-    const nextValue = { ...value, [field.key]: createDefaultValue(nextTypeRef, { resolveCustomType }) }
+    const nextValue = {
+      ...value,
+      [field.key]: createDefaultValue(nextTypeRef, { resolveCustomType }),
+    }
     onFieldsChange(nextFields, nextValue)
   }
 
@@ -170,6 +176,7 @@ export function DictionaryValueEditor({
                     onChange={(next) => updateValue(field.key, next)}
                     disabled={disabled}
                     resolveCustomType={resolveCustomType}
+                    availableCustomTypes={availableCustomTypes}
                   />
                 </div>
                 <button

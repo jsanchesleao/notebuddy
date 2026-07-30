@@ -21,6 +21,38 @@
   border-radius: var(--radius-sm);
 }
 
+.selectModeToggle {
+  display: inline-flex;
+  align-self: flex-start;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.selectModeButton {
+  padding: 0 var(--space-2);
+  height: 1.75rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.selectModeButton:not(:first-child) {
+  border-left: 1px solid var(--color-border);
+}
+
+.selectModeButton:hover {
+  background: var(--color-bg-sidebar);
+}
+
+.selectModeButton[aria-pressed='true'] {
+  color: var(--color-accent-fg);
+  background: var(--color-accent);
+}
+
 .addButton {
   display: inline-flex;
   align-items: center;

@@ -45,7 +45,10 @@ export function labelForTypeRef(
 ): string {
   switch (typeRef.kind) {
     case 'primitive':
-      return PRIMITIVE_LABELS.find((option) => option.primitive === typeRef.primitive)?.label ?? typeRef.primitive
+      return (
+        PRIMITIVE_LABELS.find((option) => option.primitive === typeRef.primitive)?.label ??
+        typeRef.primitive
+      )
     case 'list':
       return 'List'
     case 'set':
@@ -110,6 +113,18 @@ export function buildSchemaKindOptions({
     }))
 
   return [...primitiveOptions, ...compositeOptions, ...referenceOptions]
+}
+
+// Options for picking an item/slot type within a List, Set, or Tuple ad hoc note property:
+// primitives and custom types, but never a raw nested composite literal (List of List, etc.) —
+// that stays reachable only through the full SchemaNodeEditor when authoring a reusable
+// Custom Data Type, not from inline note-property editing.
+export function buildItemTypeOptions(availableCustomTypes: CustomDataType[]): SchemaKindOption[] {
+  return buildSchemaKindOptions({
+    availableCustomTypes,
+    includePrimitives: true,
+    isCustomTypeSelectable: () => true,
+  }).filter((option) => !option.key.startsWith('composite:'))
 }
 
 export function filterSchemaKindOptions(

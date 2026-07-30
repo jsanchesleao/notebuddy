@@ -1,24 +1,58 @@
 import { Icon } from '../../components/Icon/Icon'
 import { createDefaultValue } from '../../domain/dataTypes/defaultValueGenerator'
+import { buildItemTypeOptions } from '../dataTypes/schemaKinds'
+import { SchemaKindSelect } from '../dataTypes/SchemaKindSelect'
 import type { CustomDataType, DataTypeRef, PropertyValueData } from '../../domain/entities.types'
 import { PropertyValueEditor } from './PropertyValueEditor'
+import { PillListEditor } from './PillListEditor'
+import { resolvePillItemKind } from './resolvePillItemKind'
 import styles from './compositeEditors.module.css'
 
 interface SetValueEditorProps {
   itemType: DataTypeRef
   value: PropertyValueData[]
   onChange: (value: PropertyValueData[]) => void
+  onItemTypeChange?: (itemType: DataTypeRef) => void
   disabled?: boolean
   resolveCustomType: (id: string) => CustomDataType | undefined
+  availableCustomTypes: CustomDataType[]
 }
 
 export function SetValueEditor({
   itemType,
   value,
   onChange,
+  onItemTypeChange,
   disabled,
   resolveCustomType,
+  availableCustomTypes,
 }: SetValueEditorProps) {
+  const itemTypeRow = onItemTypeChange && (
+    <div className={styles.itemTypeRow}>
+      <span className={styles.itemTypeLabel}>Item type</span>
+      <SchemaKindSelect
+        value={itemType}
+        options={buildItemTypeOptions(availableCustomTypes)}
+        onChange={onItemTypeChange}
+      />
+    </div>
+  )
+
+  const pillKind = resolvePillItemKind(itemType, resolveCustomType)
+  if (pillKind) {
+    return (
+      <div className={styles.list}>
+        {itemTypeRow}
+        <PillListEditor
+          pillKind={pillKind}
+          value={value}
+          onChange={onChange}
+          disabled={disabled}
+        />
+      </div>
+    )
+  }
+
   const addItem = () => {
     onChange([...value, createDefaultValue(itemType, { resolveCustomType })])
   }
@@ -33,6 +67,7 @@ export function SetValueEditor({
 
   return (
     <div className={styles.list}>
+      {itemTypeRow}
       {value.map((item, index) => (
         <div key={index} className={styles.listRow}>
           <PropertyValueEditor
@@ -41,6 +76,7 @@ export function SetValueEditor({
             onChange={(next) => updateItem(index, next)}
             disabled={disabled}
             resolveCustomType={resolveCustomType}
+            availableCustomTypes={availableCustomTypes}
           />
           <button
             type="button"

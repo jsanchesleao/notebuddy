@@ -1,5 +1,8 @@
 import { useState, type FormEvent } from 'react'
-import { createCustomDataType, updateCustomDataType } from '../../domain/dataTypes/dataTypeRepository'
+import {
+  createCustomDataType,
+  updateCustomDataType,
+} from '../../domain/dataTypes/dataTypeRepository'
 import { SchemaNodeEditor } from './SchemaNodeEditor'
 import { SamplePreview } from './SamplePreview'
 import type { CustomDataType, DataTypeRef } from '../../domain/entities.types'
@@ -62,7 +65,11 @@ export function CustomDataTypeBuilder({
       />
       <div className={styles.previewSection}>
         <span className={styles.previewLabel}>Preview</span>
-        <SamplePreview schema={schema} resolveCustomType={resolveCustomType} />
+        <SamplePreview
+          schema={schema}
+          resolveCustomType={resolveCustomType}
+          availableCustomTypes={availableCustomTypes}
+        />
       </div>
       {error && <p className={styles.error}>{error}</p>}
       <div className={styles.actions}>

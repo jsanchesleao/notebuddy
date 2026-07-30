@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildSchemaKindOptions, kindKeyFor, labelForTypeRef } from './schemaKinds'
+import { buildItemTypeOptions, buildSchemaKindOptions, kindKeyFor, labelForTypeRef } from './schemaKinds'
 import type { CustomDataType, DataTypeRef } from '../../domain/entities.types'
 
 describe('kindKeyFor', () => {
@@ -68,7 +68,12 @@ describe('buildSchemaKindOptions', () => {
       isCustomTypeSelectable: () => true,
     })
     expect(options.map((option) => option.key)).toEqual(
-      expect.arrayContaining(['composite:list', 'composite:set', 'composite:tuple', 'composite:dictionary']),
+      expect.arrayContaining([
+        'composite:list',
+        'composite:set',
+        'composite:tuple',
+        'composite:dictionary',
+      ]),
     )
   })
 
@@ -103,5 +108,30 @@ describe('buildSchemaKindOptions', () => {
       kind: 'list',
       itemType: { kind: 'primitive', primitive: 'text' },
     })
+  })
+})
+
+describe('buildItemTypeOptions', () => {
+  it('includes primitives', () => {
+    const options = buildItemTypeOptions([])
+    expect(options.some((option) => option.key === 'primitive:text')).toBe(true)
+    expect(options.some((option) => option.key === 'primitive:number')).toBe(true)
+  })
+
+  it('includes available custom types', () => {
+    const custom: CustomDataType = {
+      id: 'abc',
+      name: 'Address',
+      schema: { kind: 'primitive', primitive: 'text' },
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    }
+    const options = buildItemTypeOptions([custom])
+    expect(options.map((option) => option.key)).toContain('customType:abc')
+  })
+
+  it('excludes all composite kinds', () => {
+    const options = buildItemTypeOptions([])
+    expect(options.some((option) => option.key.startsWith('composite:'))).toBe(false)
   })
 })

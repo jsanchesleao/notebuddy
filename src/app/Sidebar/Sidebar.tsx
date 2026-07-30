@@ -26,7 +26,11 @@ export function Sidebar({ open, routeKind, folderId, notebookId, noteId }: Sideb
       )}
       <Link
         to="/data-types"
-        className={routeKind === 'dataTypes' ? `${styles.dataTypesLink} ${styles.activeLink}` : styles.dataTypesLink}
+        className={
+          routeKind === 'dataTypes'
+            ? `${styles.dataTypesLink} ${styles.activeLink}`
+            : styles.dataTypesLink
+        }
       >
         <Icon name="properties" size={14} /> Data Types
       </Link>

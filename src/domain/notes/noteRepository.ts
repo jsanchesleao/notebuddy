@@ -7,6 +7,7 @@ import { deleteUpdateRows } from '../yjs/yjsUpdatesTable'
 import { createDefaultValue } from '../dataTypes/defaultValueGenerator'
 import { assertValid } from '../dataTypes/schemaValidator'
 import { getNoteType } from '../noteTypes/noteTypeRepository'
+import { ensureTagColor } from '../tags/tagRepository'
 import type { CustomDataType, Note, PropertyValue } from '../entities.types'
 
 async function deleteNoteAssets(note: Note): Promise<void> {
@@ -58,9 +59,7 @@ export interface CreateNoteInput {
 export async function createNote(input: CreateNoteInput): Promise<Note> {
   const now = new Date().toISOString()
   const { docId } = createYDoc()
-  const properties = input.noteTypeId
-    ? await buildPropertiesFromNoteType(input.noteTypeId)
-    : {}
+  const properties = input.noteTypeId ? await buildPropertiesFromNoteType(input.noteTypeId) : {}
 
   const note: Note = {
     id: createId(),
@@ -147,6 +146,10 @@ export async function setNoteTags(id: string, tags: string[]): Promise<void> {
     'metadata.updatedAt': now,
     updatedAt: now,
   })
+
+  // Registers a color for any tag name seen for the first time anywhere in the app — a
+  // no-op for tags that are already registered.
+  await Promise.all(normalized.map((tag) => ensureTagColor(tag)))
 }
 
 export async function deleteNote(id: string): Promise<void> {

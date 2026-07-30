@@ -12,3 +12,7 @@ export const SCHEMA_V2 = {
   customDataTypes: 'id, name',
   noteTypes: 'id, customTypeId',
 }
+
+export const SCHEMA_V3 = {
+  tags: 'name',
+}

@@ -25,7 +25,9 @@ export function DictionaryFieldRow({ id, children, disabled }: DictionaryFieldRo
     <div
       ref={setNodeRef}
       style={style}
-      className={isDragging ? `${styles.dictionaryEntryRow} ${styles.dragging}` : styles.dictionaryEntryRow}
+      className={
+        isDragging ? `${styles.dictionaryEntryRow} ${styles.dragging}` : styles.dictionaryEntryRow
+      }
     >
       <button
         type="button"

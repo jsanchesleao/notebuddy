@@ -28,15 +28,7 @@ export interface Board {
 }
 
 export type PrimitiveKind =
-  | 'text'
-  | 'date'
-  | 'time'
-  | 'datetime'
-  | 'boolean'
-  | 'number'
-  | 'select'
-  | 'link'
-  | 'color'
+  'text' | 'date' | 'time' | 'datetime' | 'boolean' | 'number' | 'select' | 'link' | 'color'
 
 export interface SelectOption {
   id: string
@@ -75,12 +67,7 @@ export interface NoteType {
 }
 
 export type PropertyValueData =
-  | string
-  | number
-  | boolean
-  | null
-  | PropertyValueData[]
-  | { [key: string]: PropertyValueData }
+  string | number | boolean | null | PropertyValueData[] | { [key: string]: PropertyValueData }
 
 export interface PropertyValue {
   typeRef: DataTypeRef
@@ -109,6 +96,16 @@ export interface Note {
 export interface Setting {
   key: string
   value: unknown
+}
+
+// A global registry of note tag colors, keyed by the tag's literal (case-sensitive) text —
+// shared across every note so the same tag name always renders with the same color anywhere
+// in the app. Entries are never pruned when a tag falls out of use, so a color is remembered
+// even if the tag is removed from every note and later reused.
+export interface TagRecord {
+  name: string
+  color: string
+  createdAt: string
 }
 
 export interface YjsUpdateRow {

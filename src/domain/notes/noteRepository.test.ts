@@ -121,7 +121,10 @@ describe('noteRepository', () => {
             key: 'steps',
             typeRef: {
               kind: 'list',
-              itemType: { kind: 'tuple', itemTypes: [textType, { kind: 'primitive', primitive: 'number' }] },
+              itemType: {
+                kind: 'tuple',
+                itemTypes: [textType, { kind: 'primitive', primitive: 'number' }],
+              },
             },
           },
         ],
@@ -129,7 +132,11 @@ describe('noteRepository', () => {
     })
     const noteType = await createNoteType({ name: 'Recipe', customTypeId: customType.id })
 
-    const note = await createNote({ notebookId: notebook.id, title: 'Pancakes', noteTypeId: noteType.id })
+    const note = await createNote({
+      notebookId: notebook.id,
+      title: 'Pancakes',
+      noteTypeId: noteType.id,
+    })
 
     expect(note.noteTypeId).toBe(noteType.id)
     expect(note.metadata.properties).toEqual({

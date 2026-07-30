@@ -65,7 +65,5 @@ export function findCustomDataTypesReferencing(
   customTypeId: string,
   allTypes: CustomDataType[],
 ): CustomDataType[] {
-  return allTypes.filter((type) =>
-    collectCustomTypeReferences(type.schema).includes(customTypeId),
-  )
+  return allTypes.filter((type) => collectCustomTypeReferences(type.schema).includes(customTypeId))
 }

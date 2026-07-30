@@ -83,7 +83,9 @@ export function validateValue(
         if (!(field.key in value)) {
           issues.push({ path: `${path}.${field.key}`, message: 'is required' })
         } else {
-          issues.push(...validateValue(field.typeRef, value[field.key], ctx, `${path}.${field.key}`))
+          issues.push(
+            ...validateValue(field.typeRef, value[field.key], ctx, `${path}.${field.key}`),
+          )
         }
       }
       for (const key of Object.keys(value)) {
@@ -128,7 +130,9 @@ function validatePrimitive(
         ? []
         : [{ path, message: 'must be a valid date/time or empty' }]
     case 'color':
-      return value === null || value === '' || (typeof value === 'string' && COLOR_REGEX.test(value))
+      return value === null ||
+        value === '' ||
+        (typeof value === 'string' && COLOR_REGEX.test(value))
         ? []
         : [{ path, message: 'must be a hex color or empty' }]
     case 'link':

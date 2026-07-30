@@ -4,7 +4,16 @@ import dropdownStyles from '../../components/Menu/DismissableDropdown.module.css
 import valueEditorStyles from './valueEditors.module.css'
 import styles from './ColorValueEditor.module.css'
 
-const COLOR_SWATCHES = ['#c0392b', '#c0722a', '#b8901f', '#4c7a52', '#2f6f9e', '#7a4fa0', '#6b6255', '#2b2620']
+const COLOR_SWATCHES = [
+  '#c0392b',
+  '#c0722a',
+  '#b8901f',
+  '#4c7a52',
+  '#2f6f9e',
+  '#7a4fa0',
+  '#6b6255',
+  '#2b2620',
+]
 const HEX_REGEX = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
 
 interface ColorValueEditorProps {

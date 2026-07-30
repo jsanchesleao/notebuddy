@@ -207,8 +207,8 @@
 
 .lockWatermark {
   position: absolute;
-  right: .5rem;
-  bottom: .5rem;
+  right: 0.5rem;
+  bottom: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;

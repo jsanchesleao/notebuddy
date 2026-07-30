@@ -137,7 +137,11 @@ export function SchemaNodeEditor({
               <div key={index} className={styles.slot}>
                 <input
                   type="text"
-                  className={isDuplicate ? `${styles.fieldNameInput} ${styles.duplicate}` : styles.fieldNameInput}
+                  className={
+                    isDuplicate
+                      ? `${styles.fieldNameInput} ${styles.duplicate}`
+                      : styles.fieldNameInput
+                  }
                   placeholder="Field name"
                   value={field.key}
                   onChange={(event) => {
@@ -181,7 +185,10 @@ export function SchemaNodeEditor({
             onClick={() =>
               onChange({
                 ...value,
-                fields: [...value.fields, { key: '', typeRef: { kind: 'primitive', primitive: 'text' } }],
+                fields: [
+                  ...value.fields,
+                  { key: '', typeRef: { kind: 'primitive', primitive: 'text' } },
+                ],
               })
             }
           >

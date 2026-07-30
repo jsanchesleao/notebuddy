@@ -60,6 +60,40 @@
   gap: var(--space-1);
 }
 
+.tupleEditable {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.tupleSlotRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  padding: var(--space-1) 0;
+}
+
+.tupleSlotRow + .tupleSlotRow {
+  border-top: 1px solid var(--color-border);
+}
+
+.tupleValueSlot {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemTypeRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.itemTypeLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
 .dictionary {
   display: flex;
   flex-direction: column;

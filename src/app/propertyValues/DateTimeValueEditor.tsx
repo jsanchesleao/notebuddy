@@ -12,6 +12,11 @@ interface DateTimeValueEditorProps {
   disabled?: boolean
 }
 
+// Below this width (comfortably above the Drawer panel's 22rem, below the
+// Modal panel's 42rem) the calendar and time columns no longer fit
+// side-by-side without overflowing, so they stack instead.
+const STACK_BELOW_WIDTH_PX = 384
+
 function splitValue(value: string | null): {
   date: string | null
   hour: string | null
@@ -57,8 +62,8 @@ export function DateTimeValueEditor({ value, onChange, disabled }: DateTimeValue
         </button>
       )}
     >
-      {() => (
-        <div className={styles.combined}>
+      {({ availableWidth }) => (
+        <div className={styles.combined} data-stacked={availableWidth < STACK_BELOW_WIDTH_PX}>
           <CalendarGrid
             viewYear={viewYear}
             viewMonth={viewMonth}

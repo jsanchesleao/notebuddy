@@ -1,0 +1,52 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.nameInput {
+  height: 1.75rem;
+  padding: 0 var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.saveButton {
+  padding: 0 var(--space-2);
+  height: 1.75rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-accent-fg);
+  background: var(--color-accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.cancelButton {
+  padding: 0 var(--space-2);
+  height: 1.75rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.error {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+}

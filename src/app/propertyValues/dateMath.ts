@@ -63,7 +63,11 @@ export function getCalendarWeeks(year: number, month: number): CalendarDay[][] {
 
   let trailingDay = 1
   while (cells.length % 7 !== 0) {
-    cells.push({ date: formatDate(nextYear, nextMonth, trailingDay), day: trailingDay, isCurrentMonth: false })
+    cells.push({
+      date: formatDate(nextYear, nextMonth, trailingDay),
+      day: trailingDay,
+      isCurrentMonth: false,
+    })
     trailingDay += 1
   }
 

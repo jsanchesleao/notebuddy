@@ -1,12 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import { collectCustomTypeReferences, findCustomDataTypesReferencing, wouldCreateCycle } from './schemaGraph'
+import {
+  collectCustomTypeReferences,
+  findCustomDataTypesReferencing,
+  wouldCreateCycle,
+} from './schemaGraph'
 import type { CustomDataType, DataTypeRef } from '../entities.types'
 
 function textType(): DataTypeRef {
   return { kind: 'primitive', primitive: 'text' }
 }
 
-function customType(id: string, schema: DataTypeRef, overrides: Partial<CustomDataType> = {}): CustomDataType {
+function customType(
+  id: string,
+  schema: DataTypeRef,
+  overrides: Partial<CustomDataType> = {},
+): CustomDataType {
   return {
     id,
     name: id,
@@ -101,7 +109,9 @@ describe('findCustomDataTypesReferencing', () => {
     const referencing = customType('referencing', { kind: 'customTypeRef', customTypeId: 'target' })
     const unrelated = customType('unrelated', textType())
 
-    expect(findCustomDataTypesReferencing('target', [referencing, unrelated])).toEqual([referencing])
+    expect(findCustomDataTypesReferencing('target', [referencing, unrelated])).toEqual([
+      referencing,
+    ])
   })
 
   it('returns an empty array when nothing references the id', () => {

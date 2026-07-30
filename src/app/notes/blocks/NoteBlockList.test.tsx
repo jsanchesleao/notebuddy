@@ -502,7 +502,7 @@ describe('NoteBlockList', () => {
     expect(reloaded.blocks[0].type).toBe('text')
   })
 
-  it('ArrowDown fired from a non-text block\'s own control (not the wrapper) still navigates to the next block', async () => {
+  it("ArrowDown fired from a non-text block's own control (not the wrapper) still navigates to the next block", async () => {
     const docId = createId()
     const { doc } = await loadNoteBlocks(docId)
     await insertBlock(docId, doc, createEmptyBlock('table'), 0)
@@ -584,7 +584,8 @@ describe('NoteBlockList', () => {
     await waitFor(() => expect(screen.getByLabelText('Row 1, column 1')).toBeInTheDocument())
 
     const wrappers = () => document.querySelectorAll('[data-block-wrapper]')
-    const content = (i: number) => wrappers()[i].querySelector('[data-block-content]') as HTMLElement
+    const content = (i: number) =>
+      wrappers()[i].querySelector('[data-block-content]') as HTMLElement
 
     fireEvent.mouseDown(content(0), { button: 0 })
     fireEvent.mouseEnter(content(1), { buttons: 1 })
@@ -621,7 +622,8 @@ describe('NoteBlockList', () => {
     await waitFor(() => expect(screen.getByLabelText('Row 1, column 1')).toBeInTheDocument())
 
     const wrappers = () => document.querySelectorAll('[data-block-wrapper]')
-    const content = (i: number) => wrappers()[i].querySelector('[data-block-content]') as HTMLElement
+    const content = (i: number) =>
+      wrappers()[i].querySelector('[data-block-content]') as HTMLElement
 
     fireEvent.mouseDown(content(0), { button: 0 })
     fireEvent.mouseUp(window)
@@ -650,7 +652,8 @@ describe('NoteBlockList', () => {
     await user.click(textEditable)
 
     const wrappers = () => document.querySelectorAll('[data-block-wrapper]')
-    const content = (i: number) => wrappers()[i].querySelector('[data-block-content]') as HTMLElement
+    const content = (i: number) =>
+      wrappers()[i].querySelector('[data-block-content]') as HTMLElement
 
     fireEvent.mouseDown(content(2), { button: 0, shiftKey: true })
 

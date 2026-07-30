@@ -8,13 +8,14 @@ import {
   ReferencedEntityError,
   updateCustomDataType,
 } from './dataTypeRepository'
-import type { DataTypeRef, NoteType } from '../entities.types'
+import type { DataTypeRef, Note, NoteType } from '../entities.types'
 
 const textType: DataTypeRef = { kind: 'primitive', primitive: 'text' }
 
 beforeEach(async () => {
   await db.customDataTypes.clear()
   await db.noteTypes.clear()
+  await db.notes.clear()
 })
 
 describe('dataTypeRepository', () => {
@@ -94,6 +95,39 @@ describe('dataTypeRepository', () => {
 
     await expect(deleteCustomDataType(custom.id)).rejects.toThrow(ReferencedEntityError)
     expect(await getCustomDataType(custom.id)).toBeDefined()
+  })
+
+  it('blocks deleting a custom data type referenced by a note property', async () => {
+    const optionSet = await createCustomDataType({
+      name: 'Priority',
+      schema: { kind: 'primitive', primitive: 'select', options: [] },
+    })
+    const now = new Date().toISOString()
+    const note: Note = {
+      id: 'note-1',
+      notebookId: null,
+      boardId: null,
+      noteTypeId: null,
+      title: 'Task',
+      metadata: {
+        tags: [],
+        createdAt: now,
+        updatedAt: now,
+        properties: {
+          priority: {
+            typeRef: { kind: 'customTypeRef', customTypeId: optionSet.id },
+            value: null,
+          },
+        },
+      },
+      blockDocId: 'doc-1',
+      createdAt: now,
+      updatedAt: now,
+    }
+    await db.notes.add(note)
+
+    await expect(deleteCustomDataType(optionSet.id)).rejects.toThrow(ReferencedEntityError)
+    expect(await getCustomDataType(optionSet.id)).toBeDefined()
   })
 
   it('does not block deleting an unrelated custom data type', async () => {

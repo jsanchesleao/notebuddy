@@ -6,9 +6,14 @@ import styles from './SamplePreview.module.css'
 interface SamplePreviewProps {
   schema: DataTypeRef
   resolveCustomType: (id: string) => CustomDataType | undefined
+  availableCustomTypes: CustomDataType[]
 }
 
-export function SamplePreview({ schema, resolveCustomType }: SamplePreviewProps) {
+export function SamplePreview({
+  schema,
+  resolveCustomType,
+  availableCustomTypes,
+}: SamplePreviewProps) {
   const sampleValue = createDefaultValue(schema, { resolveCustomType })
 
   return (
@@ -19,6 +24,7 @@ export function SamplePreview({ schema, resolveCustomType }: SamplePreviewProps)
         onChange={() => {}}
         disabled
         resolveCustomType={resolveCustomType}
+        availableCustomTypes={availableCustomTypes}
       />
     </div>
   )

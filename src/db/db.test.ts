@@ -3,7 +3,7 @@ import { NotebuddyDB } from './db'
 import { createId } from '../domain/ids'
 
 describe('NotebuddyDB schema', () => {
-  it('declares all eight stores', () => {
+  it('declares all nine stores', () => {
     const db = new NotebuddyDB(`test-${createId()}`)
     const tableNames = db.tables.map((table) => table.name).sort()
 
@@ -16,6 +16,7 @@ describe('NotebuddyDB schema', () => {
         'notebooks',
         'notes',
         'settings',
+        'tags',
         'yjsUpdates',
       ].sort(),
     )

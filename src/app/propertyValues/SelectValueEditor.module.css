@@ -1,0 +1,4 @@
+.stale {
+  font-style: italic;
+  color: var(--color-text-muted);
+}

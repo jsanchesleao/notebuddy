@@ -3,6 +3,7 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/react
 import userEvent from '@testing-library/user-event'
 import { db } from '../../db/db'
 import { createId } from '../../domain/ids'
+import { createCustomDataType } from '../../domain/dataTypes/dataTypeRepository'
 import { DataTypesPage } from './DataTypesPage'
 import type { Note } from '../../domain/entities.types'
 
@@ -166,5 +167,103 @@ describe('DataTypesPage', () => {
     await user.click(within(noteTypeItem).getByRole('button', { name: 'Confirm delete' }))
 
     expect(await within(noteTypeItem).findByText(/still used by/i)).toBeInTheDocument()
+  })
+
+  it('excludes Option Sets (select-shaped custom types) from the Custom Data Types list, listing them in their own section instead', async () => {
+    await createCustomDataType({
+      name: 'Priority',
+      schema: { kind: 'primitive', primitive: 'select', options: [] },
+    })
+    await createCustomDataType({ name: 'Recipe', schema: { kind: 'dictionary', fields: [] } })
+
+    render(<DataTypesPage />)
+
+    const customTypesSection = screen
+      .getByRole('heading', { name: 'Custom Data Types' })
+      .closest('section') as HTMLElement
+    expect(await within(customTypesSection).findByText('Recipe')).toBeInTheDocument()
+    expect(within(customTypesSection).queryByText('Priority')).not.toBeInTheDocument()
+
+    const optionSetsSection = screen
+      .getByRole('heading', { name: 'Option Sets' })
+      .closest('section') as HTMLElement
+    expect(within(optionSetsSection).getByText('Priority')).toBeInTheDocument()
+  })
+
+  it('creates an Option Set through its own section and shows its option count', async () => {
+    const user = userEvent.setup()
+    render(<DataTypesPage />)
+
+    await user.click(screen.getByRole('button', { name: 'New option set' }))
+    await user.type(screen.getByLabelText('Option set name'), 'Priority')
+    await user.type(screen.getByLabelText('New option label'), 'Low')
+    await user.click(screen.getByRole('button', { name: /Add option/ }))
+    await user.click(screen.getByRole('button', { name: 'Create set' }))
+
+    await waitFor(async () => {
+      const stored = await db.customDataTypes.toArray()
+      expect(stored.map((type) => type.name)).toContain('Priority')
+    })
+
+    expect(await screen.findByText('Priority')).toBeInTheDocument()
+    expect(screen.getByText('1 option')).toBeInTheDocument()
+  })
+
+  it('deletes an Option Set after confirmation', async () => {
+    await createCustomDataType({
+      name: 'Priority',
+      schema: { kind: 'primitive', primitive: 'select', options: [] },
+    })
+
+    const user = userEvent.setup()
+    render(<DataTypesPage />)
+
+    const priorityItem = (await screen.findByText('Priority')).closest('li') as HTMLElement
+    await user.click(within(priorityItem).getByRole('button', { name: 'Delete Priority' }))
+    await user.click(within(priorityItem).getByRole('button', { name: 'Confirm delete' }))
+
+    await waitFor(async () => {
+      expect(await db.customDataTypes.toArray()).toHaveLength(0)
+    })
+  })
+
+  it('blocks deleting an Option Set still used by a note property', async () => {
+    const optionSet = await createCustomDataType({
+      name: 'Priority',
+      schema: { kind: 'primitive', primitive: 'select', options: [] },
+    })
+    const now = new Date().toISOString()
+    const note: Note = {
+      id: createId(),
+      notebookId: null,
+      boardId: null,
+      noteTypeId: null,
+      title: 'A task',
+      metadata: {
+        tags: [],
+        createdAt: now,
+        updatedAt: now,
+        properties: {
+          priority: {
+            typeRef: { kind: 'customTypeRef', customTypeId: optionSet.id },
+            value: null,
+          },
+        },
+      },
+      blockDocId: createId(),
+      createdAt: now,
+      updatedAt: now,
+    }
+    await db.notes.add(note)
+
+    const user = userEvent.setup()
+    render(<DataTypesPage />)
+
+    const priorityItem = (await screen.findByText('Priority')).closest('li') as HTMLElement
+    await user.click(within(priorityItem).getByRole('button', { name: 'Delete Priority' }))
+    await user.click(within(priorityItem).getByRole('button', { name: 'Confirm delete' }))
+
+    expect(await within(priorityItem).findByText(/still used by/i)).toBeInTheDocument()
+    expect(await db.customDataTypes.get(optionSet.id)).toBeDefined()
   })
 })

@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { listCustomDataTypes } from '../../domain/dataTypes/dataTypeRepository'
+import { isOptionSetSchema } from '../../domain/dataTypes/optionSets'
 import { listNoteTypes } from '../../domain/noteTypes/noteTypeRepository'
 import { CustomDataTypeList } from '../dataTypes/CustomDataTypeList'
 import { CustomDataTypeBuilder } from '../dataTypes/CustomDataTypeBuilder'
+import { OptionSetList } from '../dataTypes/OptionSetList'
+import { OptionSetEditor } from '../dataTypes/OptionSetEditor'
 import { NoteTypeList } from '../dataTypes/NoteTypeList'
 import { NoteTypeEditor } from '../dataTypes/NoteTypeEditor'
 import { Icon } from '../../components/Icon/Icon'
@@ -17,10 +20,20 @@ export function DataTypesPage() {
   const customTypes = useLiveQuery(() => listCustomDataTypes(), [], [])
   const noteTypes = useLiveQuery(() => listNoteTypes(), [], [])
   const [editingCustomType, setEditingCustomType] = useState<EditingCustomType>(null)
+  const [editingOptionSet, setEditingOptionSet] = useState<EditingCustomType>(null)
   const [editingNoteType, setEditingNoteType] = useState<EditingNoteType>(null)
 
   const resolveCustomType = (id: string) => customTypes?.find((type) => type.id === id)
-  const dictionaryCustomTypes = (customTypes ?? []).filter((type) => type.schema.kind === 'dictionary')
+  const dictionaryCustomTypes = (customTypes ?? []).filter(
+    (type) => type.schema.kind === 'dictionary',
+  )
+  // Option Sets (select-shaped custom types) are managed through their own section below, not
+  // this generic builder — its root SchemaNodeEditor restricts the top-level kind to
+  // composites, so a primitive-select type can't be represented there.
+  const manageableCustomTypes = (customTypes ?? []).filter(
+    (type) => !isOptionSetSchema(type.schema),
+  )
+  const optionSets = (customTypes ?? []).filter((type) => isOptionSetSchema(type.schema))
 
   return (
     <div className={styles.page}>
@@ -49,7 +62,31 @@ export function DataTypesPage() {
           />
         )}
 
-        <CustomDataTypeList types={customTypes ?? []} onEdit={setEditingCustomType} />
+        <CustomDataTypeList types={manageableCustomTypes} onEdit={setEditingCustomType} />
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Option Sets</h2>
+          {!editingOptionSet && (
+            <button
+              type="button"
+              className={styles.addButton}
+              onClick={() => setEditingOptionSet('new')}
+            >
+              <Icon name="add" size={14} /> New option set
+            </button>
+          )}
+        </div>
+
+        {editingOptionSet && (
+          <OptionSetEditor
+            editing={editingOptionSet === 'new' ? null : editingOptionSet}
+            onDone={() => setEditingOptionSet(null)}
+          />
+        )}
+
+        <OptionSetList types={optionSets} onEdit={setEditingOptionSet} />
       </section>
 
       <section className={styles.section}>

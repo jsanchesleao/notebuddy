@@ -17,9 +17,7 @@ describe('SelectOptionsEditor', () => {
     await user.type(screen.getByLabelText('New option label'), 'Low')
     await user.click(screen.getByRole('button', { name: /Add option/ }))
 
-    expect(onChange).toHaveBeenCalledWith([
-      expect.objectContaining({ label: 'Low', value: 'Low' }),
-    ])
+    expect(onChange).toHaveBeenCalledWith([expect.objectContaining({ label: 'Low', value: 'Low' })])
   })
 
   it('removes an option', async () => {

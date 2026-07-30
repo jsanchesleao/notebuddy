@@ -78,7 +78,9 @@ describe('createDefaultValue — composites', () => {
       createdAt: '2026-01-01T00:00:00.000Z',
       updatedAt: '2026-01-01T00:00:00.000Z',
     }
-    const ctx: DefaultValueContext = { resolveCustomType: (id) => (id === 'inner' ? inner : undefined) }
+    const ctx: DefaultValueContext = {
+      resolveCustomType: (id) => (id === 'inner' ? inner : undefined),
+    }
     const type: DataTypeRef = { kind: 'customTypeRef', customTypeId: 'inner' }
     expect(createDefaultValue(type, ctx)).toBe('')
   })

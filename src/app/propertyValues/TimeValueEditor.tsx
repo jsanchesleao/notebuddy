@@ -36,9 +36,9 @@ export function TimeValueEditor({ value, onChange, disabled }: TimeValueEditorPr
           hour={hour}
           minute={minute}
           onPickHour={(pickedHour) => onChange(`${pickedHour}:${minute ?? '00'}`)}
-          onPickMinute={(pickedMinute) => {
+          onPickMinute={(pickedMinute, commit) => {
             onChange(`${hour ?? '00'}:${pickedMinute}`)
-            close()
+            if (commit) close()
           }}
         />
       )}

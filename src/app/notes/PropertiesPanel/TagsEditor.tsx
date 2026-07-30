@@ -1,6 +1,10 @@
 import { useState, type FormEvent } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { setNoteTags } from '../../../domain/notes/noteRepository'
+import { listTags } from '../../../domain/tags/tagRepository'
+import { getReadableTextColor } from '../../../lib/color/contrastColor'
 import { Icon } from '../../../components/Icon/Icon'
+import { TagColorPicker } from './TagColorPicker'
 import styles from './TagsEditor.module.css'
 
 interface TagsEditorProps {
@@ -10,6 +14,8 @@ interface TagsEditorProps {
 
 export function TagsEditor({ noteId, tags }: TagsEditorProps) {
   const [draft, setDraft] = useState('')
+  const allTags = useLiveQuery(() => listTags(), [])
+  const tagColors = new Map((allTags ?? []).map((tag) => [tag.name, tag.color]))
 
   const addTag = async (event: FormEvent) => {
     event.preventDefault()
@@ -30,19 +36,25 @@ export function TagsEditor({ noteId, tags }: TagsEditorProps) {
     <div className={styles.container}>
       {tags.length > 0 && (
         <ul className={styles.chips}>
-          {tags.map((tag) => (
-            <li key={tag} className={styles.chip}>
-              {tag}
-              <button
-                type="button"
-                className={styles.chipRemove}
-                aria-label={`Remove tag ${tag}`}
-                onClick={() => removeTag(tag)}
-              >
-                <Icon name="close" size={10} />
-              </button>
-            </li>
-          ))}
+          {tags.map((tag) => {
+            const color = tagColors.get(tag)
+            const chipStyle = color
+              ? { background: color, color: getReadableTextColor(color) }
+              : undefined
+            return (
+              <li key={tag} className={styles.chip} style={chipStyle}>
+                <TagColorPicker tagName={tag} color={color} />
+                <button
+                  type="button"
+                  className={styles.chipRemove}
+                  aria-label={`Remove tag ${tag}`}
+                  onClick={() => removeTag(tag)}
+                >
+                  <Icon name="close" size={10} />
+                </button>
+              </li>
+            )
+          })}
         </ul>
       )}
       <form className={styles.addForm} onSubmit={addTag}>

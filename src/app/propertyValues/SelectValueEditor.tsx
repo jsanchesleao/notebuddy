@@ -1,5 +1,6 @@
 import { DismissableDropdown } from '../../components/Menu/DismissableDropdown'
 import dropdownStyles from '../../components/Menu/DismissableDropdown.module.css'
+import styles from './SelectValueEditor.module.css'
 import type { SelectOption } from '../../domain/entities.types'
 
 interface SelectValueEditorProps {
@@ -11,6 +12,10 @@ interface SelectValueEditorProps {
 
 export function SelectValueEditor({ options, value, onChange, disabled }: SelectValueEditorProps) {
   const active = options.find((option) => option.value === value)
+  // A stored value that no longer matches any declared option — its option was removed
+  // from an ad hoc property, or from a shared Option Set that other notes still reference —
+  // is shown as-is rather than collapsed into "Not set", so the underlying data isn't hidden.
+  const isStale = value !== null && !active
 
   return (
     <DismissableDropdown
@@ -22,7 +27,13 @@ export function SelectValueEditor({ options, value, onChange, disabled }: Select
           onClick={toggle}
           disabled={disabled}
         >
-          {active?.label ?? 'Not set'}
+          {active ? (
+            active.label
+          ) : isStale ? (
+            <span className={styles.stale}>{value} (unavailable)</span>
+          ) : (
+            'Not set'
+          )}
         </button>
       )}
     >

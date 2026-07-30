@@ -1,7 +1,15 @@
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react'
 import { removeNoteProperty, setNoteProperty } from '../../../domain/notes/noteRepository'
 import { PropertyValueEditor } from '../../propertyValues/PropertyValueEditor'
 import { PrimitiveValueDisplay } from '../../propertyValues/PrimitiveValueDisplay'
+import { SelectOptionsEditor } from '../../propertyValues/SelectOptionsEditor'
 import {
   resolveSimplePrimitiveKind,
   type SimplePrimitiveKind,
@@ -9,12 +17,14 @@ import {
 import { TextValueEditor } from '../../propertyValues/TextValueEditor'
 import { NumberValueEditor } from '../../propertyValues/NumberValueEditor'
 import { LinkValueEditor } from '../../propertyValues/LinkValueEditor'
+import { DismissableDropdown } from '../../../components/Menu/DismissableDropdown'
 import { Icon } from '../../../components/Icon/Icon'
 import type {
   CustomDataType,
   DataTypeRef,
   PropertyValue,
   PropertyValueData,
+  SelectOption,
 } from '../../../domain/entities.types'
 import styles from './PropertyRow.module.css'
 
@@ -23,6 +33,7 @@ interface PropertyRowProps {
   propertyKey: string
   property: PropertyValue
   resolveCustomType: (id: string) => CustomDataType | undefined
+  availableCustomTypes: CustomDataType[]
   mode: 'drawer' | 'modal'
 }
 
@@ -31,6 +42,7 @@ export function PropertyRow({
   propertyKey,
   property,
   resolveCustomType,
+  availableCustomTypes,
   mode,
 }: PropertyRowProps) {
   const simpleKind = resolveSimplePrimitiveKind(property.typeRef, resolveCustomType)
@@ -53,6 +65,7 @@ export function PropertyRow({
       propertyKey={propertyKey}
       property={property}
       resolveCustomType={resolveCustomType}
+      availableCustomTypes={availableCustomTypes}
       mode={mode}
     />
   )
@@ -98,6 +111,7 @@ function LiveEditPropertyRow({
   propertyKey,
   property,
   resolveCustomType,
+  availableCustomTypes,
   mode,
 }: PropertyRowProps) {
   const [localValue, setLocalValue] = useState(property.value)
@@ -128,6 +142,22 @@ function LiveEditPropertyRow({
     }
   }
 
+  // Options only editable here for an ad hoc select — its typeRef is privately owned by this
+  // note. A customTypeRef-backed select shares its options with every note referencing it, so
+  // it's edited from the Option Set picker instead, never from an individual note's row.
+  const isAdHocSelect = localTypeRef.kind === 'primitive' && localTypeRef.primitive === 'select'
+
+  const handleOptionsChange = (nextOptions: SelectOption[]) => {
+    if (localTypeRef.kind !== 'primitive' || localTypeRef.primitive !== 'select') return
+    const nextTypeRef: DataTypeRef = { ...localTypeRef, options: nextOptions }
+    // Removing the currently-selected option would otherwise make this single write fail
+    // schema validation (value must match one of the declared options), so clear it here —
+    // this only ever affects the one note being edited, never other notes.
+    const stillValid =
+      typeof localValue === 'string' && nextOptions.some((option) => option.value === localValue)
+    handleSchemaChange(nextTypeRef, stillValid ? localValue : null)
+  }
+
   return (
     <PropertyRowLayout
       propertyKey={propertyKey}
@@ -138,17 +168,43 @@ function LiveEditPropertyRow({
           onChange={handleChange}
           onSchemaChange={handleSchemaChange}
           resolveCustomType={resolveCustomType}
+          availableCustomTypes={availableCustomTypes}
         />
       }
       actions={
-        <button
-          type="button"
-          className={styles.actionButton}
-          aria-label={`Remove property ${propertyKey}`}
-          onClick={() => removeNoteProperty(noteId, propertyKey)}
-        >
-          <Icon name="close" size={12} />
-        </button>
+        <>
+          {isAdHocSelect && (
+            <DismissableDropdown
+              trigger={({ toggle, open }) => (
+                <button
+                  type="button"
+                  className={styles.actionButton}
+                  aria-label={`Edit options for ${propertyKey}`}
+                  aria-expanded={open}
+                  onClick={toggle}
+                >
+                  <Icon name="edit" size={12} />
+                </button>
+              )}
+              menuClassName={styles.optionsPopover}
+            >
+              {() => (
+                <SelectOptionsEditor
+                  options={localTypeRef.kind === 'primitive' ? (localTypeRef.options ?? []) : []}
+                  onChange={handleOptionsChange}
+                />
+              )}
+            </DismissableDropdown>
+          )}
+          <button
+            type="button"
+            className={styles.actionButton}
+            aria-label={`Remove property ${propertyKey}`}
+            onClick={() => removeNoteProperty(noteId, propertyKey)}
+          >
+            <Icon name="close" size={12} />
+          </button>
+        </>
       }
       error={error}
       mode={mode}
@@ -281,7 +337,9 @@ function SimplePrimitiveEditor({ kind, value, onChange }: SimplePrimitiveEditorP
     case 'text':
       return <TextValueEditor value={typeof value === 'string' ? value : ''} onChange={onChange} />
     case 'number':
-      return <NumberValueEditor value={typeof value === 'number' ? value : null} onChange={onChange} />
+      return (
+        <NumberValueEditor value={typeof value === 'number' ? value : null} onChange={onChange} />
+      )
     case 'link':
       return <LinkValueEditor value={typeof value === 'string' ? value : ''} onChange={onChange} />
   }

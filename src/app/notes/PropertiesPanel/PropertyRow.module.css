@@ -72,6 +72,11 @@
   color: var(--color-danger);
 }
 
+.optionsPopover {
+  min-width: 14rem;
+  padding: var(--space-2);
+}
+
 .row[data-mode='modal'] .content {
   flex-direction: row;
   align-items: center;

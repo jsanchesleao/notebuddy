@@ -1,7 +1,11 @@
 import { db } from '../../db/db'
 import { createId } from '../ids'
 import type { CustomDataType, DataTypeRef } from '../entities.types'
-import { findCustomDataTypesReferencing, wouldCreateCycle } from './schemaGraph'
+import {
+  collectCustomTypeReferences,
+  findCustomDataTypesReferencing,
+  wouldCreateCycle,
+} from './schemaGraph'
 
 export class ReferencedEntityError extends Error {
   constructor(message: string) {
@@ -77,6 +81,19 @@ export async function deleteCustomDataType(id: string): Promise<void> {
 
   if (referencingNoteTypeCount > 0) {
     throw new ReferencedEntityError('Cannot delete: still used by a Note Type')
+  }
+
+  const allNotes = await db.notes.toArray()
+  const referencingNoteCount = allNotes.filter((note) =>
+    Object.values(note.metadata.properties).some((property) =>
+      collectCustomTypeReferences(property.typeRef).includes(id),
+    ),
+  ).length
+
+  if (referencingNoteCount > 0) {
+    throw new ReferencedEntityError(
+      `Cannot delete: still used by ${referencingNoteCount} note${referencingNoteCount === 1 ? '' : 's'}`,
+    )
   }
 
   await db.customDataTypes.delete(id)
