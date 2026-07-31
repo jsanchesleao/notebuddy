@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { buildItemTypeOptions, buildSchemaKindOptions, kindKeyFor, labelForTypeRef } from './schemaKinds'
+import {
+  buildItemTypeOptions,
+  buildSchemaKindOptions,
+  kindKeyFor,
+  labelForTypeRef,
+} from './schemaKinds'
 import type { CustomDataType, DataTypeRef } from '../../domain/entities.types'
 
 describe('kindKeyFor', () => {

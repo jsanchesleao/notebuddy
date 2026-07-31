@@ -52,4 +52,14 @@ describe('DateTimeValueEditor', () => {
 
     expect(onChange).toHaveBeenCalledWith('2026-07-27T09:15')
   })
+
+  it('focuses the Hour column immediately after opening, not a calendar day', async () => {
+    mockBoundaryWidth(1000)
+    const user = userEvent.setup()
+    render(<DateTimeValueEditor value="2026-07-15T09:15" onChange={() => {}} />)
+
+    await user.click(screen.getByRole('button', { name: '2026-07-15 09:15' }))
+
+    expect(screen.getByRole('button', { name: '09' })).toHaveFocus()
+  })
 })

@@ -519,9 +519,7 @@ describe('PropertyValueEditor — tuple slot editing (onSchemaChange)', () => {
     expect(screen.getByText('Click edit to add positions.')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Add position' })).not.toBeInTheDocument()
 
-    rerender(
-      <TupleHarness initialTypeRef={{ kind: 'tuple', itemTypes: [] }} initialValue={[]} />,
-    )
+    rerender(<TupleHarness initialTypeRef={{ kind: 'tuple', itemTypes: [] }} initialValue={[]} />)
 
     expect(screen.queryByText('Click edit to add positions.')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Add position' })).toBeInTheDocument()

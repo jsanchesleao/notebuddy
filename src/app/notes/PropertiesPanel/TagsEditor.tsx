@@ -53,7 +53,12 @@ export function TagsEditor({ noteId, tags, isAdding, onCancelAdd, ignoreRef }: T
         </ul>
       )}
       {isAdding && (
-        <TagAddForm noteId={noteId} existingTags={tags} onCancel={onCancelAdd} ignoreRef={ignoreRef} />
+        <TagAddForm
+          noteId={noteId}
+          existingTags={tags}
+          onCancel={onCancelAdd}
+          ignoreRef={ignoreRef}
+        />
       )}
     </div>
   )

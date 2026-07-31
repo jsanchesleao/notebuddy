@@ -36,7 +36,10 @@ function PropertiesPanelHarness({ noteId }: { noteId: string }) {
 
 // Both add-forms are only mounted while their action is active — open the floating
 // menu and pick the action before the first interaction with either form.
-async function openAdd(user: ReturnType<typeof userEvent.setup>, action: 'Add tag' | 'Add property') {
+async function openAdd(
+  user: ReturnType<typeof userEvent.setup>,
+  action: 'Add tag' | 'Add property',
+) {
   await user.click(screen.getByRole('button', { name: 'Add tag or property' }))
   await user.click(screen.getByRole('menuitem', { name: action }))
 }

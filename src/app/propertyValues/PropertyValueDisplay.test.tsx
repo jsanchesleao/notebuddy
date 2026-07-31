@@ -25,7 +25,9 @@ describe('PrimitiveValueDisplay', () => {
   })
 
   it('renders a boolean as a check or cross icon', () => {
-    const { container, rerender } = render(<PrimitiveValueDisplay primitive="boolean" value={true} />)
+    const { container, rerender } = render(
+      <PrimitiveValueDisplay primitive="boolean" value={true} />,
+    )
     expect(container.querySelector('.lucide-check')).toBeInTheDocument()
     rerender(<PrimitiveValueDisplay primitive="boolean" value={false} />)
     expect(container.querySelector('.lucide-x')).toBeInTheDocument()

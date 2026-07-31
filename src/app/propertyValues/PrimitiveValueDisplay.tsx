@@ -1,6 +1,10 @@
 import { Icon } from '../../components/Icon/Icon'
 import type { PrimitiveKind, PropertyValueData, SelectOption } from '../../domain/entities.types'
-import { formatDateDisplay, formatDateTimeDisplay, formatTimeDisplay } from './formatDateTimeDisplay'
+import {
+  formatDateDisplay,
+  formatDateTimeDisplay,
+  formatTimeDisplay,
+} from './formatDateTimeDisplay'
 import styles from './PrimitiveValueDisplay.module.css'
 
 interface PrimitiveValueDisplayProps {

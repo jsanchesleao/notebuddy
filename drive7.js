@@ -5,7 +5,9 @@ async function main() {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
   const errors = []
   page.on('pageerror', (e) => errors.push(String(e)))
-  page.on('console', (msg) => { if (msg.type() === 'error') errors.push(msg.text()) })
+  page.on('console', (msg) => {
+    if (msg.type() === 'error') errors.push(msg.text())
+  })
 
   await page.goto('http://localhost:5173/notebuddy/#/')
   await page.waitForTimeout(800)
@@ -31,9 +33,13 @@ async function main() {
   await page.screenshot({ path: 'shot9-note-page-full.png', fullPage: true })
 
   // dump all input placeholders/aria-labels for reference
-  const inputs = await page.$$eval('input', (els) => els.map((e) => ({ placeholder: e.placeholder, aria: e.getAttribute('aria-label') })))
+  const inputs = await page.$$eval('input', (els) =>
+    els.map((e) => ({ placeholder: e.placeholder, aria: e.getAttribute('aria-label') })),
+  )
   console.log('INPUTS:', JSON.stringify(inputs, null, 2))
-  const btns = await page.$$eval('button', (els) => els.map((e) => (e.textContent || '').trim() || e.getAttribute('aria-label')))
+  const btns = await page.$$eval('button', (els) =>
+    els.map((e) => (e.textContent || '').trim() || e.getAttribute('aria-label')),
+  )
   console.log('BUTTONS:', JSON.stringify(btns, null, 2))
   console.log('ERRORS:', errors)
 

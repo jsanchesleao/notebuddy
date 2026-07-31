@@ -44,12 +44,7 @@ export function SetValueEditor({
     return (
       <div className={styles.list}>
         {itemTypePicker}
-        <PillListEditor
-          pillKind={pillKind}
-          value={value}
-          onChange={onChange}
-          disabled={disabled}
-        />
+        <PillListEditor pillKind={pillKind} value={value} onChange={onChange} disabled={disabled} />
       </div>
     )
   }

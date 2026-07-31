@@ -25,9 +25,9 @@ describe('FolderContents', () => {
       </MemoryRouter>,
     )
 
-    expect(await screen.findByText('No folders yet')).toBeInTheDocument()
-    expect(await screen.findByText('No notebooks yet')).toBeInTheDocument()
-    expect(await screen.findByText('No boards yet')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Use the + button to create a folder, notebook, or board.'),
+    ).toBeInTheDocument()
   })
 
   it('reactively lists folders, notebooks and boards created elsewhere', async () => {
@@ -37,7 +37,7 @@ describe('FolderContents', () => {
       </MemoryRouter>,
     )
 
-    await screen.findByText('No folders yet')
+    await screen.findByText('Use the + button to create a folder, notebook, or board.')
 
     await createFolder({ parentFolderId: null, title: 'Recipes' })
     await createNotebook({ folderId: null, title: 'Journal' })
@@ -74,6 +74,8 @@ describe('FolderContents', () => {
     await waitFor(() => {
       expect(screen.queryByRole('link', { name: 'New name' })).not.toBeInTheDocument()
     })
-    expect(await screen.findByText('No folders yet')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Use the + button to create a folder, notebook, or board.'),
+    ).toBeInTheDocument()
   })
 })

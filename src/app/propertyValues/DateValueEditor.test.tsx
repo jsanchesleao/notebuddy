@@ -39,6 +39,16 @@ describe('DateValueEditor', () => {
     expect(screen.getByText('August 2026')).toBeInTheDocument()
   })
 
+  it('drills into the month grid via the header button', async () => {
+    const user = userEvent.setup()
+    render(<DateValueEditor value="2026-07-15" onChange={() => {}} />)
+
+    await user.click(screen.getByRole('button', { name: '2026-07-15' }))
+    await user.click(screen.getByRole('button', { name: 'July 2026' }))
+
+    expect(screen.getByRole('button', { name: 'Aug' })).toBeInTheDocument()
+  })
+
   it('offers a Clear action that sets the value to null', async () => {
     const user = userEvent.setup()
     const onChange = vi.fn()
