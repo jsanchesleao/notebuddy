@@ -1,5 +1,7 @@
 import { Icon } from '../../components/Icon/Icon'
 import { createDefaultValue } from '../../domain/dataTypes/defaultValueGenerator'
+import { buildItemTypeOptions } from '../dataTypes/schemaKinds'
+import { SchemaKindSelect } from '../dataTypes/SchemaKindSelect'
 import type { CustomDataType, DataTypeRef, PropertyValueData } from '../../domain/entities.types'
 import { PropertyValueEditor } from './PropertyValueEditor'
 import { PillListEditor } from './PillListEditor'
@@ -10,6 +12,8 @@ interface SetValueEditorProps {
   itemType: DataTypeRef
   value: PropertyValueData[]
   onChange: (value: PropertyValueData[]) => void
+  // See ListValueEditor's onItemTypeChange doc.
+  onItemTypeChange?: (itemType: DataTypeRef) => void
   disabled?: boolean
   resolveCustomType: (id: string) => CustomDataType | undefined
   availableCustomTypes: CustomDataType[]
@@ -19,14 +23,27 @@ export function SetValueEditor({
   itemType,
   value,
   onChange,
+  onItemTypeChange,
   disabled,
   resolveCustomType,
   availableCustomTypes,
 }: SetValueEditorProps) {
+  const itemTypePicker = onItemTypeChange && (
+    <div className={styles.itemTypeRow}>
+      <span className={styles.itemTypeLabel}>Item type</span>
+      <SchemaKindSelect
+        value={itemType}
+        options={buildItemTypeOptions(availableCustomTypes)}
+        onChange={onItemTypeChange}
+      />
+    </div>
+  )
+
   const pillKind = resolvePillItemKind(itemType, resolveCustomType)
   if (pillKind) {
     return (
       <div className={styles.list}>
+        {itemTypePicker}
         <PillListEditor
           pillKind={pillKind}
           value={value}
@@ -51,6 +68,7 @@ export function SetValueEditor({
 
   return (
     <div className={styles.list}>
+      {itemTypePicker}
       {value.map((item, index) => (
         <div key={index} className={styles.listRow}>
           <PropertyValueEditor

@@ -13,6 +13,11 @@ interface PillListEditorProps {
   onChange: (value: PropertyValueData[]) => void
   disabled?: boolean
   maxSize?: number
+  // Used for the read-only display mode of a List/Set property: keeps each pill's
+  // click-to-edit-value popover working (the confirmed "pill quick-edit" exception to
+  // read-only rendering), but hides the per-pill remove button and the trailing "add" control,
+  // both of which belong to the row's full edit mode instead.
+  hideControls?: boolean
 }
 
 export function PillListEditor({
@@ -21,6 +26,7 @@ export function PillListEditor({
   onChange,
   disabled,
   maxSize,
+  hideControls,
 }: PillListEditorProps) {
   const atMax = maxSize !== undefined && value.length >= maxSize
 
@@ -54,24 +60,28 @@ export function PillListEditor({
               disabled={disabled}
             />
           )}
-          <button
-            type="button"
-            className={styles.pillRemove}
-            aria-label={`Remove item ${index + 1}`}
-            onClick={() => removeItem(index)}
-            disabled={disabled}
-          >
-            <Icon name="close" size={10} />
-          </button>
+          {!hideControls && (
+            <button
+              type="button"
+              className={styles.pillRemove}
+              aria-label={`Remove item ${index + 1}`}
+              onClick={() => removeItem(index)}
+              disabled={disabled}
+            >
+              <Icon name="close" size={10} />
+            </button>
+          )}
         </li>
       ))}
-      <li>
-        {pillKind.kind === 'text' ? (
-          <TextAdd onAdd={addItem} disabled={disabled || atMax} />
-        ) : (
-          <SelectAdd options={pillKind.options} onAdd={addItem} disabled={disabled || atMax} />
-        )}
-      </li>
+      {!hideControls && (
+        <li>
+          {pillKind.kind === 'text' ? (
+            <TextAdd onAdd={addItem} disabled={disabled || atMax} />
+          ) : (
+            <SelectAdd options={pillKind.options} onAdd={addItem} disabled={disabled || atMax} />
+          )}
+        </li>
+      )}
     </ul>
   )
 }

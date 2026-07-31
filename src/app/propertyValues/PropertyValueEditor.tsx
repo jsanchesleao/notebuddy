@@ -72,6 +72,11 @@ export function PropertyValueEditor({
           maxSize={typeRef.maxSize}
           value={Array.isArray(value) ? value : []}
           onChange={onChange}
+          onItemTypeChange={
+            onSchemaChange
+              ? (nextItemType) => onSchemaChange({ ...typeRef, itemType: nextItemType }, [])
+              : undefined
+          }
           disabled={disabled}
           resolveCustomType={resolveCustomType}
           availableCustomTypes={availableCustomTypes}
@@ -83,6 +88,11 @@ export function PropertyValueEditor({
           itemType={typeRef.itemType}
           value={Array.isArray(value) ? value : []}
           onChange={onChange}
+          onItemTypeChange={
+            onSchemaChange
+              ? (nextItemType) => onSchemaChange({ ...typeRef, itemType: nextItemType }, [])
+              : undefined
+          }
           disabled={disabled}
           resolveCustomType={resolveCustomType}
           availableCustomTypes={availableCustomTypes}

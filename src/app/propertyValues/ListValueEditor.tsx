@@ -1,5 +1,7 @@
 import { Icon } from '../../components/Icon/Icon'
 import { createDefaultValue } from '../../domain/dataTypes/defaultValueGenerator'
+import { buildItemTypeOptions } from '../dataTypes/schemaKinds'
+import { SchemaKindSelect } from '../dataTypes/SchemaKindSelect'
 import type { CustomDataType, DataTypeRef, PropertyValueData } from '../../domain/entities.types'
 import { PropertyValueEditor } from './PropertyValueEditor'
 import { PillListEditor } from './PillListEditor'
@@ -11,6 +13,11 @@ interface ListValueEditorProps {
   maxSize?: number
   value: PropertyValueData[]
   onChange: (value: PropertyValueData[]) => void
+  // Only set for a property whose schema is privately owned by the note — see
+  // PropertyValueEditor's onSchemaChange doc. Renders the item-type picker inline, above the
+  // item rows, so it lives inside the same edit panel as add/edit/remove instead of a separate
+  // row-level control.
+  onItemTypeChange?: (itemType: DataTypeRef) => void
   disabled?: boolean
   resolveCustomType: (id: string) => CustomDataType | undefined
   availableCustomTypes: CustomDataType[]
@@ -21,14 +28,27 @@ export function ListValueEditor({
   maxSize,
   value,
   onChange,
+  onItemTypeChange,
   disabled,
   resolveCustomType,
   availableCustomTypes,
 }: ListValueEditorProps) {
+  const itemTypePicker = onItemTypeChange && (
+    <div className={styles.itemTypeRow}>
+      <span className={styles.itemTypeLabel}>Item type</span>
+      <SchemaKindSelect
+        value={itemType}
+        options={buildItemTypeOptions(availableCustomTypes)}
+        onChange={onItemTypeChange}
+      />
+    </div>
+  )
+
   const pillKind = resolvePillItemKind(itemType, resolveCustomType)
   if (pillKind) {
     return (
       <div className={styles.list}>
+        {itemTypePicker}
         <PillListEditor
           pillKind={pillKind}
           maxSize={maxSize}
@@ -56,6 +76,7 @@ export function ListValueEditor({
 
   return (
     <div className={styles.list}>
+      {itemTypePicker}
       {value.map((item, index) => (
         <div key={index} className={styles.listRow}>
           <PropertyValueEditor

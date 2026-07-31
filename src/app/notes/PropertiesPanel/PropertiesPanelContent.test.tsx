@@ -213,6 +213,9 @@ describe('PropertiesPanelContent', () => {
     const propertiesSection = screen
       .getByRole('heading', { name: 'Properties', level: 3 })
       .closest('section')!
+    // Dictionary properties start collapsed in the new read-only display mode — the
+    // "Add entry" control only exists once the row's edit pencil reveals the full editor.
+    await user.click(within(propertiesSection).getByRole('button', { name: 'Edit meta' }))
     await user.click(within(propertiesSection).getByRole('button', { name: 'Add entry' }))
     const keyInput = within(propertiesSection).getByLabelText('Entry key 1')
     await user.type(keyInput, 'color')
@@ -443,7 +446,8 @@ describe('PropertiesPanelContent', () => {
     expect(screen.getByRole('button', { name: 'a' })).toBeInTheDocument()
     expect(screen.queryByText('Item type')).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Edit item type for scores' }))
+    await user.click(screen.getByRole('button', { name: 'Edit scores' }))
+    await user.click(screen.getByRole('button', { name: 'Text' }))
     await user.click(screen.getByRole('menuitemradio', { name: 'Number' }))
 
     await waitFor(async () => {
@@ -468,7 +472,8 @@ describe('PropertiesPanelContent', () => {
     render(<PropertiesPanelHarness noteId={note.id} />)
     await screen.findByRole('heading', { name: 'Properties', level: 2 })
 
-    await user.click(screen.getByRole('button', { name: 'Edit item type for tags2' }))
+    await user.click(screen.getByRole('button', { name: 'Edit tags2' }))
+    await user.click(screen.getByRole('button', { name: 'Text' }))
     await user.click(screen.getByRole('menuitemradio', { name: 'Boolean' }))
 
     await waitFor(async () => {
@@ -505,7 +510,7 @@ describe('PropertiesPanelContent', () => {
     expect(screen.queryByRole('button', { name: 'Remove position 1' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Add position' })).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Edit positions for range' }))
+    await user.click(screen.getByRole('button', { name: 'Edit range' }))
 
     expect(screen.getAllByRole('button', { name: 'Text' })).toHaveLength(1)
     expect(screen.getByRole('button', { name: 'Remove position 1' })).toBeInTheDocument()
@@ -528,11 +533,99 @@ describe('PropertiesPanelContent', () => {
       })
     })
 
-    await user.click(screen.getByRole('button', { name: 'Edit positions for range' }))
+    await user.click(screen.getByRole('button', { name: 'Edit range' }))
 
     expect(screen.queryAllByRole('button', { name: 'Text' })).toHaveLength(0)
     expect(screen.queryByRole('button', { name: 'Boolean' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Remove position 1' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Add position' })).not.toBeInTheDocument()
+  })
+
+  it('shows a List of numbers as read-only chips, hiding add/remove until the edit pencil is clicked', async () => {
+    const user = userEvent.setup()
+    const note = await createTestNote()
+    await setNoteProperty(note.id, 'amounts', {
+      typeRef: { kind: 'list', itemType: { kind: 'primitive', primitive: 'number' } },
+      value: [1, 2, 3],
+    })
+
+    render(<PropertiesPanelHarness noteId={note.id} />)
+    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+
+    expect(screen.getByText('1')).toBeInTheDocument()
+    expect(screen.getByText('2')).toBeInTheDocument()
+    expect(screen.getByText('3')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Add item' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Edit amounts' }))
+
+    expect(screen.getByRole('button', { name: 'Add item' })).toBeInTheDocument()
+    expect(screen.getAllByRole('spinbutton')).toHaveLength(3)
+  })
+
+  it('keeps text pill quick-edit available on a List without entering edit mode, while hiding add/remove', async () => {
+    const user = userEvent.setup()
+    const note = await createTestNote()
+    await setNoteProperty(note.id, 'labels', {
+      typeRef: { kind: 'list', itemType: { kind: 'primitive', primitive: 'text' } },
+      value: ['draft'],
+    })
+
+    render(<PropertiesPanelHarness noteId={note.id} />)
+    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+
+    expect(screen.queryByRole('button', { name: 'Remove item 1' })).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('New item')).not.toBeInTheDocument()
+
+    // The pill quick-edit shortcut stays available without clicking the row's edit pencil.
+    await user.click(screen.getByRole('button', { name: 'draft' }))
+    const editInput = screen.getByLabelText('Edit item')
+    await user.clear(editInput)
+    await user.type(editInput, 'final')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(async () => {
+      const updated = await getNote(note.id)
+      expect(updated?.metadata.properties.labels.value).toEqual(['final'])
+    })
+  })
+
+  it('shows a Dictionary read-only as key: value lines, and a Tuple read-only inline with a clickable link', async () => {
+    const note = await createTestNote()
+    await setNoteProperty(note.id, 'team', {
+      typeRef: {
+        kind: 'dictionary',
+        fields: [
+          { key: 'lead', typeRef: { kind: 'primitive', primitive: 'text' } },
+          { key: 'size', typeRef: { kind: 'primitive', primitive: 'number' } },
+        ],
+      },
+      value: { lead: 'Alice', size: 4 },
+    })
+    await setNoteProperty(note.id, 'bookmark', {
+      typeRef: {
+        kind: 'tuple',
+        itemTypes: [
+          { kind: 'primitive', primitive: 'text' },
+          { kind: 'primitive', primitive: 'link' },
+        ],
+      },
+      value: ['docs', 'https://example.com'],
+    })
+
+    render(<PropertiesPanelHarness noteId={note.id} />)
+    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+
+    expect(screen.getByText('lead:')).toBeInTheDocument()
+    expect(screen.getByText('Alice')).toBeInTheDocument()
+    expect(screen.getByText('size:')).toBeInTheDocument()
+    expect(screen.getByText('4')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Add entry' })).not.toBeInTheDocument()
+
+    const link = screen.getByRole('link', { name: 'https://example.com' })
+    expect(link).toHaveAttribute('href', 'https://example.com')
+    expect(screen.getByText('docs')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Add position' })).not.toBeInTheDocument()
   })
 

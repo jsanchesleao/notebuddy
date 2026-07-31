@@ -77,10 +77,6 @@
   padding: var(--space-2);
 }
 
-.itemTypePopover {
-  width: 16rem;
-}
-
 .row[data-mode='modal'] .content {
   flex-direction: row;
   align-items: center;

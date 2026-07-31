@@ -8,6 +8,7 @@ import {
 } from 'react'
 import { removeNoteProperty, setNoteProperty } from '../../../domain/notes/noteRepository'
 import { PropertyValueEditor } from '../../propertyValues/PropertyValueEditor'
+import { PropertyValueDisplay } from '../../propertyValues/PropertyValueDisplay'
 import { PrimitiveValueDisplay } from '../../propertyValues/PrimitiveValueDisplay'
 import { SelectOptionsEditor } from '../../propertyValues/SelectOptionsEditor'
 import {
@@ -19,8 +20,6 @@ import { NumberValueEditor } from '../../propertyValues/NumberValueEditor'
 import { LinkValueEditor } from '../../propertyValues/LinkValueEditor'
 import { DismissableDropdown } from '../../../components/Menu/DismissableDropdown'
 import { Icon } from '../../../components/Icon/Icon'
-import { SchemaKindMenu } from '../../dataTypes/SchemaKindMenu'
-import { buildItemTypeOptions, kindKeyFor } from '../../dataTypes/schemaKinds'
 import type {
   CustomDataType,
   DataTypeRef,
@@ -119,7 +118,11 @@ function LiveEditPropertyRow({
   const [localValue, setLocalValue] = useState(property.value)
   const [localTypeRef, setLocalTypeRef] = useState(property.typeRef)
   const [error, setError] = useState<string | null>(null)
-  const [isEditingTuple, setIsEditingTuple] = useState(false)
+  // Single edit toggle shared by List/Set/Tuple/Dictionary: false renders the read-only,
+  // per-type PropertyValueDisplay tree; true reveals the full PropertyValueEditor, including
+  // its inline item-type/position/field controls. Meaningless for non-composite kinds, which
+  // always render live via the editor branch below.
+  const [isEditingComposite, setIsEditingComposite] = useState(false)
 
   const handleChange = async (nextValue: PropertyValueData) => {
     setLocalValue(nextValue)
@@ -161,67 +164,45 @@ function LiveEditPropertyRow({
     handleSchemaChange(nextTypeRef, stillValid ? localValue : null)
   }
 
-  // Only List/Set have a single item type to swap — Tuple has one type per slot, so it gets
-  // a show/hide toggle instead (see isEditingTuple below), not a single popover.
-  const itemType =
-    localTypeRef.kind === 'list' || localTypeRef.kind === 'set' ? localTypeRef.itemType : null
-
-  const handleItemTypeChange = (nextItemType: DataTypeRef) => {
-    if (localTypeRef.kind !== 'list' && localTypeRef.kind !== 'set') return
-    handleSchemaChange({ ...localTypeRef, itemType: nextItemType }, [])
-  }
+  const isComposite =
+    localTypeRef.kind === 'list' ||
+    localTypeRef.kind === 'set' ||
+    localTypeRef.kind === 'tuple' ||
+    localTypeRef.kind === 'dictionary'
 
   return (
     <PropertyRowLayout
       propertyKey={propertyKey}
       value={
-        <PropertyValueEditor
-          typeRef={localTypeRef}
-          value={localValue}
-          onChange={handleChange}
-          onSchemaChange={handleSchemaChange}
-          isEditingTuple={isEditingTuple}
-          resolveCustomType={resolveCustomType}
-          availableCustomTypes={availableCustomTypes}
-        />
+        isComposite && !isEditingComposite ? (
+          <PropertyValueDisplay
+            typeRef={localTypeRef}
+            value={localValue}
+            onChange={handleChange}
+            resolveCustomType={resolveCustomType}
+            availableCustomTypes={availableCustomTypes}
+          />
+        ) : (
+          <PropertyValueEditor
+            typeRef={localTypeRef}
+            value={localValue}
+            onChange={handleChange}
+            onSchemaChange={handleSchemaChange}
+            isEditingTuple={isEditingComposite}
+            resolveCustomType={resolveCustomType}
+            availableCustomTypes={availableCustomTypes}
+          />
+        )
       }
       actions={
         <>
-          {itemType && (
-            <DismissableDropdown
-              trigger={({ toggle, open }) => (
-                <button
-                  type="button"
-                  className={styles.actionButton}
-                  aria-label={`Edit item type for ${propertyKey}`}
-                  aria-expanded={open}
-                  onClick={toggle}
-                >
-                  <Icon name="edit" size={12} />
-                </button>
-              )}
-              menuClassName={styles.itemTypePopover}
-            >
-              {({ close }) => (
-                <SchemaKindMenu
-                  options={buildItemTypeOptions(availableCustomTypes)}
-                  activeKey={kindKeyFor(itemType)}
-                  onSelect={(option) => {
-                    handleItemTypeChange(option.build())
-                    close()
-                  }}
-                  onClose={close}
-                />
-              )}
-            </DismissableDropdown>
-          )}
-          {localTypeRef.kind === 'tuple' && (
+          {isComposite && (
             <button
               type="button"
               className={styles.actionButton}
-              aria-label={`Edit positions for ${propertyKey}`}
-              aria-pressed={isEditingTuple}
-              onClick={() => setIsEditingTuple((value) => !value)}
+              aria-label={`Edit ${propertyKey}`}
+              aria-pressed={isEditingComposite}
+              onClick={() => setIsEditingComposite((value) => !value)}
             >
               <Icon name="edit" size={12} />
             </button>
@@ -348,7 +329,7 @@ function SimplePropertyRow({ noteId, propertyKey, property, kind, mode }: Simple
             <SimplePrimitiveEditor kind={kind} value={draftValue} onChange={setDraftValue} />
           </form>
         ) : (
-          <PrimitiveValueDisplay kind={kind} value={property.value} />
+          <PrimitiveValueDisplay primitive={kind} value={property.value} />
         )
       }
       actions={
