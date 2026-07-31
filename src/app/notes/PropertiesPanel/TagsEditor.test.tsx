@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -26,11 +27,23 @@ async function createTestNote(): Promise<Note> {
 }
 
 // Mirrors how NotePage feeds a live note snapshot into the properties panel — edits made
-// through TagsEditor write to Dexie, and this harness reflects them back into props.
+// through TagsEditor write to Dexie, and this harness reflects them back into props. The
+// add-tag form is owned by a parent (AddMenuButton + PropertiesPanelContent in the real
+// app) — this harness starts it open since these tests exercise tag CRUD, not the menu.
 function TagsEditorHarness({ noteId }: { noteId: string }) {
   const note = useLiveQuery(() => getNote(noteId), [noteId])
+  const [isAdding, setIsAdding] = useState(true)
+  const ignoreRef = useRef<HTMLElement | null>(null)
   if (!note) return null
-  return <TagsEditor noteId={noteId} tags={note.metadata.tags} />
+  return (
+    <TagsEditor
+      noteId={noteId}
+      tags={note.metadata.tags}
+      isAdding={isAdding}
+      onCancelAdd={() => setIsAdding(false)}
+      ignoreRef={ignoreRef}
+    />
+  )
 }
 
 describe('TagsEditor', () => {
@@ -91,5 +104,46 @@ describe('TagsEditor', () => {
       const tags = await listTags()
       expect(tags[0].color).toBe('#123456')
     })
+  })
+
+  it('dismisses the add-tag form via the Cancel button, without persisting a draft', async () => {
+    const user = userEvent.setup()
+    const note = await createTestNote()
+
+    render(<TagsEditorHarness noteId={note.id} />)
+    await user.type(await screen.findByLabelText('New tag'), 'draft')
+    await user.click(screen.getByRole('button', { name: 'Cancel adding tag' }))
+    expect(screen.queryByLabelText('New tag')).not.toBeInTheDocument()
+
+    expect(await listTags()).toHaveLength(0)
+  })
+
+  it('dismisses the add-tag form via Escape, without persisting a draft', async () => {
+    const user = userEvent.setup()
+    const note = await createTestNote()
+
+    render(<TagsEditorHarness noteId={note.id} />)
+    await user.type(await screen.findByLabelText('New tag'), 'draft')
+    await user.keyboard('{Escape}')
+    expect(screen.queryByLabelText('New tag')).not.toBeInTheDocument()
+
+    expect(await listTags()).toHaveLength(0)
+  })
+
+  it('dismisses the add-tag form via an outside click, without persisting a draft', async () => {
+    const user = userEvent.setup()
+    const note = await createTestNote()
+
+    render(
+      <div>
+        <button type="button">outside</button>
+        <TagsEditorHarness noteId={note.id} />
+      </div>,
+    )
+    await user.type(await screen.findByLabelText('New tag'), 'draft')
+    await user.click(screen.getByRole('button', { name: 'outside' }))
+    expect(screen.queryByLabelText('New tag')).not.toBeInTheDocument()
+
+    expect(await listTags()).toHaveLength(0)
   })
 })

@@ -1,29 +1,24 @@
-import { useState, type FormEvent } from 'react'
+import type { RefObject } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { setNoteTags } from '../../../domain/notes/noteRepository'
 import { listTags } from '../../../domain/tags/tagRepository'
 import { getReadableTextColor } from '../../../lib/color/contrastColor'
 import { Icon } from '../../../components/Icon/Icon'
 import { TagColorPicker } from './TagColorPicker'
+import { TagAddForm } from './TagAddForm'
 import styles from './TagsEditor.module.css'
 
 interface TagsEditorProps {
   noteId: string
   tags: string[]
+  isAdding: boolean
+  onCancelAdd: () => void
+  ignoreRef: RefObject<HTMLElement | null>
 }
 
-export function TagsEditor({ noteId, tags }: TagsEditorProps) {
-  const [draft, setDraft] = useState('')
+export function TagsEditor({ noteId, tags, isAdding, onCancelAdd, ignoreRef }: TagsEditorProps) {
   const allTags = useLiveQuery(() => listTags(), [])
   const tagColors = new Map((allTags ?? []).map((tag) => [tag.name, tag.color]))
-
-  const addTag = async (event: FormEvent) => {
-    event.preventDefault()
-    const trimmed = draft.trim()
-    if (!trimmed || tags.includes(trimmed)) return
-    await setNoteTags(noteId, [...tags, trimmed])
-    setDraft('')
-  }
 
   const removeTag = async (tag: string) => {
     await setNoteTags(
@@ -57,19 +52,9 @@ export function TagsEditor({ noteId, tags }: TagsEditorProps) {
           })}
         </ul>
       )}
-      <form className={styles.addForm} onSubmit={addTag}>
-        <input
-          type="text"
-          className={styles.addInput}
-          placeholder="Add tag"
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          aria-label="New tag"
-        />
-        <button type="submit" className={styles.addButton} aria-label="Add tag">
-          <Icon name="add" size={14} />
-        </button>
-      </form>
+      {isAdding && (
+        <TagAddForm noteId={noteId} existingTags={tags} onCancel={onCancelAdd} ignoreRef={ignoreRef} />
+      )}
     </div>
   )
 }

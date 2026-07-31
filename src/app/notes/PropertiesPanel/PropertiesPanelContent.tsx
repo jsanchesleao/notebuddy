@@ -1,9 +1,11 @@
+import { useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { listCustomDataTypes } from '../../../domain/dataTypes/dataTypeRepository'
 import { Icon } from '../../../components/Icon/Icon'
 import { TagsEditor } from './TagsEditor'
 import { PropertyRow } from './PropertyRow'
 import { AddPropertyControl } from './AddPropertyControl'
+import { AddMenuButton, type AddAction } from './AddMenuButton'
 import type { Note } from '../../../domain/entities.types'
 import styles from './PropertiesPanelContent.module.css'
 
@@ -28,6 +30,9 @@ export function PropertiesPanelContent({
   const resolveCustomType = (id: string) => customTypes?.find((type) => type.id === id)
   const propertyEntries = Object.entries(note.metadata.properties)
 
+  const [activeAction, setActiveAction] = useState<AddAction | null>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+
   return (
     <>
       <div className={styles.header}>
@@ -35,6 +40,12 @@ export function PropertiesPanelContent({
           Properties
         </h2>
         <div className={styles.actions}>
+          <AddMenuButton
+            activeAction={activeAction}
+            onSelect={setActiveAction}
+            onCloseActive={() => setActiveAction(null)}
+            triggerRef={triggerRef}
+          />
           {showDetachToggle && (
             <button
               type="button"
@@ -62,7 +73,13 @@ export function PropertiesPanelContent({
 
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>Tags</h3>
-        <TagsEditor noteId={note.id} tags={note.metadata.tags} />
+        <TagsEditor
+          noteId={note.id}
+          tags={note.metadata.tags}
+          isAdding={activeAction === 'tag'}
+          onCancelAdd={() => setActiveAction(null)}
+          ignoreRef={triggerRef}
+        />
       </section>
 
       <section className={styles.section}>
@@ -79,11 +96,15 @@ export function PropertiesPanelContent({
             mode={mode}
           />
         ))}
-        <AddPropertyControl
-          noteId={note.id}
-          existingKeys={Object.keys(note.metadata.properties)}
-          availableCustomTypes={customTypes ?? []}
-        />
+        {activeAction === 'property' && (
+          <AddPropertyControl
+            noteId={note.id}
+            existingKeys={Object.keys(note.metadata.properties)}
+            availableCustomTypes={customTypes ?? []}
+            onCancel={() => setActiveAction(null)}
+            ignoreRef={triggerRef}
+          />
+        )}
       </section>
     </>
   )

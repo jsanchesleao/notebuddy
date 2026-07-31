@@ -21,10 +21,11 @@ export interface PropertyValueEditorProps {
   // across a customTypeRef boundary) — lets list/set/tuple/dictionary editors add/retype/
   // remove/reorder their own item type(s) or fields, persisting typeRef and value together.
   onSchemaChange?: (typeRef: DataTypeRef, value: PropertyValueData) => void
-  // Only meaningful for a `tuple` typeRef: reveals per-slot type pickers as a group (see
-  // LiveEditPropertyRow's `showItemTypes` toggle). Defaults to hidden so other callers
-  // (SamplePreview, DictionaryValueEditor) render tuples exactly as before.
-  showTupleItemTypes?: boolean
+  // Only meaningful for a `tuple` typeRef: reveals the per-slot type pickers and the
+  // Add/Remove position controls as a group (see LiveEditPropertyRow's `isEditingTuple`
+  // toggle). Defaults to hidden so other callers (SamplePreview, DictionaryValueEditor)
+  // render tuples exactly as before.
+  isEditingTuple?: boolean
   disabled?: boolean
   resolveCustomType: (id: string) => CustomDataType | undefined
   availableCustomTypes: CustomDataType[]
@@ -35,7 +36,7 @@ export function PropertyValueEditor({
   value,
   onChange,
   onSchemaChange,
-  showTupleItemTypes,
+  isEditingTuple,
   disabled,
   resolveCustomType,
   availableCustomTypes,
@@ -99,7 +100,7 @@ export function PropertyValueEditor({
                   onSchemaChange({ ...typeRef, itemTypes: nextItemTypes }, nextValue)
               : undefined
           }
-          showItemTypes={showTupleItemTypes ?? false}
+          isEditingTuple={isEditingTuple ?? false}
           disabled={disabled}
           resolveCustomType={resolveCustomType}
           availableCustomTypes={availableCustomTypes}

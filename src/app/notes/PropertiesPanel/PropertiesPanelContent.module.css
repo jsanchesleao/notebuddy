@@ -32,6 +32,12 @@
   background: var(--color-bg-sidebar);
 }
 
+.iconButton[aria-expanded='true'],
+.iconButton[aria-pressed='true'] {
+  color: var(--color-text);
+  background: var(--color-bg-sidebar);
+}
+
 .section {
   margin-bottom: var(--space-5);
 }

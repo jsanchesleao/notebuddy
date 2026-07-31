@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type RefObject } from 'react'
 import { setNoteProperty } from '../../../domain/notes/noteRepository'
 import { createDefaultValue } from '../../../domain/dataTypes/defaultValueGenerator'
 import { isOptionSetSchema } from '../../../domain/dataTypes/optionSets'
@@ -7,6 +7,7 @@ import { OptionSetPicker } from '../../dataTypes/OptionSetPicker'
 import { buildItemTypeOptions, buildSchemaKindOptions } from '../../dataTypes/schemaKinds'
 import { SelectOptionsEditor } from '../../propertyValues/SelectOptionsEditor'
 import { Icon } from '../../../components/Icon/Icon'
+import { useDismissOnOutsideOrEscape } from '../../../components/Menu/useDismissOnOutsideOrEscape'
 import type { CustomDataType, DataTypeRef } from '../../../domain/entities.types'
 import styles from './AddPropertyControl.module.css'
 import compositeStyles from '../../propertyValues/compositeEditors.module.css'
@@ -15,6 +16,8 @@ interface AddPropertyControlProps {
   noteId: string
   existingKeys: string[]
   availableCustomTypes: CustomDataType[]
+  onCancel: () => void
+  ignoreRef: RefObject<HTMLElement | null>
 }
 
 const DEFAULT_TYPE: DataTypeRef = { kind: 'primitive', primitive: 'text' }
@@ -32,11 +35,19 @@ export function AddPropertyControl({
   noteId,
   existingKeys,
   availableCustomTypes,
+  onCancel,
+  ignoreRef,
 }: AddPropertyControlProps) {
   const [key, setKey] = useState('')
   const [typeRef, setTypeRef] = useState<DataTypeRef>(DEFAULT_TYPE)
   const [selectMode, setSelectMode] = useState<SelectMode>(null)
   const [error, setError] = useState<string | null>(null)
+  const keyInputRef = useRef<HTMLInputElement>(null)
+  const formRef = useDismissOnOutsideOrEscape<HTMLFormElement>(onCancel, ignoreRef)
+
+  useEffect(() => {
+    keyInputRef.current?.focus()
+  }, [])
 
   const resolveCustomType = (id: string) => availableCustomTypes.find((type) => type.id === id)
   const itemTypeOptions = buildItemTypeOptions(availableCustomTypes)
@@ -85,9 +96,10 @@ export function AddPropertyControl({
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit}>
+    <form ref={formRef} className={styles.form} onSubmit={handleSubmit}>
       <div className={styles.row}>
         <input
+          ref={keyInputRef}
           type="text"
           className={styles.keyInput}
           placeholder="Property name"
@@ -191,9 +203,14 @@ export function AddPropertyControl({
         </div>
       )}
 
-      <button type="submit" className={styles.addButton}>
-        <Icon name="add" size={14} /> Add property
-      </button>
+      <div className={styles.formActions}>
+        <button type="submit" className={styles.addButton}>
+          <Icon name="add" size={14} /> Add property
+        </button>
+        <button type="button" className={styles.cancelButton} onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
       {error && <p className={styles.error}>{error}</p>}
     </form>
   )

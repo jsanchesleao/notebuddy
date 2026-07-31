@@ -421,11 +421,11 @@ describe('PropertyValueEditor — tuple slot editing (onSchemaChange)', () => {
   function TupleHarness({
     initialTypeRef,
     initialValue,
-    showTupleItemTypes = true,
+    isEditingTuple = true,
   }: {
     initialTypeRef: DataTypeRef
     initialValue: PropertyValueData
-    showTupleItemTypes?: boolean
+    isEditingTuple?: boolean
   }) {
     const [typeRef, setTypeRef] = useState(initialTypeRef)
     const [value, setValue] = useState(initialValue)
@@ -438,7 +438,7 @@ describe('PropertyValueEditor — tuple slot editing (onSchemaChange)', () => {
           setTypeRef(nextTypeRef)
           setValue(nextValue)
         }}
-        showTupleItemTypes={showTupleItemTypes}
+        isEditingTuple={isEditingTuple}
         resolveCustomType={noCustomTypes}
         availableCustomTypes={[]}
       />
@@ -492,19 +492,39 @@ describe('PropertyValueEditor — tuple slot editing (onSchemaChange)', () => {
     expect(screen.getByRole('spinbutton')).toHaveValue(5)
   })
 
-  it('hides per-slot type pickers when showTupleItemTypes is not set', () => {
+  it('hides per-slot type pickers and add/remove controls when isEditingTuple is false', () => {
     render(
       <TupleHarness
         initialTypeRef={{ kind: 'tuple', itemTypes: [textType, numberType] }}
         initialValue={['x', 5]}
-        showTupleItemTypes={false}
+        isEditingTuple={false}
       />,
     )
 
     expect(screen.queryByRole('button', { name: /^Text/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /^Number/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Add position' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Remove position 1' })).not.toBeInTheDocument()
+  })
+
+  it('shows an empty-state hint for a zero-slot tuple until editing is toggled on', () => {
+    const { rerender } = render(
+      <TupleHarness
+        initialTypeRef={{ kind: 'tuple', itemTypes: [] }}
+        initialValue={[]}
+        isEditingTuple={false}
+      />,
+    )
+
+    expect(screen.getByText('Click edit to add positions.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Add position' })).not.toBeInTheDocument()
+
+    rerender(
+      <TupleHarness initialTypeRef={{ kind: 'tuple', itemTypes: [] }} initialValue={[]} />,
+    )
+
+    expect(screen.queryByText('Click edit to add positions.')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Add position' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Remove position 1' })).toBeInTheDocument()
   })
 
   it('renders a tuple read-only with no controls when onSchemaChange is absent', () => {

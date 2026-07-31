@@ -34,6 +34,13 @@ function PropertiesPanelHarness({ noteId }: { noteId: string }) {
   return <PropertiesPanel note={note} open onClose={() => {}} />
 }
 
+// Both add-forms are only mounted while their action is active — open the floating
+// menu and pick the action before the first interaction with either form.
+async function openAdd(user: ReturnType<typeof userEvent.setup>, action: 'Add tag' | 'Add property') {
+  await user.click(screen.getByRole('button', { name: 'Add tag or property' }))
+  await user.click(screen.getByRole('menuitem', { name: action }))
+}
+
 describe('PropertiesPanelContent', () => {
   it('adds and removes tags', async () => {
     const user = userEvent.setup()
@@ -42,6 +49,7 @@ describe('PropertiesPanelContent', () => {
     render(<PropertiesPanelHarness noteId={note.id} />)
     await screen.findByRole('heading', { name: 'Properties', level: 2 })
 
+    await openAdd(user, 'Add tag')
     await user.type(screen.getByLabelText('New tag'), 'recipe')
     await user.click(screen.getByRole('button', { name: 'Add tag' }))
 
@@ -68,6 +76,7 @@ describe('PropertiesPanelContent', () => {
     render(<PropertiesPanelHarness noteId={note.id} />)
     await screen.findByRole('heading', { name: 'Properties', level: 2 })
 
+    await openAdd(user, 'Add property')
     await user.type(screen.getByLabelText('New property name'), 'favorite')
     await user.click(screen.getByRole('button', { name: 'Add property' }))
 
@@ -89,6 +98,7 @@ describe('PropertiesPanelContent', () => {
     render(<PropertiesPanelHarness noteId={note.id} />)
     await screen.findByRole('heading', { name: 'Properties', level: 2 })
 
+    await openAdd(user, 'Add property')
     await user.type(screen.getByLabelText('New property name'), 'favorite')
     await user.click(screen.getByRole('button', { name: 'Add property' }))
     await screen.findByText('favorite')
@@ -106,6 +116,7 @@ describe('PropertiesPanelContent', () => {
     render(<PropertiesPanelHarness noteId={note.id} />)
     await screen.findByRole('heading', { name: 'Properties', level: 2 })
 
+    await openAdd(user, 'Add property')
     await user.type(screen.getByLabelText('New property name'), 'favorite')
     await user.click(screen.getByRole('button', { name: 'Add property' }))
     await screen.findByText('favorite')
@@ -155,6 +166,7 @@ describe('PropertiesPanelContent', () => {
     render(<PropertiesPanelHarness noteId={note.id} />)
     await screen.findByRole('heading', { name: 'Properties', level: 2 })
 
+    await openAdd(user, 'Add property')
     await user.type(screen.getByLabelText('New property name'), 'website')
     const kindTrigger = screen.getByRole('button', { name: /^Text/ })
     await user.click(kindTrigger)
@@ -187,6 +199,7 @@ describe('PropertiesPanelContent', () => {
     render(<PropertiesPanelHarness noteId={note.id} />)
     await screen.findByRole('heading', { name: 'Properties', level: 2 })
 
+    await openAdd(user, 'Add property')
     await user.type(screen.getByLabelText('New property name'), 'meta')
     await user.click(screen.getByRole('button', { name: /^Text/ }))
     await user.click(screen.getByRole('menuitemradio', { name: 'Dictionary' }))
@@ -194,6 +207,9 @@ describe('PropertiesPanelContent', () => {
     await screen.findByText('meta')
 
     // Empty dictionary shows only the add-entry affordance — this is the reported bug.
+    // Clicking "Add entry" (on the just-added PropertyRow, outside the compose form)
+    // dismisses the now-idle "Add property" form as an outside click, so only the
+    // dictionary's own key/value inputs remain.
     const propertiesSection = screen
       .getByRole('heading', { name: 'Properties', level: 3 })
       .closest('section')!
@@ -201,13 +217,9 @@ describe('PropertiesPanelContent', () => {
     const keyInput = within(propertiesSection).getByLabelText('Entry key 1')
     await user.type(keyInput, 'color')
 
-    const namedInputs = new Set([
-      keyInput,
-      within(propertiesSection).getByLabelText('New property name'),
-    ])
     const valueInput = within(propertiesSection)
       .getAllByRole('textbox')
-      .find((el) => !namedInputs.has(el))
+      .find((el) => el !== keyInput)
     await user.type(valueInput!, 'blue')
 
     await waitFor(async () => {
@@ -239,6 +251,7 @@ describe('PropertiesPanelContent', () => {
     render(<PropertiesPanelHarness noteId={note.id} />)
     await screen.findByRole('heading', { name: 'Properties', level: 2 })
 
+    await openAdd(user, 'Add property')
     await user.type(screen.getByLabelText('New property name'), 'scores')
     await user.click(screen.getByRole('button', { name: /^Text/ }))
     await user.click(screen.getByRole('menuitemradio', { name: 'List' }))
@@ -267,6 +280,7 @@ describe('PropertiesPanelContent', () => {
     render(<PropertiesPanelHarness noteId={note.id} />)
     await screen.findByRole('heading', { name: 'Properties', level: 2 })
 
+    await openAdd(user, 'Add property')
     await user.type(screen.getByLabelText('New property name'), 'range')
     await user.click(screen.getByRole('button', { name: /^Text/ }))
     await user.click(screen.getByRole('menuitemradio', { name: 'Tuple' }))
@@ -302,6 +316,7 @@ describe('PropertiesPanelContent', () => {
     render(<PropertiesPanelHarness noteId={note.id} />)
     await screen.findByRole('heading', { name: 'Properties', level: 2 })
 
+    await openAdd(user, 'Add property')
     await user.type(screen.getByLabelText('New property name'), 'priority')
     await user.click(screen.getByRole('button', { name: /^Text/ }))
     await user.click(screen.getByRole('menuitemradio', { name: 'Select' }))
@@ -346,6 +361,7 @@ describe('PropertiesPanelContent', () => {
     render(<PropertiesPanelHarness noteId={note.id} />)
     await screen.findByRole('heading', { name: 'Properties', level: 2 })
 
+    await openAdd(user, 'Add property')
     await user.type(screen.getByLabelText('New property name'), 'status')
     await user.click(screen.getByRole('button', { name: /^Text/ }))
     await user.click(screen.getByRole('menuitemradio', { name: 'Select' }))
@@ -481,15 +497,20 @@ describe('PropertiesPanelContent', () => {
     render(<PropertiesPanelHarness noteId={note.id} />)
     await screen.findByRole('heading', { name: 'Properties', level: 2 })
 
-    // The "Add property" compose form has its own always-visible "Text" type trigger, so
-    // assert counts/unique labels rather than mere presence of "Text" to avoid colliding with it.
-    expect(screen.getAllByRole('button', { name: 'Text' })).toHaveLength(1)
+    // The "Add property" compose form is closed by default (only mounted while its
+    // action is active), so no baseline "Text" trigger exists until positions are
+    // opened for editing.
+    expect(screen.queryAllByRole('button', { name: 'Text' })).toHaveLength(0)
     expect(screen.queryByRole('button', { name: 'Number' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Remove position 1' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Add position' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Edit positions for range' }))
+
+    expect(screen.getAllByRole('button', { name: 'Text' })).toHaveLength(1)
     expect(screen.getByRole('button', { name: 'Remove position 1' })).toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: 'Edit item types for range' }))
-
-    expect(screen.getAllByRole('button', { name: 'Text' })).toHaveLength(2)
+    expect(screen.getByRole('button', { name: 'Remove position 2' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add position' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Number' }))
     await user.click(screen.getByRole('menuitemradio', { name: 'Boolean' }))
 
@@ -507,10 +528,68 @@ describe('PropertiesPanelContent', () => {
       })
     })
 
-    await user.click(screen.getByRole('button', { name: 'Edit item types for range' }))
+    await user.click(screen.getByRole('button', { name: 'Edit positions for range' }))
 
-    expect(screen.getAllByRole('button', { name: 'Text' })).toHaveLength(1)
+    expect(screen.queryAllByRole('button', { name: 'Text' })).toHaveLength(0)
     expect(screen.queryByRole('button', { name: 'Boolean' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Remove position 1' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Remove position 1' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Add position' })).not.toBeInTheDocument()
+  })
+
+  it('opens the add menu, adds a tag/property, and dismisses via cancel/escape/outside-click/re-click', async () => {
+    const user = userEvent.setup()
+    const note = await createTestNote()
+
+    render(<PropertiesPanelHarness noteId={note.id} />)
+    const heading = await screen.findByRole('heading', { name: 'Properties', level: 2 })
+
+    const trigger = screen.getByRole('button', { name: 'Add tag or property' })
+    await user.click(trigger)
+    expect(screen.getByRole('menuitem', { name: 'Add tag' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Add property' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('menuitem', { name: 'Add property' }))
+    const nameInput = screen.getByLabelText('New property name')
+    expect(nameInput).toHaveFocus()
+
+    // Re-clicking the trigger closes the active property form (rather than reopening
+    // the menu); clicking it again then opens the menu to switch to "Add tag",
+    // discarding the property draft.
+    await user.type(nameInput, 'draft')
+    await user.click(trigger)
+    expect(screen.queryByLabelText('New property name')).not.toBeInTheDocument()
+    await user.click(trigger)
+    await user.click(screen.getByRole('menuitem', { name: 'Add tag' }))
+    const tagInput = screen.getByLabelText('New tag')
+    expect(tagInput).toHaveFocus()
+
+    // Escape dismisses the active form.
+    await user.keyboard('{Escape}')
+    expect(screen.queryByLabelText('New tag')).not.toBeInTheDocument()
+
+    // Cancel button dismisses the active form.
+    await user.click(trigger)
+    await user.click(screen.getByRole('menuitem', { name: 'Add tag' }))
+    await user.click(screen.getByRole('button', { name: 'Cancel adding tag' }))
+    expect(screen.queryByLabelText('New tag')).not.toBeInTheDocument()
+
+    // Clicking outside the active form dismisses it.
+    await user.click(trigger)
+    await user.click(screen.getByRole('menuitem', { name: 'Add property' }))
+    expect(screen.getByLabelText('New property name')).toBeInTheDocument()
+    await user.click(heading)
+    expect(screen.queryByLabelText('New property name')).not.toBeInTheDocument()
+
+    // Re-clicking the trigger while a form is open closes it (without reopening the menu).
+    await user.click(trigger)
+    await user.click(screen.getByRole('menuitem', { name: 'Add property' }))
+    expect(screen.getByLabelText('New property name')).toBeInTheDocument()
+    await user.click(trigger)
+    expect(screen.queryByLabelText('New property name')).not.toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'Add tag' })).not.toBeInTheDocument()
+
+    // The draft never got submitted.
+    const updated = await getNote(note.id)
+    expect(updated?.metadata.properties.draft).toBeUndefined()
   })
 })

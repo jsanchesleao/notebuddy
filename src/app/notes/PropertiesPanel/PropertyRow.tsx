@@ -119,7 +119,7 @@ function LiveEditPropertyRow({
   const [localValue, setLocalValue] = useState(property.value)
   const [localTypeRef, setLocalTypeRef] = useState(property.typeRef)
   const [error, setError] = useState<string | null>(null)
-  const [showTupleItemTypes, setShowTupleItemTypes] = useState(false)
+  const [isEditingTuple, setIsEditingTuple] = useState(false)
 
   const handleChange = async (nextValue: PropertyValueData) => {
     setLocalValue(nextValue)
@@ -162,7 +162,7 @@ function LiveEditPropertyRow({
   }
 
   // Only List/Set have a single item type to swap — Tuple has one type per slot, so it gets
-  // a show/hide toggle instead (see showTupleItemTypes below), not a single popover.
+  // a show/hide toggle instead (see isEditingTuple below), not a single popover.
   const itemType =
     localTypeRef.kind === 'list' || localTypeRef.kind === 'set' ? localTypeRef.itemType : null
 
@@ -180,7 +180,7 @@ function LiveEditPropertyRow({
           value={localValue}
           onChange={handleChange}
           onSchemaChange={handleSchemaChange}
-          showTupleItemTypes={showTupleItemTypes}
+          isEditingTuple={isEditingTuple}
           resolveCustomType={resolveCustomType}
           availableCustomTypes={availableCustomTypes}
         />
@@ -219,9 +219,9 @@ function LiveEditPropertyRow({
             <button
               type="button"
               className={styles.actionButton}
-              aria-label={`Edit item types for ${propertyKey}`}
-              aria-pressed={showTupleItemTypes}
-              onClick={() => setShowTupleItemTypes((value) => !value)}
+              aria-label={`Edit positions for ${propertyKey}`}
+              aria-pressed={isEditingTuple}
+              onClick={() => setIsEditingTuple((value) => !value)}
             >
               <Icon name="edit" size={12} />
             </button>

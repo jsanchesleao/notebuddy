@@ -11,7 +11,7 @@ interface TupleValueEditorProps {
   value: PropertyValueData[]
   onChange: (value: PropertyValueData[]) => void
   onItemTypesChange?: (itemTypes: DataTypeRef[], value: PropertyValueData[]) => void
-  showItemTypes?: boolean
+  isEditingTuple?: boolean
   disabled?: boolean
   resolveCustomType: (id: string) => CustomDataType | undefined
   availableCustomTypes: CustomDataType[]
@@ -22,7 +22,7 @@ export function TupleValueEditor({
   value,
   onChange,
   onItemTypesChange,
-  showItemTypes = false,
+  isEditingTuple = false,
   disabled,
   resolveCustomType,
   availableCustomTypes,
@@ -79,7 +79,7 @@ export function TupleValueEditor({
     <div className={styles.tupleEditable}>
       {itemTypes.map((itemType, index) => (
         <div key={index} className={styles.tupleSlotRow}>
-          {showItemTypes && (
+          {isEditingTuple && (
             <SchemaKindSelect
               value={itemType}
               options={itemTypeOptions}
@@ -96,20 +96,27 @@ export function TupleValueEditor({
               availableCustomTypes={availableCustomTypes}
             />
           </div>
-          <button
-            type="button"
-            className={styles.removeButton}
-            aria-label={`Remove position ${index + 1}`}
-            onClick={() => removeSlot(index)}
-            disabled={disabled}
-          >
-            <Icon name="close" size={12} />
-          </button>
+          {isEditingTuple && (
+            <button
+              type="button"
+              className={styles.removeButton}
+              aria-label={`Remove position ${index + 1}`}
+              onClick={() => removeSlot(index)}
+              disabled={disabled}
+            >
+              <Icon name="close" size={12} />
+            </button>
+          )}
         </div>
       ))}
-      <button type="button" className={styles.addButton} onClick={addSlot} disabled={disabled}>
-        <Icon name="add" size={14} /> Add position
-      </button>
+      {isEditingTuple && (
+        <button type="button" className={styles.addButton} onClick={addSlot} disabled={disabled}>
+          <Icon name="add" size={14} /> Add position
+        </button>
+      )}
+      {itemTypes.length === 0 && !isEditingTuple && (
+        <p className={styles.hint}>Click edit to add positions.</p>
+      )}
     </div>
   )
 }
