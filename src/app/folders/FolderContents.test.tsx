@@ -41,7 +41,14 @@ describe('FolderContents', () => {
 
     await createFolder({ parentFolderId: null, title: 'Recipes' })
     await createNotebook({ folderId: null, title: 'Journal' })
-    await db.boards.add({ id: 'board-1', folderId: null, title: 'Kanban', columns: [] })
+    await db.boards.add({
+      id: 'board-1',
+      folderId: null,
+      title: 'Kanban',
+      columns: [],
+      cardsDocId: 'board-1-cards',
+      statusTypeId: null,
+    })
 
     expect(await screen.findByRole('link', { name: 'Recipes' })).toBeInTheDocument()
     expect(await screen.findByRole('link', { name: 'Journal' })).toBeInTheDocument()

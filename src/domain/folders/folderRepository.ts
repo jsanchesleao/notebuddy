@@ -1,6 +1,8 @@
 import { db } from '../../db/db'
 import { createId } from '../ids'
 import { deleteNotebooksByFolderId } from '../notebooks/notebookRepository'
+import { deleteBoardsByFolderId } from '../boards/boardRepository'
+import { runCascadeDelete } from '../cascadeDelete'
 import type { Folder } from '../entities.types'
 
 export interface CreateFolderInput {
@@ -44,22 +46,17 @@ async function collectDescendantFolderIds(rootId: string): Promise<string[]> {
 }
 
 export async function deleteFolder(id: string): Promise<void> {
-  await db.transaction(
-    'rw',
-    db.folders,
-    db.notebooks,
-    db.notes,
-    db.boards,
-    db.yjsUpdates,
-    async () => {
+  await runCascadeDelete({
+    tables: [db.folders, db.notebooks, db.notes, db.boards, db.yjsUpdates],
+    run: async () => {
       const folderIds = await collectDescendantFolderIds(id)
 
       for (const folderId of folderIds) {
         await deleteNotebooksByFolderId(folderId)
-        await db.boards.where('folderId').equals(folderId).delete()
+        await deleteBoardsByFolderId(folderId)
       }
 
       await db.folders.bulkDelete(folderIds)
     },
-  )
+  })
 }

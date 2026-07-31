@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { CODE_LANGUAGES, highlightCode } from './prismLanguages'
+import { SAVE_DEBOUNCE_MS } from '../blockEditing.constants'
 import type { NoteBlock } from '../../../../domain/blocks/blocks.types'
 import styles from './CodeBlock.module.css'
-
-const SAVE_DEBOUNCE_MS = 500
 
 interface CodeBlockProps {
   block: Extract<NoteBlock, { type: 'code' }>

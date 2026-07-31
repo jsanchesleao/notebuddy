@@ -9,11 +9,15 @@ import {
 } from './folderRepository'
 import { createNotebook } from '../notebooks/notebookRepository'
 import { createNote } from '../notes/noteRepository'
+import { createId } from '../ids'
+import { createYDoc } from '../yjs/yjsDocStore'
+import type { Board } from '../entities.types'
 
 beforeEach(async () => {
   await db.folders.clear()
   await db.notebooks.clear()
   await db.notes.clear()
+  await db.boards.clear()
   await db.yjsUpdates.clear()
 })
 
@@ -72,6 +76,26 @@ describe('folderRepository', () => {
     expect(await db.notes.get(noteInChild.id)).toBeUndefined()
     expect(await db.yjsUpdates.where('docId').equals(noteInRoot.blockDocId).count()).toBe(0)
     expect(await db.yjsUpdates.where('docId').equals(noteInChild.blockDocId).count()).toBe(0)
+  })
+
+  it('cascades delete through a board and its notes and yjsUpdates rows', async () => {
+    const root = await createFolder({ parentFolderId: null, title: 'Root' })
+    const board: Board = {
+      id: createId(),
+      folderId: root.id,
+      title: 'Board',
+      columns: [],
+      cardsDocId: createYDoc().docId,
+      statusTypeId: null,
+    }
+    await db.boards.add(board)
+    const cardNote = await createNote({ notebookId: null, boardId: board.id, title: 'Card' })
+
+    await deleteFolder(root.id)
+
+    expect(await db.boards.get(board.id)).toBeUndefined()
+    expect(await db.notes.get(cardNote.id)).toBeUndefined()
+    expect(await db.yjsUpdates.where('docId').equals(cardNote.blockDocId).count()).toBe(0)
   })
 
   it('does not affect folders outside the deleted subtree', async () => {

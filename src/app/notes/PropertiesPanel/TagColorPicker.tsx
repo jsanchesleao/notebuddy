@@ -3,9 +3,9 @@ import { DismissableDropdown } from '../../../components/Menu/DismissableDropdow
 import valueEditorStyles from '../../propertyValues/valueEditors.module.css'
 import { PILL_PALETTE } from '../../../domain/tags/tagPalette'
 import { setTagColor } from '../../../domain/tags/tagRepository'
+import { HEX_COLOR_REGEX } from '../../../lib/color/hexColor'
 import styles from './TagColorPicker.module.css'
 
-const HEX_REGEX = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
 const FALLBACK_COLOR = PILL_PALETTE[0]
 
 interface TagColorPickerProps {
@@ -58,7 +58,7 @@ export function TagColorPicker({ tagName, color }: TagColorPickerProps) {
             className={styles.hexForm}
             onSubmit={async (event) => {
               event.preventDefault()
-              if (!HEX_REGEX.test(draft)) return
+              if (!HEX_COLOR_REGEX.test(draft)) return
               await setTagColor(tagName, draft)
               close()
             }}
@@ -71,7 +71,7 @@ export function TagColorPicker({ tagName, color }: TagColorPickerProps) {
               onChange={(event) => setDraft(event.target.value)}
               aria-label="Hex color"
             />
-            <button type="submit" disabled={!HEX_REGEX.test(draft)}>
+            <button type="submit" disabled={!HEX_COLOR_REGEX.test(draft)}>
               Set
             </button>
           </form>

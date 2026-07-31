@@ -10,9 +10,8 @@ import type { NoteBlock, NoteBlockType } from '../../../../domain/blocks/blocks.
 import { TextFormattingToolbar } from './TextFormattingToolbar'
 import { SlashCommandMenu } from './SlashCommandMenu'
 import { parseSlashQuery } from './slashCommand'
+import { SAVE_DEBOUNCE_MS } from '../blockEditing.constants'
 import styles from './TextBlock.module.css'
-
-const SAVE_DEBOUNCE_MS = 500
 
 export type BlockEdge = 'start' | 'end'
 

@@ -8,6 +8,7 @@ import { createDefaultValue } from '../dataTypes/defaultValueGenerator'
 import { assertValid } from '../dataTypes/schemaValidator'
 import { getNoteType } from '../noteTypes/noteTypeRepository'
 import { ensureTagColor } from '../tags/tagRepository'
+import { runCascadeDelete } from '../cascadeDelete'
 import type { CustomDataType, Note, PropertyValue } from '../entities.types'
 
 async function deleteNoteAssets(note: Note): Promise<void> {
@@ -152,30 +153,36 @@ export async function setNoteTags(id: string, tags: string[]): Promise<void> {
   await Promise.all(normalized.map((tag) => ensureTagColor(tag)))
 }
 
+async function deleteNotesWithCleanup(notes: Note[]): Promise<void> {
+  await runCascadeDelete({
+    tables: [db.notes, db.yjsUpdates],
+    beforeTransaction: async () => {
+      for (const note of notes) {
+        await deleteNoteAssets(note)
+      }
+    },
+    run: async () => {
+      for (const note of notes) {
+        await deleteUpdateRows(note.blockDocId)
+        await db.notes.delete(note.id)
+      }
+    },
+  })
+}
+
 export async function deleteNote(id: string): Promise<void> {
   const note = await db.notes.get(id)
   if (!note) return
 
-  await deleteNoteAssets(note)
-
-  await db.transaction('rw', db.notes, db.yjsUpdates, async () => {
-    await deleteUpdateRows(note.blockDocId)
-    await db.notes.delete(id)
-  })
+  await deleteNotesWithCleanup([note])
 }
 
 export async function deleteNotesByNotebookId(notebookId: string): Promise<void> {
   const notes = await db.notes.where('notebookId').equals(notebookId).toArray()
+  await deleteNotesWithCleanup(notes)
+}
 
-  for (const note of notes) {
-    await deleteNoteAssets(note)
-  }
-
-  await db.transaction('rw', db.notes, db.yjsUpdates, async () => {
-    for (const note of notes) {
-      await deleteUpdateRows(note.blockDocId)
-    }
-
-    await db.notes.where('notebookId').equals(notebookId).delete()
-  })
+export async function deleteNotesByBoardId(boardId: string): Promise<void> {
+  const notes = await db.notes.where('boardId').equals(boardId).toArray()
+  await deleteNotesWithCleanup(notes)
 }

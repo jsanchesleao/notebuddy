@@ -10,6 +10,9 @@ export interface Notebook {
   title: string
   defaultNoteTypeId: string | null
   encryption: { enabled: boolean; salt?: string } | null
+  // Y.Doc id holding this notebook's sticky notes canvas. Notebooks otherwise stay
+  // content-free — this doc never holds anything but sticky notes.
+  stickyNotesDocId: string
 }
 
 export interface BoardColumn {
@@ -25,6 +28,12 @@ export interface Board {
   folderId: string | null
   title: string
   columns: BoardColumn[]
+  // Y.Doc id holding card ordering + this board's sticky notes canvas, mirrors Note.blockDocId.
+  cardsDocId: string
+  // Permanent link to the CustomDataType (a "select" option-set schema) backing this
+  // board's columns — see optionSets.ts. Each BoardColumn.id matches a SelectOption.id from
+  // this type; renaming/retagging a column edits that option, not just the column.
+  statusTypeId: string | null
 }
 
 export type PrimitiveKind =
@@ -87,6 +96,10 @@ export interface Note {
   boardId: string | null
   noteTypeId: string | null
   title: string
+  // Board-card fields — only meaningful when boardId is set, but not enforced as such
+  // (a note removed from a board keeps whatever it had, same as any other stale field).
+  description?: string
+  cardImagePath?: string
   metadata: NoteMetadata
   blockDocId: string
   createdAt: string

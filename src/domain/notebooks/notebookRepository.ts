@@ -1,6 +1,9 @@
 import { db } from '../../db/db'
 import { createId } from '../ids'
 import { deleteNotesByNotebookId } from '../notes/noteRepository'
+import { runCascadeDelete } from '../cascadeDelete'
+import { createYDoc } from '../yjs/yjsDocStore'
+import { deleteUpdateRows } from '../yjs/yjsUpdatesTable'
 import type { Notebook } from '../entities.types'
 
 export interface CreateNotebookInput {
@@ -9,12 +12,14 @@ export interface CreateNotebookInput {
 }
 
 export async function createNotebook(input: CreateNotebookInput): Promise<Notebook> {
+  const { docId: stickyNotesDocId } = createYDoc()
   const notebook: Notebook = {
     id: createId(),
     folderId: input.folderId,
     title: input.title,
     defaultNoteTypeId: null,
     encryption: null,
+    stickyNotesDocId,
   }
 
   await db.notebooks.add(notebook)
@@ -38,20 +43,29 @@ export async function renameNotebook(id: string, title: string): Promise<void> {
 }
 
 export async function deleteNotebook(id: string): Promise<void> {
-  await db.transaction('rw', db.notebooks, db.notes, db.yjsUpdates, async () => {
-    await deleteNotesByNotebookId(id)
-    await db.notebooks.delete(id)
+  await runCascadeDelete({
+    tables: [db.notebooks, db.notes, db.yjsUpdates],
+    run: async () => {
+      const notebook = await db.notebooks.get(id)
+      await deleteNotesByNotebookId(id)
+      if (notebook) await deleteUpdateRows(notebook.stickyNotesDocId)
+      await db.notebooks.delete(id)
+    },
   })
 }
 
 export async function deleteNotebooksByFolderId(folderId: string): Promise<void> {
-  await db.transaction('rw', db.notebooks, db.notes, db.yjsUpdates, async () => {
-    const notebooks = await db.notebooks.where('folderId').equals(folderId).toArray()
+  await runCascadeDelete({
+    tables: [db.notebooks, db.notes, db.yjsUpdates],
+    run: async () => {
+      const notebooks = await db.notebooks.where('folderId').equals(folderId).toArray()
 
-    for (const notebook of notebooks) {
-      await deleteNotesByNotebookId(notebook.id)
-    }
+      for (const notebook of notebooks) {
+        await deleteNotesByNotebookId(notebook.id)
+        await deleteUpdateRows(notebook.stickyNotesDocId)
+      }
 
-    await db.notebooks.where('folderId').equals(folderId).delete()
+      await db.notebooks.where('folderId').equals(folderId).delete()
+    },
   })
 }

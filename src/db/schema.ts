@@ -16,3 +16,9 @@ export const SCHEMA_V2 = {
 export const SCHEMA_V3 = {
   tags: 'name',
 }
+
+export const SCHEMA_V4 = {
+  // statusTypeId is indexed so deleteCustomDataType can check whether any board still
+  // references a given option-set CustomDataType before allowing its deletion.
+  boards: 'id, folderId, statusTypeId',
+}

@@ -1,9 +1,8 @@
 import { useRef, useState } from 'react'
 import { Icon } from '../../../../components/Icon/Icon'
+import { SAVE_DEBOUNCE_MS } from '../blockEditing.constants'
 import type { NoteBlock, TableCell } from '../../../../domain/blocks/blocks.types'
 import styles from './TableBlock.module.css'
-
-const SAVE_DEBOUNCE_MS = 500
 
 interface TableBlockProps {
   block: Extract<NoteBlock, { type: 'table' }>

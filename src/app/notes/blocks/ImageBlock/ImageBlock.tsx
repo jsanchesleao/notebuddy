@@ -1,28 +1,11 @@
 import { useEffect, useRef, useState, type FocusEvent, type MouseEvent } from 'react'
-import { createId } from '../../../../domain/ids'
-import { buildAssetPath } from '../../../../lib/opfs/opfsPaths'
-import { getOpfsDriver } from '../../../../lib/opfs/opfsDriver'
 import { useOpfsBlobUrl } from '../../useOpfsBlobUrl'
+import { useOpfsImageUpload } from '../../useOpfsImageUpload'
 import { Icon } from '../../../../components/Icon/Icon'
+import { ALIGNMENTS, WIDTH_PRESETS, type Alignment } from '../alignmentOptions'
+import { SAVE_DEBOUNCE_MS } from '../blockEditing.constants'
 import type { NoteBlock } from '../../../../domain/blocks/blocks.types'
 import styles from './ImageBlock.module.css'
-
-const SAVE_DEBOUNCE_MS = 500
-
-const WIDTH_PRESETS: { label: string; value: number | undefined }[] = [
-  { label: 'S', value: 240 },
-  { label: 'M', value: 480 },
-  { label: 'L', value: 720 },
-  { label: 'Full', value: undefined },
-]
-
-const ALIGNMENTS = [
-  { value: 'left', label: 'Align left', icon: 'alignLeft' },
-  { value: 'center', label: 'Align center', icon: 'alignCenter' },
-  { value: 'right', label: 'Align right', icon: 'alignRight' },
-] as const
-
-type Alignment = (typeof ALIGNMENTS)[number]['value']
 
 const ALIGN_CLASS: Record<Alignment, string> = {
   left: styles.alignLeft,
@@ -59,6 +42,11 @@ export function ImageBlock({
   const url = useOpfsBlobUrl(block.opfsPath)
   const align = block.align ?? 'left'
   const revealed = hovered || focused
+  const uploadImage = useOpfsImageUpload({
+    ownerId: noteId,
+    currentPath: block.opfsPath,
+    onUploaded: (path) => onUpdate({ opfsPath: path }),
+  })
 
   useEffect(() => {
     if (!autoOpenPicker) return
@@ -116,14 +104,7 @@ export function ImageBlock({
               event.target.value = ''
               if (!file) return
 
-              const path = buildAssetPath({ noteId, assetId: createId(), fileName: file.name })
-              const previousPath = block.opfsPath
-              await getOpfsDriver().writeFile(path, file)
-              onUpdate({ opfsPath: path })
-
-              if (previousPath) {
-                await getOpfsDriver().deleteFile(previousPath)
-              }
+              await uploadImage(file)
             }}
           />
           <div className={styles.divider} />

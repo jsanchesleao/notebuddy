@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { DismissableDropdown } from '../../components/Menu/DismissableDropdown'
 import dropdownStyles from '../../components/Menu/DismissableDropdown.module.css'
+import { HEX_COLOR_REGEX } from '../../lib/color/hexColor'
 import valueEditorStyles from './valueEditors.module.css'
 import styles from './ColorValueEditor.module.css'
 
@@ -14,7 +15,6 @@ const COLOR_SWATCHES = [
   '#6b6255',
   '#2b2620',
 ]
-const HEX_REGEX = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
 
 interface ColorValueEditorProps {
   value: string
@@ -65,7 +65,7 @@ export function ColorValueEditor({ value, onChange, disabled }: ColorValueEditor
             className={styles.hexForm}
             onSubmit={(event) => {
               event.preventDefault()
-              if (HEX_REGEX.test(draft)) {
+              if (HEX_COLOR_REGEX.test(draft)) {
                 onChange(draft)
                 close()
               }
@@ -79,7 +79,7 @@ export function ColorValueEditor({ value, onChange, disabled }: ColorValueEditor
               onChange={(event) => setDraft(event.target.value)}
               aria-label="Hex color"
             />
-            <button type="submit" disabled={!HEX_REGEX.test(draft)}>
+            <button type="submit" disabled={!HEX_COLOR_REGEX.test(draft)}>
               Set
             </button>
           </form>

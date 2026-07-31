@@ -1,3 +1,4 @@
+import { resolveTypeRef } from '../../domain/dataTypes/resolveTypeRef'
 import type { CustomDataType, DataTypeRef, PropertyValueData } from '../../domain/entities.types'
 import { PrimitiveValueDisplay } from './PrimitiveValueDisplay'
 import { CollectionValueDisplay } from './CollectionValueDisplay'
@@ -23,33 +24,23 @@ export function PropertyValueDisplay({
   resolveCustomType,
   availableCustomTypes,
 }: PropertyValueDisplayProps) {
-  switch (typeRef.kind) {
+  const resolved = resolveTypeRef(typeRef, resolveCustomType)
+  if (!resolved) return <span>Unknown type</span>
+
+  switch (resolved.kind) {
     case 'primitive':
       return (
         <PrimitiveValueDisplay
-          primitive={typeRef.primitive}
+          primitive={resolved.primitive}
           value={value}
-          options={typeRef.options}
+          options={resolved.options}
         />
       )
-    case 'customTypeRef': {
-      const referenced = resolveCustomType(typeRef.customTypeId)
-      if (!referenced) return <span>Unknown type</span>
-      return (
-        <PropertyValueDisplay
-          typeRef={referenced.schema}
-          value={value}
-          onChange={onChange}
-          resolveCustomType={resolveCustomType}
-          availableCustomTypes={availableCustomTypes}
-        />
-      )
-    }
     case 'list':
     case 'set':
       return (
         <CollectionValueDisplay
-          itemType={typeRef.itemType}
+          itemType={resolved.itemType}
           value={Array.isArray(value) ? value : []}
           onChange={onChange}
           resolveCustomType={resolveCustomType}
@@ -59,7 +50,7 @@ export function PropertyValueDisplay({
     case 'tuple':
       return (
         <TupleValueDisplay
-          itemTypes={typeRef.itemTypes}
+          itemTypes={resolved.itemTypes}
           value={Array.isArray(value) ? value : []}
           resolveCustomType={resolveCustomType}
           availableCustomTypes={availableCustomTypes}
@@ -68,11 +59,13 @@ export function PropertyValueDisplay({
     case 'dictionary':
       return (
         <DictionaryValueDisplay
-          fields={typeRef.fields}
+          fields={resolved.fields}
           value={value && typeof value === 'object' && !Array.isArray(value) ? value : {}}
           resolveCustomType={resolveCustomType}
           availableCustomTypes={availableCustomTypes}
         />
       )
+    case 'customTypeRef':
+      return <span>Unknown type</span>
   }
 }

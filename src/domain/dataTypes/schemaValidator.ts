@@ -1,3 +1,5 @@
+import { HEX_COLOR_REGEX } from '../../lib/color/hexColor'
+import { resolveTypeRef } from './resolveTypeRef'
 import type { CustomDataType, DataTypeRef, PropertyValueData } from '../entities.types'
 
 export interface ValidationContext {
@@ -21,7 +23,6 @@ export class SchemaValidationError extends Error {
 
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/
 const TIME_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/
-const COLOR_REGEX = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
 
 function isPlainObject(value: unknown): value is Record<string, PropertyValueData> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -96,9 +97,9 @@ export function validateValue(
       return issues
     }
     case 'customTypeRef': {
-      const referenced = ctx.resolveCustomType(typeRef.customTypeId)
-      if (!referenced) return [{ path, message: 'references an unknown custom type' }]
-      return validateValue(referenced.schema, value, ctx, path)
+      const resolved = resolveTypeRef(typeRef, ctx.resolveCustomType)
+      if (!resolved) return [{ path, message: 'references an unknown custom type' }]
+      return validateValue(resolved, value, ctx, path)
     }
   }
 }
@@ -132,7 +133,7 @@ function validatePrimitive(
     case 'color':
       return value === null ||
         value === '' ||
-        (typeof value === 'string' && COLOR_REGEX.test(value))
+        (typeof value === 'string' && HEX_COLOR_REGEX.test(value))
         ? []
         : [{ path, message: 'must be a hex color or empty' }]
     case 'link':

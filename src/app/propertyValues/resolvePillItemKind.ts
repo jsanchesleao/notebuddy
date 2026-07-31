@@ -1,3 +1,4 @@
+import { resolveTypeRef } from '../../domain/dataTypes/resolveTypeRef'
 import type { CustomDataType, DataTypeRef, SelectOption } from '../../domain/entities.types'
 
 export type PillItemKind = { kind: 'text' } | { kind: 'select'; options: SelectOption[] }
@@ -10,16 +11,10 @@ export function resolvePillItemKind(
   typeRef: DataTypeRef,
   resolveCustomType: (id: string) => CustomDataType | undefined,
 ): PillItemKind | null {
-  switch (typeRef.kind) {
-    case 'primitive':
-      if (typeRef.primitive === 'text') return { kind: 'text' }
-      if (typeRef.primitive === 'select') return { kind: 'select', options: typeRef.options ?? [] }
-      return null
-    case 'customTypeRef': {
-      const referenced = resolveCustomType(typeRef.customTypeId)
-      return referenced ? resolvePillItemKind(referenced.schema, resolveCustomType) : null
-    }
-    default:
-      return null
-  }
+  const resolved = resolveTypeRef(typeRef, resolveCustomType)
+  if (!resolved || resolved.kind !== 'primitive') return null
+
+  if (resolved.primitive === 'text') return { kind: 'text' }
+  if (resolved.primitive === 'select') return { kind: 'select', options: resolved.options ?? [] }
+  return null
 }

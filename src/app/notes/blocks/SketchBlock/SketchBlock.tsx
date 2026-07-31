@@ -3,26 +3,12 @@ import type { PointerEvent as ReactPointerEvent } from 'react'
 import { strokeToPath } from './strokeToPath'
 import { TEXT_COLOR_PRESETS } from '../TextBlock/textColorPresets'
 import { Icon } from '../../../../components/Icon/Icon'
+import { ALIGNMENTS, WIDTH_PRESETS, type Alignment } from '../alignmentOptions'
 import type { NoteBlock, Stroke } from '../../../../domain/blocks/blocks.types'
 import styles from './SketchBlock.module.css'
 
 const DEFAULT_COLORS = TEXT_COLOR_PRESETS.map((preset) => preset.value)
 const DEFAULT_SIZES = [2, 4, 8]
-
-const WIDTH_PRESETS: { label: string; value: number | undefined }[] = [
-  { label: 'S', value: 240 },
-  { label: 'M', value: 480 },
-  { label: 'L', value: 720 },
-  { label: 'Full', value: undefined },
-]
-
-const ALIGNMENTS = [
-  { value: 'left', label: 'Align left', icon: 'alignLeft' },
-  { value: 'center', label: 'Align center', icon: 'alignCenter' },
-  { value: 'right', label: 'Align right', icon: 'alignRight' },
-] as const
-
-type Alignment = (typeof ALIGNMENTS)[number]['value']
 
 const ALIGN_CLASS: Record<Alignment, string> = {
   left: styles.alignLeft,

@@ -66,6 +66,8 @@ describe('Sidebar', () => {
       folderId: subfolder.id,
       title: 'Scoped board',
       columns: [],
+      cardsDocId: 'board-1-cards',
+      statusTypeId: null,
     })
 
     render(

@@ -1,3 +1,4 @@
+import { resolveTypeRef } from '../../domain/dataTypes/resolveTypeRef'
 import type { CustomDataType, DataTypeRef, PropertyValueData } from '../../domain/entities.types'
 import { TextValueEditor } from './TextValueEditor'
 import { NumberValueEditor } from './NumberValueEditor'
@@ -41,40 +42,38 @@ export function PropertyValueEditor({
   resolveCustomType,
   availableCustomTypes,
 }: PropertyValueEditorProps) {
-  switch (typeRef.kind) {
+  const resolved = resolveTypeRef(typeRef, resolveCustomType)
+  if (!resolved) return <span>Unknown type</span>
+
+  // Schema editing (and the tuple edit-mode toggle) must never be forwarded across a
+  // customTypeRef boundary — once a property's type is a shared, registered CustomDataType
+  // rather than a shape privately owned by the note, this component tree stops treating it
+  // as editable, no matter how deeply nested the eventual list/set/tuple/dictionary is.
+  const crossedCustomTypeRef = typeRef.kind === 'customTypeRef'
+  const effectiveOnSchemaChange = crossedCustomTypeRef ? undefined : onSchemaChange
+  const effectiveIsEditingTuple = crossedCustomTypeRef ? false : isEditingTuple
+
+  switch (resolved.kind) {
     case 'primitive':
       return (
         <PrimitiveValueEditor
-          primitiveType={typeRef}
+          primitiveType={resolved}
           value={value}
           onChange={onChange}
           disabled={disabled}
         />
       )
-    case 'customTypeRef': {
-      const referenced = resolveCustomType(typeRef.customTypeId)
-      if (!referenced) return <span>Unknown type</span>
-      return (
-        <PropertyValueEditor
-          typeRef={referenced.schema}
-          value={value}
-          onChange={onChange}
-          disabled={disabled}
-          resolveCustomType={resolveCustomType}
-          availableCustomTypes={availableCustomTypes}
-        />
-      )
-    }
     case 'list':
       return (
         <ListValueEditor
-          itemType={typeRef.itemType}
-          maxSize={typeRef.maxSize}
+          itemType={resolved.itemType}
+          maxSize={resolved.maxSize}
           value={Array.isArray(value) ? value : []}
           onChange={onChange}
           onItemTypeChange={
-            onSchemaChange
-              ? (nextItemType) => onSchemaChange({ ...typeRef, itemType: nextItemType }, [])
+            effectiveOnSchemaChange
+              ? (nextItemType) =>
+                  effectiveOnSchemaChange({ ...resolved, itemType: nextItemType }, [])
               : undefined
           }
           disabled={disabled}
@@ -85,12 +84,13 @@ export function PropertyValueEditor({
     case 'set':
       return (
         <SetValueEditor
-          itemType={typeRef.itemType}
+          itemType={resolved.itemType}
           value={Array.isArray(value) ? value : []}
           onChange={onChange}
           onItemTypeChange={
-            onSchemaChange
-              ? (nextItemType) => onSchemaChange({ ...typeRef, itemType: nextItemType }, [])
+            effectiveOnSchemaChange
+              ? (nextItemType) =>
+                  effectiveOnSchemaChange({ ...resolved, itemType: nextItemType }, [])
               : undefined
           }
           disabled={disabled}
@@ -101,16 +101,16 @@ export function PropertyValueEditor({
     case 'tuple':
       return (
         <TupleValueEditor
-          itemTypes={typeRef.itemTypes}
+          itemTypes={resolved.itemTypes}
           value={Array.isArray(value) ? value : []}
           onChange={onChange}
           onItemTypesChange={
-            onSchemaChange
+            effectiveOnSchemaChange
               ? (nextItemTypes, nextValue) =>
-                  onSchemaChange({ ...typeRef, itemTypes: nextItemTypes }, nextValue)
+                  effectiveOnSchemaChange({ ...resolved, itemTypes: nextItemTypes }, nextValue)
               : undefined
           }
-          isEditingTuple={isEditingTuple ?? false}
+          isEditingTuple={effectiveIsEditingTuple ?? false}
           disabled={disabled}
           resolveCustomType={resolveCustomType}
           availableCustomTypes={availableCustomTypes}
@@ -119,13 +119,13 @@ export function PropertyValueEditor({
     case 'dictionary':
       return (
         <DictionaryValueEditor
-          fields={typeRef.fields}
+          fields={resolved.fields}
           value={value && typeof value === 'object' && !Array.isArray(value) ? value : {}}
           onChange={onChange}
           onFieldsChange={
-            onSchemaChange
+            effectiveOnSchemaChange
               ? (nextFields, nextValue) =>
-                  onSchemaChange({ ...typeRef, fields: nextFields }, nextValue)
+                  effectiveOnSchemaChange({ ...resolved, fields: nextFields }, nextValue)
               : undefined
           }
           disabled={disabled}
@@ -133,6 +133,8 @@ export function PropertyValueEditor({
           availableCustomTypes={availableCustomTypes}
         />
       )
+    case 'customTypeRef':
+      return <span>Unknown type</span>
   }
 }
 
