@@ -47,7 +47,7 @@ describe('PropertiesPanelContent', () => {
     const note = await createTestNote()
 
     render(<PropertiesPanelHarness noteId={note.id} />)
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     await openAdd(user, 'Add tag')
     await user.type(screen.getByLabelText('New tag'), 'recipe')
@@ -74,7 +74,7 @@ describe('PropertiesPanelContent', () => {
     const note = await createTestNote()
 
     render(<PropertiesPanelHarness noteId={note.id} />)
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     await openAdd(user, 'Add property')
     await user.type(screen.getByLabelText('New property name'), 'favorite')
@@ -96,7 +96,7 @@ describe('PropertiesPanelContent', () => {
     const note = await createTestNote()
 
     render(<PropertiesPanelHarness noteId={note.id} />)
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     await openAdd(user, 'Add property')
     await user.type(screen.getByLabelText('New property name'), 'favorite')
@@ -114,7 +114,7 @@ describe('PropertiesPanelContent', () => {
     const note = await createTestNote()
 
     render(<PropertiesPanelHarness noteId={note.id} />)
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     await openAdd(user, 'Add property')
     await user.type(screen.getByLabelText('New property name'), 'favorite')
@@ -142,7 +142,7 @@ describe('PropertiesPanelContent', () => {
     })
 
     render(<PropertiesPanelHarness noteId={note.id} />)
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     const link = await screen.findByRole('link', { name: 'https://example.com' })
     expect(link).toHaveAttribute('href', 'https://example.com')
@@ -164,7 +164,7 @@ describe('PropertiesPanelContent', () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     render(<PropertiesPanelHarness noteId={note.id} />)
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     await openAdd(user, 'Add property')
     await user.type(screen.getByLabelText('New property name'), 'website')
@@ -197,7 +197,7 @@ describe('PropertiesPanelContent', () => {
     const note = await createTestNote()
 
     render(<PropertiesPanelHarness noteId={note.id} />)
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     await openAdd(user, 'Add property')
     await user.type(screen.getByLabelText('New property name'), 'meta')
@@ -252,7 +252,7 @@ describe('PropertiesPanelContent', () => {
     const note = await createTestNote()
 
     render(<PropertiesPanelHarness noteId={note.id} />)
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     await openAdd(user, 'Add property')
     await user.type(screen.getByLabelText('New property name'), 'scores')
@@ -281,7 +281,7 @@ describe('PropertiesPanelContent', () => {
     const note = await createTestNote()
 
     render(<PropertiesPanelHarness noteId={note.id} />)
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     await openAdd(user, 'Add property')
     await user.type(screen.getByLabelText('New property name'), 'range')
@@ -317,7 +317,7 @@ describe('PropertiesPanelContent', () => {
     const note = await createTestNote()
 
     render(<PropertiesPanelHarness noteId={note.id} />)
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     await openAdd(user, 'Add property')
     await user.type(screen.getByLabelText('New property name'), 'priority')
@@ -362,7 +362,7 @@ describe('PropertiesPanelContent', () => {
     const note = await createTestNote()
 
     render(<PropertiesPanelHarness noteId={note.id} />)
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     await openAdd(user, 'Add property')
     await user.type(screen.getByLabelText('New property name'), 'status')
@@ -410,7 +410,7 @@ describe('PropertiesPanelContent', () => {
     })
 
     render(<PropertiesPanelHarness noteId={note.id} />)
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     expect(screen.getByRole('button', { name: 'High' })).toBeInTheDocument()
 
@@ -441,7 +441,7 @@ describe('PropertiesPanelContent', () => {
     })
 
     render(<PropertiesPanelHarness noteId={note.id} />)
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     expect(screen.getByRole('button', { name: 'a' })).toBeInTheDocument()
     expect(screen.queryByText('Item type')).not.toBeInTheDocument()
@@ -470,7 +470,7 @@ describe('PropertiesPanelContent', () => {
     })
 
     render(<PropertiesPanelHarness noteId={note.id} />)
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     await user.click(screen.getByRole('button', { name: 'Edit tags2' }))
     await user.click(screen.getByRole('button', { name: 'Text' }))
@@ -500,7 +500,7 @@ describe('PropertiesPanelContent', () => {
     })
 
     render(<PropertiesPanelHarness noteId={note.id} />)
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     // The "Add property" compose form is closed by default (only mounted while its
     // action is active), so no baseline "Text" trigger exists until positions are
@@ -550,7 +550,7 @@ describe('PropertiesPanelContent', () => {
     })
 
     render(<PropertiesPanelHarness noteId={note.id} />)
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     expect(screen.getByText('1')).toBeInTheDocument()
     expect(screen.getByText('2')).toBeInTheDocument()
@@ -573,7 +573,7 @@ describe('PropertiesPanelContent', () => {
     })
 
     render(<PropertiesPanelHarness noteId={note.id} />)
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     expect(screen.queryByRole('button', { name: 'Remove item 1' })).not.toBeInTheDocument()
     expect(screen.queryByLabelText('New item')).not.toBeInTheDocument()
@@ -615,7 +615,7 @@ describe('PropertiesPanelContent', () => {
     })
 
     render(<PropertiesPanelHarness noteId={note.id} />)
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     expect(screen.getByText('lead:')).toBeInTheDocument()
     expect(screen.getByText('Alice')).toBeInTheDocument()
@@ -634,7 +634,7 @@ describe('PropertiesPanelContent', () => {
     const note = await createTestNote()
 
     render(<PropertiesPanelHarness noteId={note.id} />)
-    const heading = await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    const heading = await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     const trigger = screen.getByRole('button', { name: 'Add tag or property' })
     await user.click(trigger)

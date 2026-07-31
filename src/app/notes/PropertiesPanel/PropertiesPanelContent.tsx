@@ -37,7 +37,7 @@ export function PropertiesPanelContent({
     <>
       <div className={styles.header}>
         <h2 id={titleId} className={styles.heading}>
-          Properties
+          {note.title}
         </h2>
         <div className={styles.actions}>
           <AddMenuButton

@@ -70,7 +70,7 @@ describe('NotePage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Toggle properties' }))
     expect(drawer).toHaveAttribute('aria-hidden', 'false')
-    expect(screen.getByRole('heading', { name: 'Properties', level: 2 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'My note', level: 2 })).toBeInTheDocument()
   })
 
   it('navigates to the parent notebook after deleting the note', async () => {

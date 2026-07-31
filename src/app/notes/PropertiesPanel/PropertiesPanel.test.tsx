@@ -64,7 +64,7 @@ describe('PropertiesPanel', () => {
     const note = await createTestNote()
 
     render(<ToggleableHarness noteId={note.id} />)
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     await user.click(screen.getByRole('button', { name: 'Open properties in a separate window' }))
 
@@ -86,7 +86,7 @@ describe('PropertiesPanel', () => {
     const note = await createTestNote()
 
     render(<ToggleableHarness noteId={note.id} />)
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     await user.click(screen.getByRole('button', { name: 'Open properties in a separate window' }))
     await screen.findByRole('button', { name: 'Dock properties to sidebar' })
@@ -94,7 +94,7 @@ describe('PropertiesPanel', () => {
     await user.click(screen.getByRole('button', { name: 'Close properties' }))
     await user.click(screen.getByRole('button', { name: 'Toggle properties' }))
 
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
     expect(
       screen.getByRole('button', { name: 'Open properties in a separate window' }),
     ).toBeInTheDocument()
@@ -107,7 +107,7 @@ describe('PropertiesPanel', () => {
     const note = await createTestNote()
 
     render(<ToggleableHarness noteId={note.id} />)
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     expect(
       screen.queryByRole('button', { name: 'Open properties in a separate window' }),
@@ -126,7 +126,7 @@ describe('PropertiesPanel', () => {
     })
 
     render(<ToggleableHarness noteId={note.id} />)
-    await screen.findByRole('heading', { name: 'Properties', level: 2 })
+    await screen.findByRole('heading', { name: 'A note', level: 2 })
 
     const row = (await screen.findByText('favorite')).closest('[data-mode]')
     expect(row).toHaveAttribute('data-mode', 'drawer')
