@@ -13,6 +13,7 @@
   --color-bg: #faf6ef;
   --color-bg-elevated: #ffffff;
   --color-bg-sidebar: #f2ece0;
+  --color-bg-content: #fffdf8;
   --color-border: #e2d8c3;
 
   /* Color: text */
@@ -70,6 +71,7 @@
   --color-bg: #211d18;
   --color-bg-elevated: #2a2521;
   --color-bg-sidebar: #191613;
+  --color-bg-content: #171310;
   --color-border: #3a332b;
 
   --color-text: #ede6d9;
