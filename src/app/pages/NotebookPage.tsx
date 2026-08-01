@@ -1,16 +1,25 @@
-import { useEffect, useRef } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
   deleteNotebook,
   getNotebook,
   renameNotebook,
+  setDefaultNoteTypeId,
 } from '../../domain/notebooks/notebookRepository'
+import { listNoteTypes } from '../../domain/noteTypes/noteTypeRepository'
+import { listCustomDataTypes } from '../../domain/dataTypes/dataTypeRepository'
 import { deleteNote, listNotesByNotebook, renameNote } from '../../domain/notes/noteRepository'
+import { filterNotes } from '../../domain/notes/noteFilterMatch'
+import type { FilterState } from '../../domain/notes/noteFilter.types'
 import { EntityPageHeader } from '../common/EntityPageHeader'
 import { EditableEntityRow } from '../common/EditableEntityRow'
-import { Icon } from '../../components/Icon/Icon'
+import { Breadcrumb } from '../common/Breadcrumb'
+import { buildNotebookCrumbs } from '../common/breadcrumbs'
+import { NoteFilter } from '../notes/filters/NoteFilter'
 import styles from './NotebookPage.module.css'
+
+const EMPTY_FILTER: FilterState = { mode: 'and', blocks: [] }
 
 export function NotebookPage() {
   const { notebookId } = useParams<{ notebookId: string }>()
@@ -26,8 +35,19 @@ export function NotebookPage() {
     () => (notebookId ? listNotesByNotebook(notebookId) : Promise.resolve([])),
     [notebookId],
   )
+  const noteTypes = useLiveQuery(() => listNoteTypes(), [], [])
+  const customTypes = useLiveQuery(() => listCustomDataTypes(), [], [])
+  const [filterState, setFilterState] = useState<FilterState>(EMPTY_FILTER)
+  const resolveCustomType = (id: string) => customTypes?.find((type) => type.id === id)
+  const filteredNotes = filterNotes(notes ?? [], filterState, resolveCustomType)
 
   const notFound = notebook === null || !notebookId
+
+  const crumbs = useLiveQuery(
+    () =>
+      notebookId ? buildNotebookCrumbs(notebookId) : Promise.resolve([{ label: 'Home', to: '/' }]),
+    [notebookId],
+  )
 
   useEffect(() => {
     if (notFound && !isDeletingRef.current) {
@@ -41,9 +61,7 @@ export function NotebookPage() {
 
   return (
     <div className={styles.page}>
-      <Link to={backTo} className={styles.breadcrumb}>
-        <Icon name="back" size={14} /> Back
-      </Link>
+      <Breadcrumb items={crumbs ?? [{ label: 'Home', to: '/' }]} />
       <EntityPageHeader
         title={notebook.title}
         icon="book"
@@ -54,13 +72,22 @@ export function NotebookPage() {
           await deleteNotebook(notebook.id)
           navigate(backTo, { replace: true })
         }}
+        defaultNoteType={{
+          value: notebook.defaultNoteTypeId,
+          noteTypes: noteTypes ?? [],
+          onChange: (id) => setDefaultNoteTypeId(notebook.id, id),
+        }}
       />
 
       <section>
         <h2 className={styles.sectionHeading}>Notes</h2>
+        <NoteFilter notes={notes ?? []} value={filterState} onChange={setFilterState} />
         {notes?.length === 0 && <p className={styles.empty}>No notes yet</p>}
+        {notes && notes.length > 0 && filteredNotes.length === 0 && (
+          <p className={styles.empty}>No notes match the current filter</p>
+        )}
         <ul className={styles.list}>
-          {notes?.map((note) => (
+          {filteredNotes.map((note) => (
             <li key={note.id}>
               <EditableEntityRow
                 title={note.title}

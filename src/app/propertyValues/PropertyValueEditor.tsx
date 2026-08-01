@@ -138,14 +138,14 @@ export function PropertyValueEditor({
   }
 }
 
-interface PrimitiveValueEditorProps {
+export interface PrimitiveValueEditorProps {
   primitiveType: Extract<DataTypeRef, { kind: 'primitive' }>
   value: PropertyValueData
   onChange: (value: PropertyValueData) => void
   disabled?: boolean
 }
 
-function PrimitiveValueEditor({
+export function PrimitiveValueEditor({
   primitiveType,
   value,
   onChange,

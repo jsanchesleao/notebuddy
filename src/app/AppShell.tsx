@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { Sidebar } from './Sidebar/Sidebar'
 import { Fab } from './Fab/Fab'
 import { ThemeToggle } from '../theme/ThemeToggle'
@@ -8,6 +9,7 @@ import { useSidebarOpen } from './useSidebarOpen'
 import { useIsMobile } from './useIsMobile'
 import { useHeaderCompact } from './useHeaderCompact'
 import { Icon } from '../components/Icon/Icon'
+import { getNotebook } from '../domain/notebooks/notebookRepository'
 import styles from './AppShell.module.css'
 
 export function AppShell() {
@@ -17,6 +19,12 @@ export function AppShell() {
   const mainRef = useRef<HTMLElement>(null)
   const isMobile = useIsMobile()
   const headerCompact = useHeaderCompact(mainRef, isMobile)
+  const notebook =
+    useLiveQuery(
+      () =>
+        notebookId ? getNotebook(notebookId).then((found) => found ?? null) : Promise.resolve(null),
+      [notebookId],
+    ) ?? null
 
   return (
     <div className={`${styles.shell} ${headerCompact ? styles.headerCompact : ''}`}>
@@ -50,7 +58,7 @@ export function AppShell() {
           <AppRoutes />
         </main>
       </div>
-      {showFab && <Fab folderId={folderId} notebookId={notebookId} />}
+      {showFab && <Fab folderId={folderId} notebook={notebook} />}
     </div>
   )
 }

@@ -15,19 +15,6 @@
   color: var(--color-text-muted);
 }
 
-.upLink {
-  display: block;
-  margin-bottom: var(--space-4);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--color-text);
-  text-decoration: none;
-}
-
-.upLink:hover {
-  color: var(--color-accent);
-}
-
 .list {
   list-style: none;
   padding: 0;
@@ -47,16 +34,6 @@
 
 .link:hover {
   color: var(--color-accent);
-}
-
-.currentNotebook {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--color-text);
 }
 
 .activeLink {

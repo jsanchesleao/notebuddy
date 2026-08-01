@@ -1,0 +1,63 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.operand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.propertyKey {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.operatorToggle {
+  display: inline-flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.operatorButton {
+  padding: 0 var(--space-2);
+  height: 1.5rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.operatorButton:not(:first-child) {
+  border-left: 1px solid var(--color-border);
+}
+
+.operatorButton:hover {
+  background: var(--color-bg-sidebar);
+}
+
+.operatorButton[aria-pressed='true'] {
+  color: var(--color-accent-fg);
+  background: var(--color-accent);
+}
+
+.removeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.removeButton:hover {
+  color: var(--color-text);
+}

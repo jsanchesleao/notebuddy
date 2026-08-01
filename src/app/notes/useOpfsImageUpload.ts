@@ -12,7 +12,11 @@ export interface UseOpfsImageUploadOptions {
 // Writes a picked image file into OPFS under the owning note/card's asset folder, reports
 // the new path back via onUploaded, then cleans up whatever it's replacing. Shared by
 // ImageBlock and board card images so there's one place that owns this write-then-swap order.
-export function useOpfsImageUpload({ ownerId, currentPath, onUploaded }: UseOpfsImageUploadOptions) {
+export function useOpfsImageUpload({
+  ownerId,
+  currentPath,
+  onUploaded,
+}: UseOpfsImageUploadOptions) {
   return useCallback(
     async (file: File) => {
       const path = buildAssetPath({ noteId: ownerId, assetId: createId(), fileName: file.name })

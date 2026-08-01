@@ -22,3 +22,9 @@ export const SCHEMA_V4 = {
   // references a given option-set CustomDataType before allowing its deletion.
   boards: 'id, folderId, statusTypeId',
 }
+
+export const SCHEMA_V5 = {
+  // defaultNoteTypeId is indexed so deleteNoteType can check whether any notebook still
+  // references a given note type as its default before allowing its deletion.
+  notebooks: 'id, folderId, defaultNoteTypeId',
+}

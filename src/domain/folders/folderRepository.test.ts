@@ -3,8 +3,11 @@ import { db } from '../../db/db'
 import {
   createFolder,
   deleteFolder,
+  FolderMoveError,
   getFolder,
+  listFolderAncestors,
   listFoldersByParent,
+  moveFolder,
   renameFolder,
 } from './folderRepository'
 import { createNotebook } from '../notebooks/notebookRepository'
@@ -105,5 +108,55 @@ describe('folderRepository', () => {
     await deleteFolder(root.id)
 
     expect(await getFolder(sibling.id)).toEqual(sibling)
+  })
+
+  describe('listFolderAncestors', () => {
+    it('returns the root-first ancestor chain, excluding the folder itself', async () => {
+      const root = await createFolder({ parentFolderId: null, title: 'Root' })
+      const mid = await createFolder({ parentFolderId: root.id, title: 'Mid' })
+      const leaf = await createFolder({ parentFolderId: mid.id, title: 'Leaf' })
+
+      expect((await listFolderAncestors(leaf.id)).map((f) => f.title)).toEqual(['Root', 'Mid'])
+    })
+
+    it('returns an empty chain for a root-level folder', async () => {
+      const root = await createFolder({ parentFolderId: null, title: 'Root' })
+      expect(await listFolderAncestors(root.id)).toEqual([])
+    })
+  })
+
+  describe('moveFolder', () => {
+    it('reparents a folder to a new parent', async () => {
+      const a = await createFolder({ parentFolderId: null, title: 'A' })
+      const b = await createFolder({ parentFolderId: null, title: 'B' })
+
+      await moveFolder(b.id, a.id)
+
+      expect((await getFolder(b.id))?.parentFolderId).toBe(a.id)
+      expect((await listFoldersByParent(a.id)).map((f) => f.title)).toEqual(['B'])
+    })
+
+    it('moves a folder back to the top level', async () => {
+      const root = await createFolder({ parentFolderId: null, title: 'Root' })
+      const child = await createFolder({ parentFolderId: root.id, title: 'Child' })
+
+      await moveFolder(child.id, null)
+
+      expect((await getFolder(child.id))?.parentFolderId).toBeNull()
+    })
+
+    it('rejects moving a folder into itself', async () => {
+      const folder = await createFolder({ parentFolderId: null, title: 'Folder' })
+      await expect(moveFolder(folder.id, folder.id)).rejects.toThrow(FolderMoveError)
+    })
+
+    it('rejects moving a folder into one of its own descendants', async () => {
+      const root = await createFolder({ parentFolderId: null, title: 'Root' })
+      const child = await createFolder({ parentFolderId: root.id, title: 'Child' })
+      const grandchild = await createFolder({ parentFolderId: child.id, title: 'Grandchild' })
+
+      await expect(moveFolder(root.id, grandchild.id)).rejects.toThrow(FolderMoveError)
+      expect((await getFolder(root.id))?.parentFolderId).toBeNull()
+    })
   })
 })

@@ -2,7 +2,12 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { db } from '../../db/db'
 import { createOpfsMemoryDriver } from '../../lib/opfs/opfsMemoryDriver'
 import { setOpfsDriverForTesting } from '../../lib/opfs/opfsDriver'
-import { deleteBoard, deleteBoardsByFolderId, getBoard, listBoardsByFolder } from './boardRepository'
+import {
+  deleteBoard,
+  deleteBoardsByFolderId,
+  getBoard,
+  listBoardsByFolder,
+} from './boardRepository'
 import { createNote, getNote } from '../notes/noteRepository'
 import { insertBlock, loadNoteBlocks } from '../blocks/noteBlocksStore'
 import { createEmptyBlock } from '../blocks/noteBlocksFactory'

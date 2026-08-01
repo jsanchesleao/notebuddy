@@ -3,10 +3,22 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { db } from '../../db/db'
-import { createNotebook } from '../../domain/notebooks/notebookRepository'
+import { createNotebook, setDefaultNoteTypeId } from '../../domain/notebooks/notebookRepository'
 import { createCustomDataType } from '../../domain/dataTypes/dataTypeRepository'
 import { createNoteType } from '../../domain/noteTypes/noteTypeRepository'
+import type { Notebook } from '../../domain/entities.types'
 import { NoteCreateModal } from './NoteCreateModal'
+
+function fakeNotebook(id: string): Notebook {
+  return {
+    id,
+    folderId: null,
+    title: 'Fake notebook',
+    defaultNoteTypeId: null,
+    encryption: null,
+    stickyNotesDocId: 'doc-1',
+  }
+}
 
 const navigateMock = vi.fn()
 
@@ -31,7 +43,7 @@ describe('NoteCreateModal', () => {
   it('renders nothing when closed', () => {
     render(
       <MemoryRouter>
-        <NoteCreateModal open={false} onClose={() => {}} notebookId="notebook-1" />
+        <NoteCreateModal open={false} onClose={() => {}} notebook={fakeNotebook('notebook-1')} />
       </MemoryRouter>,
     )
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -44,7 +56,7 @@ describe('NoteCreateModal', () => {
 
     render(
       <MemoryRouter>
-        <NoteCreateModal open onClose={onClose} notebookId={notebook.id} />
+        <NoteCreateModal open onClose={onClose} notebook={notebook} />
       </MemoryRouter>,
     )
 
@@ -68,7 +80,7 @@ describe('NoteCreateModal', () => {
 
     render(
       <MemoryRouter>
-        <NoteCreateModal open onClose={() => {}} notebookId={notebook.id} />
+        <NoteCreateModal open onClose={() => {}} notebook={notebook} />
       </MemoryRouter>,
     )
 
@@ -93,7 +105,7 @@ describe('NoteCreateModal', () => {
 
     render(
       <MemoryRouter>
-        <NoteCreateModal open onClose={() => {}} notebookId={notebook.id} />
+        <NoteCreateModal open onClose={() => {}} notebook={notebook} />
       </MemoryRouter>,
     )
 
@@ -114,6 +126,31 @@ describe('NoteCreateModal', () => {
     })
   })
 
+  it('pre-selects the notebook default note type, and allows overriding to Blank', async () => {
+    const user = userEvent.setup()
+    const notebook = await createNotebook({ folderId: null, title: 'Journal' })
+    const customType = await createCustomDataType({
+      name: 'Recipe',
+      schema: { kind: 'dictionary', fields: [] },
+    })
+    const noteType = await createNoteType({ name: 'Recipe', customTypeId: customType.id })
+    await setDefaultNoteTypeId(notebook.id, noteType.id)
+    const updatedNotebook = { ...notebook, defaultNoteTypeId: noteType.id }
+
+    render(
+      <MemoryRouter>
+        <NoteCreateModal open onClose={() => {}} notebook={updatedNotebook} />
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByRole('button', { name: 'Recipe' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Recipe' }))
+    await user.click(screen.getByRole('menuitemradio', { name: 'Blank' }))
+
+    expect(screen.getByRole('button', { name: 'Blank' })).toBeInTheDocument()
+  })
+
   it('cancels via Escape without creating a note', async () => {
     const user = userEvent.setup()
     const notebook = await createNotebook({ folderId: null, title: 'Journal' })
@@ -121,7 +158,7 @@ describe('NoteCreateModal', () => {
 
     render(
       <MemoryRouter>
-        <NoteCreateModal open onClose={onClose} notebookId={notebook.id} />
+        <NoteCreateModal open onClose={onClose} notebook={notebook} />
       </MemoryRouter>,
     )
 

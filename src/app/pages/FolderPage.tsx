@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { deleteFolder, getFolder, renameFolder } from '../../domain/folders/folderRepository'
 import { EntityPageHeader } from '../common/EntityPageHeader'
 import { FolderContents } from '../folders/FolderContents'
-import { Icon } from '../../components/Icon/Icon'
+import { Breadcrumb } from '../common/Breadcrumb'
+import { buildFolderCrumbs } from '../common/breadcrumbs'
 import styles from './FolderPage.module.css'
 
 export function FolderPage() {
@@ -18,6 +19,8 @@ export function FolderPage() {
   )
 
   const notFound = folder === null || !folderId
+
+  const crumbs = useLiveQuery(() => buildFolderCrumbs(folderId ?? null), [folderId])
 
   useEffect(() => {
     // A null result can mean "not found" or "we just deleted it ourselves and are
@@ -34,9 +37,7 @@ export function FolderPage() {
 
   return (
     <div className={styles.page}>
-      <Link to={backTo} className={styles.breadcrumb}>
-        <Icon name="back" size={14} /> Back
-      </Link>
+      <Breadcrumb items={crumbs ?? [{ label: 'Home', to: '/' }]} />
       <EntityPageHeader
         title={folder.title}
         icon="folder"

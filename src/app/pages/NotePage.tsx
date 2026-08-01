@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { deleteNote, getNote, renameNote } from '../../domain/notes/noteRepository'
 import { EntityPageHeader } from '../common/EntityPageHeader'
-import { Icon } from '../../components/Icon/Icon'
+import { Breadcrumb } from '../common/Breadcrumb'
+import { buildNoteCrumbs } from '../common/breadcrumbs'
 import { NoteBlockList } from '../notes/blocks/NoteBlockList'
 import { PropertiesPanel } from '../notes/PropertiesPanel/PropertiesPanel'
 import { useWideMode } from './useWideMode'
@@ -23,6 +24,11 @@ export function NotePage() {
 
   const notFound = note === null || !noteId
 
+  const crumbs = useLiveQuery(
+    () => (note ? buildNoteCrumbs(note) : Promise.resolve([{ label: 'Home', to: '/' }])),
+    [note],
+  )
+
   useEffect(() => {
     if (notFound && !isDeletingRef.current) {
       navigate('/', { replace: true })
@@ -35,9 +41,7 @@ export function NotePage() {
 
   return (
     <div className={isWide ? `${styles.page} ${styles.pageWide}` : styles.page}>
-      <Link to={backTo} className={styles.breadcrumb}>
-        <Icon name="back" size={14} /> Back
-      </Link>
+      <Breadcrumb items={crumbs ?? [{ label: 'Home', to: '/' }]} />
       <EntityPageHeader
         title={note.title}
         icon="note"

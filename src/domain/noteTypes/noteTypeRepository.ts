@@ -49,5 +49,11 @@ export async function deleteNoteType(id: string): Promise<void> {
     throw new ReferencedEntityError('Cannot delete: still used by one or more notes')
   }
 
+  const referencingNotebookCount = await db.notebooks.where('defaultNoteTypeId').equals(id).count()
+
+  if (referencingNotebookCount > 0) {
+    throw new ReferencedEntityError("Cannot delete: still set as a notebook's default note type")
+  }
+
   await db.noteTypes.delete(id)
 }

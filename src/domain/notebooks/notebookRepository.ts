@@ -42,6 +42,10 @@ export async function renameNotebook(id: string, title: string): Promise<void> {
   await db.notebooks.update(id, { title })
 }
 
+export async function setDefaultNoteTypeId(id: string, noteTypeId: string | null): Promise<void> {
+  await db.notebooks.update(id, { defaultNoteTypeId: noteTypeId })
+}
+
 export async function deleteNotebook(id: string): Promise<void> {
   await runCascadeDelete({
     tables: [db.notebooks, db.notes, db.yjsUpdates],

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { EditableEntityRow } from '../common/EditableEntityRow'
 import {
@@ -11,6 +12,8 @@ import {
   renameNotebook,
 } from '../../domain/notebooks/notebookRepository'
 import { listBoardsByFolder } from '../../domain/boards/boardRepository'
+import { FolderPickerModal } from './FolderPickerModal'
+import type { Folder } from '../../domain/entities.types'
 import styles from './FolderContents.module.css'
 
 interface FolderContentsProps {
@@ -21,6 +24,7 @@ export function FolderContents({ parentFolderId }: FolderContentsProps) {
   const folders = useLiveQuery(() => listFoldersByParent(parentFolderId), [parentFolderId])
   const notebooks = useLiveQuery(() => listNotebooksByFolder(parentFolderId), [parentFolderId])
   const boards = useLiveQuery(() => listBoardsByFolder(parentFolderId), [parentFolderId])
+  const [movingFolder, setMovingFolder] = useState<Folder | null>(null)
 
   const isEmpty = folders?.length === 0 && notebooks?.length === 0 && boards?.length === 0
 
@@ -29,34 +33,44 @@ export function FolderContents({ parentFolderId }: FolderContentsProps) {
   }
 
   return (
-    <ul className={styles.list}>
-      {folders?.map((folder) => (
-        <li key={folder.id}>
-          <EditableEntityRow
-            title={folder.title}
-            icon="folder"
-            to={`/folders/${folder.id}`}
-            onRename={(title) => renameFolder(folder.id, title)}
-            onDelete={() => deleteFolder(folder.id)}
-          />
-        </li>
-      ))}
-      {notebooks?.map((notebook) => (
-        <li key={notebook.id}>
-          <EditableEntityRow
-            title={notebook.title}
-            icon="book"
-            to={`/notebooks/${notebook.id}`}
-            onRename={(title) => renameNotebook(notebook.id, title)}
-            onDelete={() => deleteNotebook(notebook.id)}
-          />
-        </li>
-      ))}
-      {boards?.map((board) => (
-        <li key={board.id}>
-          <EditableEntityRow title={board.title} icon="board" />
-        </li>
-      ))}
-    </ul>
+    <>
+      <ul className={styles.list}>
+        {folders?.map((folder) => (
+          <li key={folder.id}>
+            <EditableEntityRow
+              title={folder.title}
+              icon="folder"
+              to={`/folders/${folder.id}`}
+              onRename={(title) => renameFolder(folder.id, title)}
+              onMove={() => setMovingFolder(folder)}
+              onDelete={() => deleteFolder(folder.id)}
+            />
+          </li>
+        ))}
+        {notebooks?.map((notebook) => (
+          <li key={notebook.id}>
+            <EditableEntityRow
+              title={notebook.title}
+              icon="book"
+              to={`/notebooks/${notebook.id}`}
+              onRename={(title) => renameNotebook(notebook.id, title)}
+              onDelete={() => deleteNotebook(notebook.id)}
+            />
+          </li>
+        ))}
+        {boards?.map((board) => (
+          <li key={board.id}>
+            <EditableEntityRow title={board.title} icon="board" />
+          </li>
+        ))}
+      </ul>
+      {movingFolder && (
+        <FolderPickerModal
+          onClose={() => setMovingFolder(null)}
+          folderId={movingFolder.id}
+          currentParentFolderId={movingFolder.parentFolderId}
+        />
+      )}
+    </>
   )
 }

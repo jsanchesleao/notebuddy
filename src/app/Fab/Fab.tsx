@@ -3,11 +3,12 @@ import { createFolder } from '../../domain/folders/folderRepository'
 import { createNotebook } from '../../domain/notebooks/notebookRepository'
 import { Icon } from '../../components/Icon/Icon'
 import { NoteCreateModal } from '../notes/NoteCreateModal'
+import type { Notebook } from '../../domain/entities.types'
 import styles from './Fab.module.css'
 
 interface FabProps {
   folderId: string | null
-  notebookId: string | null
+  notebook: Notebook | null
 }
 
 type CreateAction = 'folder' | 'notebook'
@@ -17,13 +18,13 @@ const ACTION_LABELS: Record<CreateAction, string> = {
   notebook: 'Notebook',
 }
 
-export function Fab({ folderId, notebookId }: FabProps) {
+export function Fab({ folderId, notebook }: FabProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeAction, setActiveAction] = useState<CreateAction | null>(null)
   const [title, setTitle] = useState('')
   const [noteModalOpen, setNoteModalOpen] = useState(false)
 
-  const showNoteAction = Boolean(notebookId)
+  const showNoteAction = Boolean(notebook)
 
   const closeAll = () => {
     setMenuOpen(false)
@@ -115,7 +116,7 @@ export function Fab({ folderId, notebookId }: FabProps) {
         <NoteCreateModal
           open={noteModalOpen}
           onClose={() => setNoteModalOpen(false)}
-          notebookId={notebookId}
+          notebook={notebook}
         />
       )}
     </div>

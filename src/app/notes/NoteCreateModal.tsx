@@ -4,31 +4,35 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { createNote } from '../../domain/notes/noteRepository'
 import { listNoteTypes } from '../../domain/noteTypes/noteTypeRepository'
 import { Modal } from '../../components/Modal/Modal'
-import { DismissableDropdown } from '../../components/Menu/DismissableDropdown'
-import dropdownStyles from '../../components/Menu/DismissableDropdown.module.css'
-import { Icon } from '../../components/Icon/Icon'
+import { NoteTypeSelect } from '../dataTypes/NoteTypeSelect'
+import type { Notebook } from '../../domain/entities.types'
 import styles from './NoteCreateModal.module.css'
 
 interface NoteCreateModalProps {
   open: boolean
   onClose: () => void
-  notebookId: string | null
+  notebook: Notebook | null
   boardId?: string | null
 }
 
 const TITLE_ID = 'note-create-modal-title'
 
-export function NoteCreateModal({ open, onClose, notebookId, boardId }: NoteCreateModalProps) {
+export function NoteCreateModal({ open, onClose, notebook, boardId }: NoteCreateModalProps) {
   const navigate = useNavigate()
   const noteTypes = useLiveQuery(() => listNoteTypes(), [], [])
   const [title, setTitle] = useState('')
-  const [noteTypeId, setNoteTypeId] = useState<string | null>(null)
+  const [noteTypeId, setNoteTypeId] = useState<string | null>(notebook?.defaultNoteTypeId ?? null)
+  const [prevOpen, setPrevOpen] = useState(open)
 
-  const selectedNoteType = noteTypes?.find((type) => type.id === noteTypeId)
+  // Reseed the note type from the notebook's default every time the (persistently mounted)
+  // modal transitions to open, rather than only on first mount.
+  if (open !== prevOpen) {
+    setPrevOpen(open)
+    if (open) setNoteTypeId(notebook?.defaultNoteTypeId ?? null)
+  }
 
   const reset = () => {
     setTitle('')
-    setNoteTypeId(null)
   }
 
   const handleClose = () => {
@@ -39,6 +43,7 @@ export function NoteCreateModal({ open, onClose, notebookId, boardId }: NoteCrea
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     const trimmed = title.trim()
+    const notebookId = notebook?.id ?? null
     if (!trimmed || !notebookId) return
 
     const note = await createNote({ notebookId, boardId, title: trimmed, noteTypeId })
@@ -61,50 +66,7 @@ export function NoteCreateModal({ open, onClose, notebookId, boardId }: NoteCrea
           onChange={(event) => setTitle(event.target.value)}
           aria-label="New note title"
         />
-        <DismissableDropdown
-          trigger={({ toggle, open: menuOpen }) => (
-            <button
-              type="button"
-              className={dropdownStyles.trigger}
-              aria-expanded={menuOpen}
-              onClick={toggle}
-            >
-              {selectedNoteType?.name ?? 'Blank'} <Icon name="chevronDown" size={12} />
-            </button>
-          )}
-        >
-          {({ close }) => (
-            <>
-              <button
-                type="button"
-                role="menuitemradio"
-                aria-checked={noteTypeId === null}
-                className={dropdownStyles.menuItem}
-                onClick={() => {
-                  setNoteTypeId(null)
-                  close()
-                }}
-              >
-                Blank
-              </button>
-              {(noteTypes ?? []).map((type) => (
-                <button
-                  key={type.id}
-                  type="button"
-                  role="menuitemradio"
-                  aria-checked={type.id === noteTypeId}
-                  className={dropdownStyles.menuItem}
-                  onClick={() => {
-                    setNoteTypeId(type.id)
-                    close()
-                  }}
-                >
-                  {type.name}
-                </button>
-              ))}
-            </>
-          )}
-        </DismissableDropdown>
+        <NoteTypeSelect value={noteTypeId} onChange={setNoteTypeId} noteTypes={noteTypes ?? []} />
         <div className={styles.actions}>
           <button type="submit" className={styles.submit}>
             Create note

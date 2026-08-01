@@ -6,15 +6,20 @@ import {
   getNotebook,
   listNotebooksByFolder,
   renameNotebook,
+  setDefaultNoteTypeId,
 } from './notebookRepository'
 import { createNote } from '../notes/noteRepository'
 import { createFolder } from '../folders/folderRepository'
+import { createCustomDataType } from '../dataTypes/dataTypeRepository'
+import { createNoteType } from '../noteTypes/noteTypeRepository'
 
 beforeEach(async () => {
   await db.notebooks.clear()
   await db.notes.clear()
   await db.folders.clear()
   await db.yjsUpdates.clear()
+  await db.customDataTypes.clear()
+  await db.noteTypes.clear()
 })
 
 describe('notebookRepository', () => {
@@ -41,6 +46,21 @@ describe('notebookRepository', () => {
     const notebook = await createNotebook({ folderId: null, title: 'Old' })
     await renameNotebook(notebook.id, 'New')
     expect((await getNotebook(notebook.id))?.title).toBe('New')
+  })
+
+  it('sets and clears the default note type', async () => {
+    const notebook = await createNotebook({ folderId: null, title: 'Notebook' })
+    const customType = await createCustomDataType({
+      name: 'Task',
+      schema: { kind: 'primitive', primitive: 'text' },
+    })
+    const noteType = await createNoteType({ name: 'Task', customTypeId: customType.id })
+
+    await setDefaultNoteTypeId(notebook.id, noteType.id)
+    expect((await getNotebook(notebook.id))?.defaultNoteTypeId).toBe(noteType.id)
+
+    await setDefaultNoteTypeId(notebook.id, null)
+    expect((await getNotebook(notebook.id))?.defaultNoteTypeId).toBeNull()
   })
 
   it('cascades delete to the notebook’s notes and their yjsUpdates rows', async () => {

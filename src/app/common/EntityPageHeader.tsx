@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { Icon, type IconName } from '../../components/Icon/Icon'
 import { useIsDesktop } from '../useIsDesktop'
+import { NoteTypeSelect } from '../dataTypes/NoteTypeSelect'
+import type { NoteType } from '../../domain/entities.types'
 import styles from './EntityPageHeader.module.css'
 
 interface EntityPageHeaderProps {
@@ -11,6 +13,11 @@ interface EntityPageHeaderProps {
   onDelete: () => void | Promise<void>
   wideMode?: { isWide: boolean; onToggle: () => void }
   onToggleProperties?: () => void
+  defaultNoteType?: {
+    value: string | null
+    noteTypes: NoteType[]
+    onChange: (id: string | null) => void
+  }
 }
 
 export function EntityPageHeader({
@@ -21,6 +28,7 @@ export function EntityPageHeader({
   onDelete,
   wideMode,
   onToggleProperties,
+  defaultNoteType,
 }: EntityPageHeaderProps) {
   const [isRenaming, setIsRenaming] = useState(false)
   const isDesktop = useIsDesktop()
@@ -78,6 +86,14 @@ export function EntityPageHeader({
         <Icon name={icon} />
       </span>
       <h1 className={styles.title}>{title}</h1>
+      {defaultNoteType && (
+        <NoteTypeSelect
+          value={defaultNoteType.value}
+          onChange={defaultNoteType.onChange}
+          noteTypes={defaultNoteType.noteTypes}
+          triggerPrefix="Default:"
+        />
+      )}
       {wideMode && isDesktop && (
         <button
           type="button"

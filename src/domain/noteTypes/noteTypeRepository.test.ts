@@ -8,6 +8,7 @@ import {
   listNoteTypes,
   updateNoteType,
 } from './noteTypeRepository'
+import { createNotebook, setDefaultNoteTypeId } from '../notebooks/notebookRepository'
 import { createId } from '../ids'
 import type { DataTypeRef, Note } from '../entities.types'
 
@@ -33,6 +34,7 @@ beforeEach(async () => {
   await db.customDataTypes.clear()
   await db.noteTypes.clear()
   await db.notes.clear()
+  await db.notebooks.clear()
 })
 
 describe('noteTypeRepository', () => {
@@ -84,6 +86,20 @@ describe('noteTypeRepository', () => {
     expect(await getNoteType(created.id)).toBeDefined()
 
     await db.notes.update(note.id, { noteTypeId: null })
+    await deleteNoteType(created.id)
+    expect(await getNoteType(created.id)).toBeUndefined()
+  })
+
+  it('blocks deleting a note type still set as a notebook default, and allows it once cleared', async () => {
+    const customType = await createCustomDataType({ name: 'Task', schema: textType })
+    const created = await createNoteType({ name: 'Task', customTypeId: customType.id })
+    const notebook = await createNotebook({ folderId: null, title: 'Notebook' })
+    await setDefaultNoteTypeId(notebook.id, created.id)
+
+    await expect(deleteNoteType(created.id)).rejects.toThrow(ReferencedEntityError)
+    expect(await getNoteType(created.id)).toBeDefined()
+
+    await setDefaultNoteTypeId(notebook.id, null)
     await deleteNoteType(created.id)
     expect(await getNoteType(created.id)).toBeUndefined()
   })

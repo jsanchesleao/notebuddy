@@ -5,7 +5,19 @@ import { MemoryRouter } from 'react-router-dom'
 import { db } from '../../db/db'
 import { createFolder } from '../../domain/folders/folderRepository'
 import { createNotebook } from '../../domain/notebooks/notebookRepository'
+import type { Notebook } from '../../domain/entities.types'
 import { Fab } from './Fab'
+
+function fakeNotebook(id: string): Notebook {
+  return {
+    id,
+    folderId: null,
+    title: 'Fake notebook',
+    defaultNoteTypeId: null,
+    encryption: null,
+    stickyNotesDocId: 'doc-1',
+  }
+}
 
 beforeEach(async () => {
   await db.folders.clear()
@@ -23,7 +35,7 @@ describe('Fab', () => {
     const user = userEvent.setup()
     render(
       <MemoryRouter>
-        <Fab folderId={null} notebookId={null} />
+        <Fab folderId={null} notebook={null} />
       </MemoryRouter>,
     )
 
@@ -38,7 +50,7 @@ describe('Fab', () => {
     const user = userEvent.setup()
     render(
       <MemoryRouter>
-        <Fab folderId={null} notebookId="notebook-1" />
+        <Fab folderId={null} notebook={fakeNotebook('notebook-1')} />
       </MemoryRouter>,
     )
 
@@ -53,7 +65,7 @@ describe('Fab', () => {
 
     render(
       <MemoryRouter>
-        <Fab folderId={parent.id} notebookId={null} />
+        <Fab folderId={parent.id} notebook={null} />
       </MemoryRouter>,
     )
 
@@ -77,7 +89,7 @@ describe('Fab', () => {
 
     render(
       <MemoryRouter>
-        <Fab folderId={null} notebookId={null} />
+        <Fab folderId={null} notebook={null} />
       </MemoryRouter>,
     )
 
@@ -100,7 +112,7 @@ describe('Fab', () => {
 
     render(
       <MemoryRouter>
-        <Fab folderId={null} notebookId={notebook.id} />
+        <Fab folderId={null} notebook={notebook} />
       </MemoryRouter>,
     )
 
@@ -125,7 +137,7 @@ describe('Fab', () => {
 
     render(
       <MemoryRouter>
-        <Fab folderId={null} notebookId={notebook.id} />
+        <Fab folderId={null} notebook={notebook} />
       </MemoryRouter>,
     )
 

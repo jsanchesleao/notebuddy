@@ -8,10 +8,18 @@ interface EditableEntityRowProps {
   icon: IconName
   to?: string
   onRename?: (title: string) => void | Promise<void>
+  onMove?: () => void
   onDelete?: () => void | Promise<void>
 }
 
-export function EditableEntityRow({ title, icon, to, onRename, onDelete }: EditableEntityRowProps) {
+export function EditableEntityRow({
+  title,
+  icon,
+  to,
+  onRename,
+  onMove,
+  onDelete,
+}: EditableEntityRowProps) {
   const [isRenaming, setIsRenaming] = useState(false)
   const [draftTitle, setDraftTitle] = useState(title)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
@@ -81,6 +89,16 @@ export function EditableEntityRow({ title, icon, to, onRename, onDelete }: Edita
           onClick={startRename}
         >
           <Icon name="edit" />
+        </button>
+      )}
+      {onMove && (
+        <button
+          type="button"
+          className={styles.iconButton}
+          aria-label={`Move ${title}`}
+          onClick={onMove}
+        >
+          <Icon name="move" />
         </button>
       )}
       {onDelete &&
