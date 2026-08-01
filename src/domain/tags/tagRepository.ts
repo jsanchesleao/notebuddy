@@ -2,6 +2,31 @@ import { db } from '../../db/db'
 import type { TagRecord } from '../entities.types'
 import { PILL_PALETTE } from './tagPalette'
 
+// Removes tags from the registry and strips them from every note that has them, in one
+// transaction — a tag can be removed whether it's currently in use or not.
+export async function deleteTags(names: string[]): Promise<void> {
+  await db.transaction('rw', [db.tags, db.notes], async () => {
+    await db.tags.bulkDelete(names)
+
+    const nameSet = new Set(names)
+    const allNotes = await db.notes.toArray()
+    const affectedNotes = allNotes.filter((note) =>
+      note.metadata.tags.some((tag) => nameSet.has(tag)),
+    )
+
+    const now = new Date().toISOString()
+    await Promise.all(
+      affectedNotes.map((note) =>
+        db.notes.update(note.id, {
+          'metadata.tags': note.metadata.tags.filter((tag) => !nameSet.has(tag)),
+          'metadata.updatedAt': now,
+          updatedAt: now,
+        }),
+      ),
+    )
+  })
+}
+
 export async function listTags(): Promise<TagRecord[]> {
   return db.tags.toArray()
 }

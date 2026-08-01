@@ -9,6 +9,7 @@ import { OptionSetList } from '../dataTypes/OptionSetList'
 import { OptionSetEditor } from '../dataTypes/OptionSetEditor'
 import { NoteTypeList } from '../dataTypes/NoteTypeList'
 import { NoteTypeEditor } from '../dataTypes/NoteTypeEditor'
+import { ManageTagsModal } from '../tags/ManageTagsModal'
 import { Icon } from '../../components/Icon/Icon'
 import type { CustomDataType, NoteType } from '../../domain/entities.types'
 import styles from './DataTypesPage.module.css'
@@ -22,6 +23,7 @@ export function DataTypesPage() {
   const [editingCustomType, setEditingCustomType] = useState<EditingCustomType>(null)
   const [editingOptionSet, setEditingOptionSet] = useState<EditingCustomType>(null)
   const [editingNoteType, setEditingNoteType] = useState<EditingNoteType>(null)
+  const [isManageTagsOpen, setIsManageTagsOpen] = useState(false)
 
   const resolveCustomType = (id: string) => customTypes?.find((type) => type.id === id)
   const dictionaryCustomTypes = (customTypes ?? []).filter(
@@ -117,6 +119,21 @@ export function DataTypesPage() {
           onEdit={setEditingNoteType}
         />
       </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Note Tags</h2>
+          <button
+            type="button"
+            className={styles.addButton}
+            onClick={() => setIsManageTagsOpen(true)}
+          >
+            <Icon name="properties" size={14} /> Manage Tags
+          </button>
+        </div>
+      </section>
+
+      {isManageTagsOpen && <ManageTagsModal onClose={() => setIsManageTagsOpen(false)} />}
     </div>
   )
 }

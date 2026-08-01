@@ -111,6 +111,15 @@ function evaluatePropertyCriterion(
   }
 }
 
+// Unlike the filter's own 'title' criterion (see evaluateCriterion above), an empty query here
+// means "no search active" and must match everything, not nothing — this backs the notebook
+// page's always-visible quick search box rather than a configurable filter criterion.
+export function noteMatchesSearch(note: Note, query: string): boolean {
+  const trimmed = query.trim()
+  if (trimmed === '') return true
+  return note.title.toLowerCase().includes(trimmed.toLowerCase())
+}
+
 export function collectFilterableProperties(
   notes: Note[],
   resolveCustomType: ResolveCustomType,

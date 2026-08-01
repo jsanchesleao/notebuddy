@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { collectFilterableProperties, filterNotes, noteMatchesFilter } from './noteFilterMatch'
+import {
+  collectFilterableProperties,
+  filterNotes,
+  noteMatchesFilter,
+  noteMatchesSearch,
+} from './noteFilterMatch'
 import { createId } from '../ids'
 import type { CustomDataType, DataTypeRef, Note, PropertyValueData } from '../entities.types'
 import type { FilterCriterion, FilterState } from './noteFilter.types'
@@ -327,5 +332,28 @@ describe('collectFilterableProperties', () => {
       null,
     )
     expect(collectFilterableProperties([note], noCustomTypes)).toEqual([])
+  })
+})
+
+describe('noteMatchesSearch', () => {
+  it('matches everything when the query is empty', () => {
+    const note = buildNote({ title: 'Anything' })
+    expect(noteMatchesSearch(note, '')).toBe(true)
+  })
+
+  it('matches everything when the query is only whitespace', () => {
+    const note = buildNote({ title: 'Anything' })
+    expect(noteMatchesSearch(note, '   ')).toBe(true)
+  })
+
+  it('matches a case-insensitive title substring', () => {
+    const note = buildNote({ title: 'Weekly Planning' })
+    expect(noteMatchesSearch(note, 'plan')).toBe(true)
+    expect(noteMatchesSearch(note, 'PLAN')).toBe(true)
+  })
+
+  it('does not match when the query is not a substring of the title', () => {
+    const note = buildNote({ title: 'Weekly Planning' })
+    expect(noteMatchesSearch(note, 'budget')).toBe(false)
   })
 })

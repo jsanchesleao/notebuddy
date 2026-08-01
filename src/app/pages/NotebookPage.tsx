@@ -10,13 +10,15 @@ import {
 import { listNoteTypes } from '../../domain/noteTypes/noteTypeRepository'
 import { listCustomDataTypes } from '../../domain/dataTypes/dataTypeRepository'
 import { deleteNote, listNotesByNotebook, renameNote } from '../../domain/notes/noteRepository'
-import { filterNotes } from '../../domain/notes/noteFilterMatch'
+import { filterNotes, noteMatchesSearch } from '../../domain/notes/noteFilterMatch'
 import type { FilterState } from '../../domain/notes/noteFilter.types'
+import { listTags } from '../../domain/tags/tagRepository'
 import { EntityPageHeader } from '../common/EntityPageHeader'
 import { EditableEntityRow } from '../common/EditableEntityRow'
 import { Breadcrumb } from '../common/Breadcrumb'
 import { buildNotebookCrumbs } from '../common/breadcrumbs'
 import { NoteFilter } from '../notes/filters/NoteFilter'
+import { NoteQuickSearch } from '../notes/filters/NoteQuickSearch'
 import styles from './NotebookPage.module.css'
 
 const EMPTY_FILTER: FilterState = { mode: 'and', blocks: [] }
@@ -37,9 +39,13 @@ export function NotebookPage() {
   )
   const noteTypes = useLiveQuery(() => listNoteTypes(), [], [])
   const customTypes = useLiveQuery(() => listCustomDataTypes(), [], [])
+  const tags = useLiveQuery(() => listTags(), [], [])
+  const tagColors = new Map((tags ?? []).map((tag) => [tag.name, tag.color]))
   const [filterState, setFilterState] = useState<FilterState>(EMPTY_FILTER)
+  const [search, setSearch] = useState('')
   const resolveCustomType = (id: string) => customTypes?.find((type) => type.id === id)
   const filteredNotes = filterNotes(notes ?? [], filterState, resolveCustomType)
+  const visibleNotes = filteredNotes.filter((note) => noteMatchesSearch(note, search))
 
   const notFound = notebook === null || !notebookId
 
@@ -81,18 +87,23 @@ export function NotebookPage() {
 
       <section>
         <h2 className={styles.sectionHeading}>Notes</h2>
-        <NoteFilter notes={notes ?? []} value={filterState} onChange={setFilterState} />
+        <div className={styles.toolbar}>
+          <NoteFilter notes={notes ?? []} value={filterState} onChange={setFilterState} />
+          <NoteQuickSearch value={search} onChange={setSearch} />
+        </div>
         {notes?.length === 0 && <p className={styles.empty}>No notes yet</p>}
-        {notes && notes.length > 0 && filteredNotes.length === 0 && (
+        {notes && notes.length > 0 && visibleNotes.length === 0 && (
           <p className={styles.empty}>No notes match the current filter</p>
         )}
         <ul className={styles.list}>
-          {filteredNotes.map((note) => (
+          {visibleNotes.map((note) => (
             <li key={note.id}>
               <EditableEntityRow
                 title={note.title}
                 icon="note"
                 to={`/notes/${note.id}`}
+                tags={note.metadata.tags}
+                tagColors={tagColors}
                 onRename={(title) => renameNote(note.id, title)}
                 onDelete={() => deleteNote(note.id)}
               />

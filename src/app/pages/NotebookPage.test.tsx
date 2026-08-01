@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { db } from '../../db/db'
 import { createFolder } from '../../domain/folders/folderRepository'
 import { createNotebook } from '../../domain/notebooks/notebookRepository'
-import { createNote } from '../../domain/notes/noteRepository'
+import { createNote, setNoteTags } from '../../domain/notes/noteRepository'
 import { AppRoutes } from '../routes'
 
 beforeEach(async () => {
@@ -13,6 +13,7 @@ beforeEach(async () => {
   await db.notebooks.clear()
   await db.notes.clear()
   await db.yjsUpdates.clear()
+  await db.tags.clear()
 })
 
 afterEach(() => {
@@ -55,5 +56,48 @@ describe('NotebookPage', () => {
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Folder' })).toBeInTheDocument()
     })
+  })
+
+  it('narrows the notes list to titles matching the quick search', async () => {
+    const notebook = await createNotebook({ folderId: null, title: 'Journal' })
+    await createNote({ notebookId: notebook.id, title: 'Weekly Planning' })
+    await createNote({ notebookId: notebook.id, title: 'Grocery List' })
+    const user = userEvent.setup()
+
+    render(
+      <MemoryRouter initialEntries={[`/notebooks/${notebook.id}`]}>
+        <AppRoutes />
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByRole('link', { name: 'Weekly Planning' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Grocery List' })).toBeInTheDocument()
+
+    await user.type(screen.getByRole('textbox', { name: 'Search notes by title' }), 'plan')
+
+    expect(screen.getByRole('link', { name: 'Weekly Planning' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Grocery List' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Clear search' }))
+
+    expect(screen.getByRole('link', { name: 'Weekly Planning' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Grocery List' })).toBeInTheDocument()
+  })
+
+  it("shows each note's tags as pills next to its title", async () => {
+    const notebook = await createNotebook({ folderId: null, title: 'Journal' })
+    const tagged = await createNote({ notebookId: notebook.id, title: 'Tagged note' })
+    await setNoteTags(tagged.id, ['work', 'urgent'])
+    await createNote({ notebookId: notebook.id, title: 'Untagged note' })
+
+    render(
+      <MemoryRouter initialEntries={[`/notebooks/${notebook.id}`]}>
+        <AppRoutes />
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByRole('link', { name: 'Tagged note' })).toBeInTheDocument()
+    expect(screen.getByText('work')).toBeInTheDocument()
+    expect(screen.getByText('urgent')).toBeInTheDocument()
   })
 })

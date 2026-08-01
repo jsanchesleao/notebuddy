@@ -49,6 +49,7 @@ import {
   PictureInPicture,
   Move,
   Filter,
+  Search,
 } from 'lucide-react'
 
 const ICONS = {
@@ -102,6 +103,7 @@ const ICONS = {
   detach: PictureInPicture,
   move: Move,
   filter: Filter,
+  search: Search,
 } as const
 
 export type IconName = keyof typeof ICONS
