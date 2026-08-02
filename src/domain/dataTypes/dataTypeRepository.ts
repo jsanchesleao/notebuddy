@@ -83,6 +83,14 @@ export async function deleteCustomDataType(id: string): Promise<void> {
     throw new ReferencedEntityError('Cannot delete: still used by a Note Type')
   }
 
+  const referencingBoardCount = await db.boards.where('statusTypeId').equals(id).count()
+
+  if (referencingBoardCount > 0) {
+    throw new ReferencedEntityError(
+      `Cannot delete: still used by ${referencingBoardCount} board${referencingBoardCount === 1 ? '' : 's'}`,
+    )
+  }
+
   const allNotes = await db.notes.toArray()
   const referencingNoteCount = allNotes.filter((note) =>
     Object.values(note.metadata.properties).some((property) =>

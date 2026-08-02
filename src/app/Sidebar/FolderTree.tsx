@@ -18,6 +18,7 @@ import styles from './FolderTree.module.css'
 interface FolderTreeProps {
   activeFolderId: string | null
   activeNotebookId: string | null
+  activeBoardId: string | null
 }
 
 const ROOT_DROP_ID = '__root__'
@@ -36,7 +37,7 @@ function RootDropZone() {
   )
 }
 
-export function FolderTree({ activeFolderId, activeNotebookId }: FolderTreeProps) {
+export function FolderTree({ activeFolderId, activeNotebookId, activeBoardId }: FolderTreeProps) {
   const { expandedIds, toggle, expandAll } = useExpandedFolders()
   const [moveError, setMoveError] = useState<string | null>(null)
 
@@ -79,6 +80,7 @@ export function FolderTree({ activeFolderId, activeNotebookId }: FolderTreeProps
           depth={0}
           activeFolderId={activeFolderId}
           activeNotebookId={activeNotebookId}
+          activeBoardId={activeBoardId}
           expandedIds={expandedIds}
           onToggle={toggle}
         />

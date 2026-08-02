@@ -1,5 +1,6 @@
 import { getFolder, listFolderAncestors } from '../../domain/folders/folderRepository'
 import { getNotebook } from '../../domain/notebooks/notebookRepository'
+import { getBoard } from '../../domain/boards/boardRepository'
 import type { Note } from '../../domain/entities.types'
 
 export interface BreadcrumbItem {
@@ -31,10 +32,23 @@ export async function buildNotebookCrumbs(notebookId: string): Promise<Breadcrum
   return [...folderCrumbs, { label: notebook.title, to: `/notebooks/${notebook.id}` }]
 }
 
+export async function buildBoardCrumbs(boardId: string): Promise<BreadcrumbItem[]> {
+  const board = await getBoard(boardId)
+  if (!board) return [HOME_CRUMB]
+
+  const folderCrumbs = await buildFolderCrumbs(board.folderId)
+  return [...folderCrumbs, { label: board.title, to: `/boards/${board.id}` }]
+}
+
 export async function buildNoteCrumbs(note: Note): Promise<BreadcrumbItem[]> {
   if (note.notebookId) {
     const notebookCrumbs = await buildNotebookCrumbs(note.notebookId)
     return [...notebookCrumbs, { label: note.title }]
+  }
+
+  if (note.boardId) {
+    const boardCrumbs = await buildBoardCrumbs(note.boardId)
+    return [...boardCrumbs, { label: note.title }]
   }
 
   return [HOME_CRUMB, { label: note.title }]

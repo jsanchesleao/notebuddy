@@ -2,7 +2,9 @@
 
 Reference doc for resuming the Phase 4 (Organizational Structures) prep work. See `roadmap.md` §Phase 4 and `spec.md` §4.6/§5 for the original requirements. The full decision record (every architectural fork, with the reasoning) lives in the plan file this was built from: `C:\Users\User\.claude\plans\i-want-to-prepare-snazzy-leaf.md` — read that first if any "why" below is unclear.
 
-**Status**: Sections 0 (cleanup) and 1 (schema migration) are done, committed (`a346844 "some cleanup"`), and verified. Section 2 (folders tree/breadcrumbs/move) is now also done and verified (typecheck/lint/516 tests/build all green) — see below for what's implemented; not yet committed. Sections 3–5 have not been started.
+**Status**: Sections 0 (cleanup) and 1 (schema migration) are done, committed (`a346844 "some cleanup"`), and verified. Section 2 (folders tree/breadcrumbs/move) and Section 3 (notebook default note type + filter UI) are done, committed (`ffc1daf "notebook initial filtering"`). **Section 4 (Boards) is now also done and verified** (typecheck/lint/629 tests/build all green; manually walked through in a real browser via Playwright, including actual pointer drag-and-drop between columns) — see below for what's implemented; not yet committed. Section 5 (Sticky Notes) has not been started.
+
+One real bug found and fixed during the browser walkthrough, worth knowing about if touching `OptionSetPicker` again: **`OptionSetPicker` renders its own inline `<form>` (via `OptionSetForm`) when creating/editing an option set.** Any modal that wraps `OptionSetPicker` in its own outer `<form>` (as `BoardCreateModal` originally did) creates a nested-`<form>` DOM structure, which is invalid HTML — submitting the inner form bubbles a native `submit` event up to the outer form too, and since HTML can't nest forms, the browser falls back to a real (unintended) page navigation/reload, silently wiping all component state. Fixed by making `BoardCreateModal`'s wrapper a plain `<div>` with an explicit `onClick`-triggered submit instead of a `<form onSubmit>` (see `src/app/boards/BoardCreateModal.tsx`). Also noted: `OptionSetPicker`'s inline "create new" flow leaves its own dropdown open afterward (pre-existing behavior shared by every consumer, e.g. `AddPropertyControl`) — not a bug, just something a caller's own UI/tests need to account for (click the trigger again, or click away, to dismiss it).
 
 ---
 
@@ -14,7 +16,7 @@ Reference doc for resuming the Phase 4 (Organizational Structures) prep work. Se
 - **Removed**: `src/domain/settings/settingsRepository.ts` (was unused; `localStorage` via `createLocalStorageKey` is the standing convention for UI state).
 - **New hook**: `src/app/notes/useOpfsImageUpload.ts` (extracted from `ImageBlock`, ready for board card images).
 - **`SCHEMA_V4` migration** (`src/db/schema.ts`, `src/db/db.ts`) already adds:
-  - `Board.cardsDocId: string` — Y.Doc id for card ordering + board sticky notes (mirrors `Note.blockDocId`). **Not yet minted anywhere** — there's no `createBoard` function yet (see §4 below); when you add one, mint it via `createYDoc()`.
+  - `Board.cardsDocId: string` — Y.Doc id for card ordering + board sticky notes (mirrors `Note.blockDocId`). Minted via `createYDoc()` in `createBoard` (§4, now done).
   - `Board.statusTypeId: string | null` — permanent link to the option-set `CustomDataType` backing the board's columns. Indexed (`boards: 'id, folderId, statusTypeId'`) so `deleteCustomDataType` can check for referencing boards.
   - `Notebook.stickyNotesDocId: string` — Y.Doc id for the notebook's sticky-note canvas. **Already minted** in `notebookRepository.createNotebook` and cleaned up in `deleteNotebook`/`deleteNotebooksByFolderId`.
   - `Note.description?: string` and `Note.cardImagePath?: string` — board-card fields, types only so far, no repository functions to set them yet.
@@ -36,7 +38,18 @@ Implemented (uncommitted, sitting alongside sections 0-1 on `main`):
 - **Default note type**: wire up the (currently dead) `Notebook.defaultNoteTypeId`. Add a picker control near `EntityPageHeader` on `NotebookPage.tsx`. Update `NoteCreateModal.tsx` to preselect `notebook.defaultNoteTypeId` instead of always defaulting to `null`.
 - **Filter UI**: new `NoteFilter` component — tag membership, property-value match, note-type match, **and simple title substring match** (confirmed in scope, even though full-text/FlexSearch is Phase 5). Operates in-memory over the notes array already fetched via `useLiveQuery(listNotesByNotebook(...))` — no search index. Build as a standalone, reusable component from the start — §4 (boards) reuses it.
 
-## 4. Boards — CRUD, option-set-linked columns, kanban DnD, cards, filtering
+## 4. Boards — CRUD, option-set-linked columns, kanban DnD, cards, filtering — DONE
+
+Implemented per the design below, with a few refinements decided along the way (recorded in the plan file this was built from: `C:\Users\User\.claude\plans\please-continue-with-the-tingly-swing.md`):
+
+- **Domain**: `boardRepository.ts` gained `createBoard`, `getBoard` (now reconciles `columns` against the linked `CustomDataType`'s options on every read, preserving board-local drag order/color/visibility), `renameBoard`, `setColumnColor`, `setColumnVisibility`, `reorderColumns`, `applyColumnEdits` (the add/rename/delete-with-reassignment mutation), `findOtherStatusTypeReferences`. New `src/domain/boards/boardCardsStore.ts` (Y.Doc card ordering, mirrors `noteBlocksStore.ts`) using a single flat `{noteId, columnId}` array rather than one array per column. `src/lib/color/leastUsedColor.ts` extracted out of `tagRepository.ts` so board columns get their own board-local least-used-color pool. `noteRepository.createNote` derives the `status` property + card-order entry when `boardId` is set (reads `db.boards` directly rather than importing `boardRepository`, to avoid a `boardRepository` ↔ `noteRepository` import cycle since `boardRepository` already depends on `noteRepository` for cascade deletes). `deleteCustomDataType` now also rejects deletion if a board's `statusTypeId` references it. **Refinement vs. the original design below**: `applyColumnEdits` only requires a `reassignToColumnId` for a removed column when notes actually reference it — an empty column can just be dropped, no forced pointless choice.
+- **UI** (`src/app/boards/`): `BoardPage.tsx` (`/boards/:boardId`, new `'board'` `RouteKind`), `BoardCreateModal.tsx` (embeds the existing `OptionSetPicker` as-is for column source — reuse over rebuild), `KanbanBoard.tsx` + `useBoardCards.ts` + `BoardColumnView.tsx` + `BoardColumnHeader.tsx` + `BoardCard.tsx` (dnd-kit multi-container: one `SortableContext` per column plus a column-level `SortableContext`/`useSortable` for column reordering, `useDroppable` per column body, `DragOverlay`), `ManageColumnsControl.tsx` (wraps the shared `OptionSetForm` with reassignment-prompt glue instead of the originally-sketched per-column inline rename/`InlineCreateForm`), `groupCardsByColumn.ts` (pure grouping helper with a fallback for a card not yet reflected in the mounted board's own Y.Doc instance — see below), `BoardCardDetails.tsx` (description/image editor, shown on `NotePage.tsx` when `note.boardId` is set). `NoteCreateModal.tsx` now accepts board-only cards (`notebookId` OR `boardId`) and skips navigation for board cards so the user stays on the kanban board after adding one.
+- **Important architectural note for future board work**: this app has no live cross-instance Y.Doc sync (no y-indexeddb/BroadcastChannel provider) — two separately-`loadYDoc()`'d instances of the same `docId` don't observe each other's mutations in memory, they only share persisted state via Dexie. So when `createNote` appends a card-order entry via its own doc load while `KanbanBoard` is already mounted with its own doc instance, the mounted board never sees that append via `observeDeep`. `groupCardsByColumn` works around this with a fallback: a note missing from `cardOrder` is appended to the column matching its own `status` property value, purely so it's visible immediately; proper position reconciles on the next full board load.
+- **Bug found + fixed during manual browser verification**: see the note above the Section 4 heading — nested `<form>` in `BoardCreateModal` caused a real page reload when creating an option set inline.
+- Tests: `leastUsedColor.test.ts`, `boardCardsStore.test.ts`, `groupCardsByColumn.test.ts`, `useBoardCards.test.tsx`, extended `boardRepository.test.ts`/`noteRepository.test.ts`/`dataTypeRepository.test.ts`/`NoteCreateModal.test.tsx`/`Fab.test.tsx`/`NotePage.test.tsx`, new `BoardCreateModal.test.tsx`/`BoardCardDetails.test.tsx`. 629 tests total, all green; typecheck/lint/format clean; production build succeeds.
+
+<details>
+<summary>Original pre-implementation design (kept for reference)</summary>
 
 Largest remaining piece. `src/domain/boards/boardRepository.ts` currently only has `getBoard`/`listBoardsByFolder`/`deleteBoard`/`deleteBoardsByFolderId` — no create/update/column-management yet.
 
@@ -59,6 +72,8 @@ Largest remaining piece. `src/domain/boards/boardRepository.ts` currently only h
 - Filtering: reuse `NoteFilter` from §3.
 - Column visibility persisted via `localStorage`.
 - New `boardRepository.test.ts` additions needed: create/column CRUD/column-delete-reassignment/full cascade.
+
+</details>
 
 ## 5. Sticky Notes — new domain + free-form canvas + mobile gallery
 

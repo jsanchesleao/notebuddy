@@ -7,6 +7,7 @@ import { Breadcrumb } from '../common/Breadcrumb'
 import { buildNoteCrumbs } from '../common/breadcrumbs'
 import { NoteBlockList } from '../notes/blocks/NoteBlockList'
 import { PropertiesPanel } from '../notes/PropertiesPanel/PropertiesPanel'
+import { BoardCardDetails } from '../boards/BoardCardDetails'
 import { useWideMode } from './useWideMode'
 import styles from './NotePage.module.css'
 
@@ -37,7 +38,11 @@ export function NotePage() {
 
   if (note === undefined || notFound) return null
 
-  const backTo = note.notebookId ? `/notebooks/${note.notebookId}` : '/'
+  const backTo = note.notebookId
+    ? `/notebooks/${note.notebookId}`
+    : note.boardId
+      ? `/boards/${note.boardId}`
+      : '/'
 
   return (
     <div className={isWide ? `${styles.page} ${styles.pageWide}` : styles.page}>
@@ -55,6 +60,7 @@ export function NotePage() {
         wideMode={{ isWide, onToggle: toggleWide }}
         onToggleProperties={() => setPropertiesOpen((open) => !open)}
       />
+      {note.boardId && <BoardCardDetails note={note} />}
       <NoteBlockList key={note.blockDocId} noteId={note.id} blockDocId={note.blockDocId} />
       <PropertiesPanel note={note} open={propertiesOpen} onClose={() => setPropertiesOpen(false)} />
     </div>

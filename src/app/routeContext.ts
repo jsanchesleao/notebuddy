@@ -1,11 +1,12 @@
 import { matchPath, useLocation } from 'react-router-dom'
 
-export type RouteKind = 'home' | 'folder' | 'notebook' | 'note' | 'dataTypes' | 'notFound'
+export type RouteKind = 'home' | 'folder' | 'notebook' | 'board' | 'note' | 'dataTypes' | 'notFound'
 
 export interface CurrentRouteContext {
   routeKind: RouteKind
   folderId: string | null
   notebookId: string | null
+  boardId: string | null
   noteId: string | null
 }
 
@@ -18,6 +19,7 @@ export function useCurrentRouteContext(): CurrentRouteContext {
   const homeMatch = matchPath('/', location.pathname)
   const folderMatch = matchPath('/folders/:folderId', location.pathname)
   const notebookMatch = matchPath('/notebooks/:notebookId', location.pathname)
+  const boardMatch = matchPath('/boards/:boardId', location.pathname)
   const noteMatch = matchPath('/notes/:noteId', location.pathname)
   const dataTypesMatch = matchPath('/data-types', location.pathname)
 
@@ -27,16 +29,19 @@ export function useCurrentRouteContext(): CurrentRouteContext {
       ? 'folder'
       : notebookMatch
         ? 'notebook'
-        : noteMatch
-          ? 'note'
-          : dataTypesMatch
-            ? 'dataTypes'
-            : 'notFound'
+        : boardMatch
+          ? 'board'
+          : noteMatch
+            ? 'note'
+            : dataTypesMatch
+              ? 'dataTypes'
+              : 'notFound'
 
   return {
     routeKind,
     folderId: folderMatch?.params.folderId ?? null,
     notebookId: notebookMatch?.params.notebookId ?? null,
+    boardId: boardMatch?.params.boardId ?? null,
     noteId: noteMatch?.params.noteId ?? null,
   }
 }

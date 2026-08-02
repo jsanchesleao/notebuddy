@@ -12,20 +12,27 @@ interface SidebarProps {
   routeKind: RouteKind
   folderId: string | null
   notebookId: string | null
+  boardId: string | null
   noteId: string | null
 }
 
-export function Sidebar({ open, routeKind, folderId, notebookId, noteId }: SidebarProps) {
+export function Sidebar({ open, routeKind, folderId, notebookId, boardId, noteId }: SidebarProps) {
   const note = useLiveQuery(
     () => (routeKind === 'note' && noteId ? getNote(noteId) : Promise.resolve(null)),
     [routeKind, noteId],
   )
   const activeNotebookId =
     routeKind === 'notebook' ? notebookId : routeKind === 'note' ? (note?.notebookId ?? null) : null
+  const activeBoardId =
+    routeKind === 'board' ? boardId : routeKind === 'note' ? (note?.boardId ?? null) : null
 
   return (
     <nav className={`${styles.sidebar} ${open ? styles.open : ''}`} aria-label="Primary">
-      <SidebarFolderView currentFolderId={folderId} activeNotebookId={activeNotebookId} />
+      <SidebarFolderView
+        currentFolderId={folderId}
+        activeNotebookId={activeNotebookId}
+        activeBoardId={activeBoardId}
+      />
       {activeNotebookId && (
         <SidebarNotebookView notebookId={activeNotebookId} activeNoteId={noteId} />
       )}

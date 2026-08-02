@@ -11,6 +11,7 @@ interface FolderTreeNodeProps {
   depth: number
   activeFolderId: string | null
   activeNotebookId: string | null
+  activeBoardId: string | null
   expandedIds: Set<string>
   onToggle: (folderId: string) => void
 }
@@ -20,6 +21,7 @@ export function FolderTreeNode({
   depth,
   activeFolderId,
   activeNotebookId,
+  activeBoardId,
   expandedIds,
   onToggle,
 }: FolderTreeNodeProps) {
@@ -76,6 +78,7 @@ export function FolderTreeNode({
           depth={depth + 1}
           activeFolderId={activeFolderId}
           activeNotebookId={activeNotebookId}
+          activeBoardId={activeBoardId}
           expandedIds={expandedIds}
           onToggle={onToggle}
         />

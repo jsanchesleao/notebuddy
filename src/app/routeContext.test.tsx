@@ -16,6 +16,7 @@ describe('useCurrentRouteContext', () => {
       routeKind: 'home',
       folderId: null,
       notebookId: null,
+      boardId: null,
       noteId: null,
     })
   })
@@ -26,6 +27,7 @@ describe('useCurrentRouteContext', () => {
       routeKind: 'folder',
       folderId: 'folder-1',
       notebookId: null,
+      boardId: null,
       noteId: null,
     })
   })
@@ -36,6 +38,18 @@ describe('useCurrentRouteContext', () => {
       routeKind: 'notebook',
       folderId: null,
       notebookId: 'notebook-1',
+      boardId: null,
+      noteId: null,
+    })
+  })
+
+  it('reports board for /boards/:boardId', () => {
+    const { result } = renderAt('/boards/board-1')
+    expect(result.current).toEqual({
+      routeKind: 'board',
+      folderId: null,
+      notebookId: null,
+      boardId: 'board-1',
       noteId: null,
     })
   })
@@ -46,6 +60,7 @@ describe('useCurrentRouteContext', () => {
       routeKind: 'note',
       folderId: null,
       notebookId: null,
+      boardId: null,
       noteId: 'note-1',
     })
   })
@@ -56,6 +71,7 @@ describe('useCurrentRouteContext', () => {
       routeKind: 'dataTypes',
       folderId: null,
       notebookId: null,
+      boardId: null,
       noteId: null,
     })
   })
@@ -66,6 +82,7 @@ describe('useCurrentRouteContext', () => {
       routeKind: 'notFound',
       folderId: null,
       notebookId: null,
+      boardId: null,
       noteId: null,
     })
   })

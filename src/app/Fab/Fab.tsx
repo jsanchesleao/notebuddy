@@ -3,28 +3,33 @@ import { createFolder } from '../../domain/folders/folderRepository'
 import { createNotebook } from '../../domain/notebooks/notebookRepository'
 import { Icon } from '../../components/Icon/Icon'
 import { NoteCreateModal } from '../notes/NoteCreateModal'
-import type { Notebook } from '../../domain/entities.types'
+import { BoardCreateModal } from '../boards/BoardCreateModal'
+import type { Board, Notebook } from '../../domain/entities.types'
 import styles from './Fab.module.css'
 
 interface FabProps {
   folderId: string | null
   notebook: Notebook | null
+  board?: Board | null
 }
 
-type CreateAction = 'folder' | 'notebook'
+type PopoverAction = 'folder' | 'notebook'
 
-const ACTION_LABELS: Record<CreateAction, string> = {
+const ACTION_LABELS: Record<PopoverAction, string> = {
   folder: 'Folder',
   notebook: 'Notebook',
 }
 
-export function Fab({ folderId, notebook }: FabProps) {
+export function Fab({ folderId, notebook, board = null }: FabProps) {
   const [menuOpen, setMenuOpen] = useState(false)
-  const [activeAction, setActiveAction] = useState<CreateAction | null>(null)
+  const [activeAction, setActiveAction] = useState<PopoverAction | null>(null)
   const [title, setTitle] = useState('')
   const [noteModalOpen, setNoteModalOpen] = useState(false)
+  const [cardModalOpen, setCardModalOpen] = useState(false)
+  const [boardModalOpen, setBoardModalOpen] = useState(false)
 
   const showNoteAction = Boolean(notebook)
+  const showCardAction = Boolean(board)
 
   const closeAll = () => {
     setMenuOpen(false)
@@ -89,6 +94,16 @@ export function Fab({ folderId, notebook }: FabProps) {
               <Icon name="add" size={14} /> New {ACTION_LABELS[action]}
             </button>
           ))}
+          <button
+            type="button"
+            className={styles.menuItem}
+            onClick={() => {
+              setMenuOpen(false)
+              setBoardModalOpen(true)
+            }}
+          >
+            <Icon name="add" size={14} /> New Board
+          </button>
           {showNoteAction && (
             <button
               type="button"
@@ -99,6 +114,18 @@ export function Fab({ folderId, notebook }: FabProps) {
               }}
             >
               <Icon name="add" size={14} /> New Note
+            </button>
+          )}
+          {showCardAction && (
+            <button
+              type="button"
+              className={styles.menuItem}
+              onClick={() => {
+                setMenuOpen(false)
+                setCardModalOpen(true)
+              }}
+            >
+              <Icon name="add" size={14} /> New Card
             </button>
           )}
         </div>
@@ -119,6 +146,19 @@ export function Fab({ folderId, notebook }: FabProps) {
           notebook={notebook}
         />
       )}
+      {showCardAction && board && (
+        <NoteCreateModal
+          open={cardModalOpen}
+          onClose={() => setCardModalOpen(false)}
+          notebook={null}
+          boardId={board.id}
+        />
+      )}
+      <BoardCreateModal
+        open={boardModalOpen}
+        onClose={() => setBoardModalOpen(false)}
+        folderId={folderId}
+      />
     </div>
   )
 }

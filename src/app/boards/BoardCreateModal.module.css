@@ -1,0 +1,68 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-content);
+  font-size: var(--font-size-lg);
+}
+
+.titleInput {
+  height: 2.25rem;
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.fieldLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.error {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.submit {
+  padding: 0 var(--space-3);
+  height: 2rem;
+  font-size: var(--font-size-sm);
+  color: var(--color-accent-fg);
+  background: var(--color-accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.submit:hover {
+  background: var(--color-accent-hover);
+}
+
+.cancel {
+  padding: 0 var(--space-3);
+  height: 2rem;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.cancel:hover {
+  background: var(--color-bg-sidebar);
+}

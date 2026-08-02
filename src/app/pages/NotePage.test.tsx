@@ -5,11 +5,15 @@ import { MemoryRouter } from 'react-router-dom'
 import { db } from '../../db/db'
 import { createNotebook } from '../../domain/notebooks/notebookRepository'
 import { createNote } from '../../domain/notes/noteRepository'
+import { createBoard } from '../../domain/boards/boardRepository'
+import { createCustomDataType } from '../../domain/dataTypes/dataTypeRepository'
 import { AppRoutes } from '../routes'
 
 beforeEach(async () => {
   await db.notebooks.clear()
   await db.notes.clear()
+  await db.boards.clear()
+  await db.customDataTypes.clear()
   await db.yjsUpdates.clear()
 })
 
@@ -71,6 +75,53 @@ describe('NotePage', () => {
     await user.click(screen.getByRole('button', { name: 'Toggle properties' }))
     expect(drawer).toHaveAttribute('aria-hidden', 'false')
     expect(screen.getByRole('heading', { name: 'My note', level: 2 })).toBeInTheDocument()
+  })
+
+  it('shows card details and saves an edited description for a board card', async () => {
+    const statusType = await createCustomDataType({
+      name: 'Status',
+      schema: {
+        kind: 'primitive',
+        primitive: 'select',
+        options: [{ id: '1', label: 'Todo', value: 'todo' }],
+      },
+    })
+    const board = await createBoard({ title: 'Board', folderId: null, statusTypeId: statusType.id })
+    const note = await createNote({ notebookId: null, boardId: board.id, title: 'A card' })
+    const user = userEvent.setup()
+
+    render(
+      <MemoryRouter initialEntries={[`/notes/${note.id}`]}>
+        <AppRoutes />
+      </MemoryRouter>,
+    )
+
+    await screen.findByRole('heading', { name: 'A card' })
+    expect(screen.getByRole('heading', { name: 'Card details' })).toBeInTheDocument()
+
+    await user.type(screen.getByLabelText('Card description'), 'Some details')
+
+    await waitFor(
+      async () => {
+        const updated = await db.notes.get(note.id)
+        expect(updated?.description).toBe('Some details')
+      },
+      { timeout: 1000 },
+    )
+  })
+
+  it('does not show card details for a regular notebook note', async () => {
+    const notebook = await createNotebook({ folderId: null, title: 'Notebook' })
+    const note = await createNote({ notebookId: notebook.id, title: 'My note' })
+
+    render(
+      <MemoryRouter initialEntries={[`/notes/${note.id}`]}>
+        <AppRoutes />
+      </MemoryRouter>,
+    )
+
+    await screen.findByRole('heading', { name: 'My note' })
+    expect(screen.queryByRole('heading', { name: 'Card details' })).not.toBeInTheDocument()
   })
 
   it('navigates to the parent notebook after deleting the note', async () => {

@@ -1,0 +1,90 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-2) var(--space-1);
+}
+
+.gripButton {
+  display: inline-flex;
+  padding: var(--space-1);
+  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  cursor: grab;
+}
+
+.gripButton:hover {
+  background: var(--color-bg-sidebar);
+}
+
+.swatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.name {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.count {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.visibilityButton {
+  display: inline-flex;
+  padding: var(--space-1);
+  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
+}
+
+.visibilityButton:hover {
+  background: var(--color-bg-sidebar);
+}
+
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+}
+
+.swatchGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--space-1);
+}
+
+.swatchOption {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+}
+
+.hexForm {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.hexInput {
+  flex: 1;
+  min-width: 0;
+  height: 1.75rem;
+  padding: 0 var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}

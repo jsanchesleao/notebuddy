@@ -13,6 +13,7 @@ interface FolderTreeChildrenProps {
   depth: number
   activeFolderId: string | null
   activeNotebookId: string | null
+  activeBoardId: string | null
   expandedIds: Set<string>
   onToggle: (folderId: string) => void
 }
@@ -22,6 +23,7 @@ export function FolderTreeChildren({
   depth,
   activeFolderId,
   activeNotebookId,
+  activeBoardId,
   expandedIds,
   onToggle,
 }: FolderTreeChildrenProps) {
@@ -45,6 +47,7 @@ export function FolderTreeChildren({
           depth={depth}
           activeFolderId={activeFolderId}
           activeNotebookId={activeNotebookId}
+          activeBoardId={activeBoardId}
           expandedIds={expandedIds}
           onToggle={onToggle}
         />
@@ -68,9 +71,16 @@ export function FolderTreeChildren({
       ))}
       {boards?.map((board) => (
         <li key={board.id}>
-          <div className={styles.leafRow} style={{ paddingLeft: `${leafPaddingLeft}px` }}>
+          <div
+            className={
+              board.id === activeBoardId ? `${styles.leafRow} ${styles.active}` : styles.leafRow
+            }
+            style={{ paddingLeft: `${leafPaddingLeft}px` }}
+          >
             <Icon name="board" size={12} className={styles.leafIcon} />
-            <span className={styles.link}>{board.title}</span>
+            <Link to={`/boards/${board.id}`} className={styles.link}>
+              {board.title}
+            </Link>
           </div>
         </li>
       ))}

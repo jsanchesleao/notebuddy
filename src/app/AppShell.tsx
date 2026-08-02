@@ -10,12 +10,17 @@ import { useIsMobile } from './useIsMobile'
 import { useHeaderCompact } from './useHeaderCompact'
 import { Icon } from '../components/Icon/Icon'
 import { getNotebook } from '../domain/notebooks/notebookRepository'
+import { getBoard } from '../domain/boards/boardRepository'
 import styles from './AppShell.module.css'
 
 export function AppShell() {
   const { open: sidebarOpen, toggle: toggleSidebar, setOpen: setSidebarOpen } = useSidebarOpen()
-  const { routeKind, folderId, notebookId, noteId } = useCurrentRouteContext()
-  const showFab = routeKind === 'home' || routeKind === 'folder' || routeKind === 'notebook'
+  const { routeKind, folderId, notebookId, boardId, noteId } = useCurrentRouteContext()
+  const showFab =
+    routeKind === 'home' ||
+    routeKind === 'folder' ||
+    routeKind === 'notebook' ||
+    routeKind === 'board'
   const mainRef = useRef<HTMLElement>(null)
   const isMobile = useIsMobile()
   const headerCompact = useHeaderCompact(mainRef, isMobile)
@@ -24,6 +29,11 @@ export function AppShell() {
       () =>
         notebookId ? getNotebook(notebookId).then((found) => found ?? null) : Promise.resolve(null),
       [notebookId],
+    ) ?? null
+  const board =
+    useLiveQuery(
+      () => (boardId ? getBoard(boardId).then((found) => found ?? null) : Promise.resolve(null)),
+      [boardId],
     ) ?? null
 
   return (
@@ -52,13 +62,14 @@ export function AppShell() {
           routeKind={routeKind}
           folderId={folderId}
           notebookId={notebookId}
+          boardId={boardId}
           noteId={noteId}
         />
         <main className={styles.main} ref={mainRef}>
           <AppRoutes />
         </main>
       </div>
-      {showFab && <Fab folderId={folderId} notebook={notebook} />}
+      {showFab && <Fab folderId={folderId} notebook={notebook} board={board} />}
     </div>
   )
 }

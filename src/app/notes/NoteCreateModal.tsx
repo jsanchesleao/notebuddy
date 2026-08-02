@@ -13,11 +13,20 @@ interface NoteCreateModalProps {
   onClose: () => void
   notebook: Notebook | null
   boardId?: string | null
+  // Which column a board card should start in — omitted defaults to the board's first
+  // visible column (see createNote's statusValue). Ignored when boardId is not set.
+  defaultStatusValue?: string
 }
 
 const TITLE_ID = 'note-create-modal-title'
 
-export function NoteCreateModal({ open, onClose, notebook, boardId }: NoteCreateModalProps) {
+export function NoteCreateModal({
+  open,
+  onClose,
+  notebook,
+  boardId,
+  defaultStatusValue,
+}: NoteCreateModalProps) {
   const navigate = useNavigate()
   const noteTypes = useLiveQuery(() => listNoteTypes(), [], [])
   const [title, setTitle] = useState('')
@@ -44,12 +53,22 @@ export function NoteCreateModal({ open, onClose, notebook, boardId }: NoteCreate
     event.preventDefault()
     const trimmed = title.trim()
     const notebookId = notebook?.id ?? null
-    if (!trimmed || !notebookId) return
+    if (!trimmed || (!notebookId && !boardId)) return
 
-    const note = await createNote({ notebookId, boardId, title: trimmed, noteTypeId })
+    const note = await createNote({
+      notebookId,
+      boardId,
+      title: trimmed,
+      noteTypeId,
+      statusValue: defaultStatusValue,
+    })
     reset()
     onClose()
-    navigate(`/notes/${note.id}`)
+    // Board cards stay on the kanban board instead of jumping into the full note editor, so
+    // several cards can be added in a row without a round trip through each one.
+    if (!boardId) {
+      navigate(`/notes/${note.id}`)
+    }
   }
 
   return (

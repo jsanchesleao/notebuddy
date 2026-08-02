@@ -8,7 +8,9 @@ import {
   ReferencedEntityError,
   updateCustomDataType,
 } from './dataTypeRepository'
-import type { DataTypeRef, Note, NoteType } from '../entities.types'
+import { createId } from '../ids'
+import { createYDoc } from '../yjs/yjsDocStore'
+import type { Board, DataTypeRef, Note, NoteType } from '../entities.types'
 
 const textType: DataTypeRef = { kind: 'primitive', primitive: 'text' }
 
@@ -16,6 +18,7 @@ beforeEach(async () => {
   await db.customDataTypes.clear()
   await db.noteTypes.clear()
   await db.notes.clear()
+  await db.boards.clear()
 })
 
 describe('dataTypeRepository', () => {
@@ -125,6 +128,25 @@ describe('dataTypeRepository', () => {
       updatedAt: now,
     }
     await db.notes.add(note)
+
+    await expect(deleteCustomDataType(optionSet.id)).rejects.toThrow(ReferencedEntityError)
+    expect(await getCustomDataType(optionSet.id)).toBeDefined()
+  })
+
+  it('blocks deleting a custom data type referenced by a board as its statusTypeId', async () => {
+    const optionSet = await createCustomDataType({
+      name: 'Status',
+      schema: { kind: 'primitive', primitive: 'select', options: [] },
+    })
+    const board: Board = {
+      id: createId(),
+      folderId: null,
+      title: 'Board',
+      columns: [],
+      cardsDocId: createYDoc().docId,
+      statusTypeId: optionSet.id,
+    }
+    await db.boards.add(board)
 
     await expect(deleteCustomDataType(optionSet.id)).rejects.toThrow(ReferencedEntityError)
     expect(await getCustomDataType(optionSet.id)).toBeDefined()

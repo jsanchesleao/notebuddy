@@ -50,6 +50,8 @@ import {
   Move,
   Filter,
   Search,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 
 const ICONS = {
@@ -104,6 +106,8 @@ const ICONS = {
   move: Move,
   filter: Filter,
   search: Search,
+  visible: Eye,
+  hidden: EyeOff,
 } as const
 
 export type IconName = keyof typeof ICONS

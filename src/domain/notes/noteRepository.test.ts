@@ -6,26 +6,46 @@ import {
   createNote,
   deleteNote,
   getNote,
+  listNotesByBoardId,
   listNotesByNotebook,
   removeNoteProperty,
   renameNote,
+  setNoteCardImagePath,
+  setNoteDescription,
   setNoteProperty,
   setNoteTags,
 } from './noteRepository'
 import { createNotebook } from '../notebooks/notebookRepository'
+import { createBoard } from '../boards/boardRepository'
+import { loadBoardCards } from '../boards/boardCardsStore'
 import { insertBlock, loadNoteBlocks } from '../blocks/noteBlocksStore'
 import { createEmptyBlock } from '../blocks/noteBlocksFactory'
 import { appendYDocUpdate, loadYDoc } from '../yjs/yjsDocStore'
 import { createCustomDataType } from '../dataTypes/dataTypeRepository'
 import { createNoteType } from '../noteTypes/noteTypeRepository'
+import { createId } from '../ids'
 import * as Y from 'yjs'
-import type { DataTypeRef } from '../entities.types'
+import type { DataTypeRef, SelectOption } from '../entities.types'
 
 const textType: DataTypeRef = { kind: 'primitive', primitive: 'text' }
+
+async function makeBoardWithColumns(labels: string[]) {
+  const options: SelectOption[] = labels.map((label) => ({
+    id: createId(),
+    label,
+    value: label.toLowerCase(),
+  }))
+  const customType = await createCustomDataType({
+    name: 'Status',
+    schema: { kind: 'primitive', primitive: 'select', options },
+  })
+  return createBoard({ title: 'Board', folderId: null, statusTypeId: customType.id })
+}
 
 beforeEach(async () => {
   await db.notes.clear()
   await db.notebooks.clear()
+  await db.boards.clear()
   await db.yjsUpdates.clear()
   await db.customDataTypes.clear()
   await db.noteTypes.clear()
@@ -208,5 +228,79 @@ describe('noteRepository', () => {
 
     const updated = await getNote(note.id)
     expect(updated?.metadata.tags).toEqual(['recipe', 'dinner'])
+  })
+
+  describe('board cards', () => {
+    it('derives a status property from the first visible column by default', async () => {
+      const board = await makeBoardWithColumns(['Todo', 'Done'])
+      const note = await createNote({ notebookId: null, boardId: board.id, title: 'Card' })
+
+      expect(note.notebookId).toBeNull()
+      expect(note.metadata.properties.status).toEqual({
+        typeRef: { kind: 'customTypeRef', customTypeId: board.statusTypeId },
+        value: 'todo',
+      })
+    })
+
+    it('honors an explicit statusValue override', async () => {
+      const board = await makeBoardWithColumns(['Todo', 'Done'])
+      const note = await createNote({
+        notebookId: null,
+        boardId: board.id,
+        title: 'Card',
+        statusValue: 'done',
+      })
+
+      expect(note.metadata.properties.status?.value).toBe('done')
+    })
+
+    it('appends a card-order entry to the board cardsDocId', async () => {
+      const board = await makeBoardWithColumns(['Todo', 'Done'])
+      const note = await createNote({ notebookId: null, boardId: board.id, title: 'Card' })
+
+      const { cardOrder } = await loadBoardCards(board.cardsDocId)
+      expect(cardOrder).toEqual([{ noteId: note.id, columnId: board.columns[0].id }])
+    })
+
+    it('skips status/card-order for a board with no columns', async () => {
+      const board = await makeBoardWithColumns([])
+      const note = await createNote({ notebookId: null, boardId: board.id, title: 'Card' })
+
+      expect(note.metadata.properties.status).toBeUndefined()
+      const { cardOrder } = await loadBoardCards(board.cardsDocId)
+      expect(cardOrder).toEqual([])
+    })
+
+    it('removes the card-order entry when a board card is deleted', async () => {
+      const board = await makeBoardWithColumns(['Todo'])
+      const note = await createNote({ notebookId: null, boardId: board.id, title: 'Card' })
+
+      await deleteNote(note.id)
+
+      const { cardOrder } = await loadBoardCards(board.cardsDocId)
+      expect(cardOrder).toEqual([])
+    })
+
+    it('lists notes scoped to a board', async () => {
+      const board = await makeBoardWithColumns(['Todo'])
+      const other = await makeBoardWithColumns(['Todo'])
+      await createNote({ notebookId: null, boardId: board.id, title: 'A' })
+      await createNote({ notebookId: null, boardId: other.id, title: 'B' })
+
+      const notes = await listNotesByBoardId(board.id)
+      expect(notes.map((note) => note.title)).toEqual(['A'])
+    })
+
+    it('sets a card description and image path', async () => {
+      const board = await makeBoardWithColumns(['Todo'])
+      const note = await createNote({ notebookId: null, boardId: board.id, title: 'Card' })
+
+      await setNoteDescription(note.id, 'Some details')
+      await setNoteCardImagePath(note.id, 'boards/b/asset.png')
+
+      const updated = await getNote(note.id)
+      expect(updated?.description).toBe('Some details')
+      expect(updated?.cardImagePath).toBe('boards/b/asset.png')
+    })
   })
 })

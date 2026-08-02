@@ -26,7 +26,14 @@ describe('Sidebar', () => {
   it('shows empty-state text when there is no data', async () => {
     render(
       <MemoryRouter>
-        <Sidebar open={false} routeKind="home" folderId={null} notebookId={null} noteId={null} />
+        <Sidebar
+          open={false}
+          routeKind="home"
+          folderId={null}
+          notebookId={null}
+          boardId={null}
+          noteId={null}
+        />
       </MemoryRouter>,
     )
 
@@ -36,7 +43,14 @@ describe('Sidebar', () => {
   it('always shows a Home link at the top of the tree', async () => {
     render(
       <MemoryRouter>
-        <Sidebar open={false} routeKind="home" folderId={null} notebookId={null} noteId={null} />
+        <Sidebar
+          open={false}
+          routeKind="home"
+          folderId={null}
+          notebookId={null}
+          boardId={null}
+          noteId={null}
+        />
       </MemoryRouter>,
     )
 
@@ -46,7 +60,14 @@ describe('Sidebar', () => {
   it('reactively lists root-level folders and notebooks as they are created elsewhere', async () => {
     render(
       <MemoryRouter>
-        <Sidebar open={false} routeKind="home" folderId={null} notebookId={null} noteId={null} />
+        <Sidebar
+          open={false}
+          routeKind="home"
+          folderId={null}
+          notebookId={null}
+          boardId={null}
+          noteId={null}
+        />
       </MemoryRouter>,
     )
 
@@ -67,7 +88,14 @@ describe('Sidebar', () => {
 
     render(
       <MemoryRouter>
-        <Sidebar open={false} routeKind="home" folderId={null} notebookId={null} noteId={null} />
+        <Sidebar
+          open={false}
+          routeKind="home"
+          folderId={null}
+          notebookId={null}
+          boardId={null}
+          noteId={null}
+        />
       </MemoryRouter>,
     )
 
@@ -90,7 +118,14 @@ describe('Sidebar', () => {
 
     render(
       <MemoryRouter>
-        <Sidebar open={false} routeKind="home" folderId={null} notebookId={null} noteId={null} />
+        <Sidebar
+          open={false}
+          routeKind="home"
+          folderId={null}
+          notebookId={null}
+          boardId={null}
+          noteId={null}
+        />
       </MemoryRouter>,
     )
 
@@ -113,6 +148,7 @@ describe('Sidebar', () => {
           routeKind="folder"
           folderId={child.id}
           notebookId={null}
+          boardId={null}
           noteId={null}
         />
       </MemoryRouter>,
@@ -134,6 +170,7 @@ describe('Sidebar', () => {
           routeKind="folder"
           folderId={child.id}
           notebookId={null}
+          boardId={null}
           noteId={null}
         />
       </MemoryRouter>,
@@ -161,6 +198,7 @@ describe('Sidebar', () => {
           routeKind="notebook"
           folderId={null}
           notebookId={notebook.id}
+          boardId={null}
           noteId={null}
         />
       </MemoryRouter>,
@@ -184,7 +222,14 @@ describe('Sidebar', () => {
 
     render(
       <MemoryRouter>
-        <Sidebar open={false} routeKind="note" folderId={null} notebookId={null} noteId={note.id} />
+        <Sidebar
+          open={false}
+          routeKind="note"
+          folderId={null}
+          notebookId={null}
+          boardId={null}
+          noteId={note.id}
+        />
       </MemoryRouter>,
     )
 
