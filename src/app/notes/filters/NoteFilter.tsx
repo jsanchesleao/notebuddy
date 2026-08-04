@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { listNoteTypes } from '../../../domain/noteTypes/noteTypeRepository'
 import { listTags } from '../../../domain/tags/tagRepository'
@@ -6,6 +5,7 @@ import { listCustomDataTypes } from '../../../domain/dataTypes/dataTypeRepositor
 import { collectFilterableProperties } from '../../../domain/notes/noteFilterMatch'
 import { createId } from '../../../domain/ids'
 import { Icon } from '../../../components/Icon/Icon'
+import { DismissableDropdown } from '../../../components/Menu/DismissableDropdown'
 import { FilterBlock } from './FilterBlock'
 import type {
   FilterBlock as FilterBlockData,
@@ -21,7 +21,6 @@ export interface NoteFilterProps {
 }
 
 export function NoteFilter({ notes, value, onChange }: NoteFilterProps) {
-  const [expanded, setExpanded] = useState(false)
   const noteTypes = useLiveQuery(() => listNoteTypes(), [], [])
   const tags = useLiveQuery(() => listTags(), [], [])
   const customTypes = useLiveQuery(() => listCustomDataTypes(), [], [])
@@ -49,18 +48,18 @@ export function NoteFilter({ notes, value, onChange }: NoteFilterProps) {
   }
 
   return (
-    <div className={styles.container}>
-      <button
-        type="button"
-        className={styles.toggle}
-        aria-expanded={expanded}
-        onClick={() => setExpanded((open) => !open)}
-      >
-        <Icon name="filter" size={14} /> Filter
-        {activeCriteriaCount > 0 && <span className={styles.badge}>{activeCriteriaCount}</span>}
-      </button>
-      {expanded && (
-        <div className={styles.panel}>
+    <DismissableDropdown
+      className={styles.container}
+      menuClassName={styles.panel}
+      trigger={({ toggle, open }) => (
+        <button type="button" className={styles.toggle} aria-expanded={open} onClick={toggle}>
+          <Icon name="filter" size={14} /> Filter
+          {activeCriteriaCount > 0 && <span className={styles.badge}>{activeCriteriaCount}</span>}
+        </button>
+      )}
+    >
+      {() => (
+        <>
           <div className={styles.modeToggle} role="group" aria-label="Filter mode">
             <button
               type="button"
@@ -100,8 +99,8 @@ export function NoteFilter({ notes, value, onChange }: NoteFilterProps) {
           <button type="button" className={styles.addBlockButton} onClick={addBlock}>
             <Icon name="add" size={14} /> Add block
           </button>
-        </div>
+        </>
       )}
-    </div>
+    </DismissableDropdown>
   )
 }

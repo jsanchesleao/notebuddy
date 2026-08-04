@@ -7,6 +7,8 @@ import { createNotebook } from '../../domain/notebooks/notebookRepository'
 import { createNote } from '../../domain/notes/noteRepository'
 import { createBoard } from '../../domain/boards/boardRepository'
 import { createCustomDataType } from '../../domain/dataTypes/dataTypeRepository'
+import { createOpfsMemoryDriver } from '../../lib/opfs/opfsMemoryDriver'
+import { setOpfsDriverForTesting } from '../../lib/opfs/opfsDriver'
 import { AppRoutes } from '../routes'
 
 beforeEach(async () => {
@@ -15,6 +17,7 @@ beforeEach(async () => {
   await db.boards.clear()
   await db.customDataTypes.clear()
   await db.yjsUpdates.clear()
+  setOpfsDriverForTesting(createOpfsMemoryDriver())
 })
 
 afterEach(() => {
@@ -97,9 +100,12 @@ describe('NotePage', () => {
     )
 
     await screen.findByRole('heading', { name: 'A card' })
-    expect(screen.getByRole('heading', { name: 'Card details' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Card details' })).toBeInTheDocument()
 
+    await user.click(screen.getByRole('button', { name: 'Card details' }))
+    await user.click(screen.getByRole('button', { name: 'Add description' }))
     await user.type(screen.getByLabelText('Card description'), 'Some details')
+    await user.tab()
 
     await waitFor(
       async () => {
@@ -108,6 +114,111 @@ describe('NotePage', () => {
       },
       { timeout: 1000 },
     )
+
+    expect(await screen.findByText('Some details')).toBeInTheDocument()
+  })
+
+  it('discards an in-progress description edit on Escape', async () => {
+    const statusType = await createCustomDataType({
+      name: 'Status',
+      schema: {
+        kind: 'primitive',
+        primitive: 'select',
+        options: [{ id: '1', label: 'Todo', value: 'todo' }],
+      },
+    })
+    const board = await createBoard({ title: 'Board', folderId: null, statusTypeId: statusType.id })
+    const note = await createNote({ notebookId: null, boardId: board.id, title: 'A card' })
+    const user = userEvent.setup()
+
+    render(
+      <MemoryRouter initialEntries={[`/notes/${note.id}`]}>
+        <AppRoutes />
+      </MemoryRouter>,
+    )
+
+    await screen.findByRole('heading', { name: 'A card' })
+    await user.click(screen.getByRole('button', { name: 'Card details' }))
+    await user.click(screen.getByRole('button', { name: 'Add description' }))
+    await user.type(screen.getByLabelText('Card description'), 'Discard me')
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByLabelText('Card description')).not.toBeInTheDocument()
+    const updated = await db.notes.get(note.id)
+    expect(updated?.description).toBeUndefined()
+  })
+
+  it('uploads a card image via the header edit menu', async () => {
+    const statusType = await createCustomDataType({
+      name: 'Status',
+      schema: {
+        kind: 'primitive',
+        primitive: 'select',
+        options: [{ id: '1', label: 'Todo', value: 'todo' }],
+      },
+    })
+    const board = await createBoard({ title: 'Board', folderId: null, statusTypeId: statusType.id })
+    const note = await createNote({ notebookId: null, boardId: board.id, title: 'A card' })
+    const user = userEvent.setup()
+
+    render(
+      <MemoryRouter initialEntries={[`/notes/${note.id}`]}>
+        <AppRoutes />
+      </MemoryRouter>,
+    )
+
+    await screen.findByRole('heading', { name: 'A card' })
+    await user.click(screen.getByRole('button', { name: 'Edit note' }))
+    await user.click(screen.getByRole('button', { name: 'Add image' }))
+
+    const file = new File(['x'], 'cover.png', { type: 'image/png' })
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(input, file)
+
+    await waitFor(async () => {
+      const updated = await db.notes.get(note.id)
+      expect(updated?.cardImagePath).toBeTruthy()
+    })
+  })
+
+  it('removes an existing card image via the header edit menu', async () => {
+    const statusType = await createCustomDataType({
+      name: 'Status',
+      schema: {
+        kind: 'primitive',
+        primitive: 'select',
+        options: [{ id: '1', label: 'Todo', value: 'todo' }],
+      },
+    })
+    const board = await createBoard({ title: 'Board', folderId: null, statusTypeId: statusType.id })
+    const note = await createNote({ notebookId: null, boardId: board.id, title: 'A card' })
+    const user = userEvent.setup()
+
+    render(
+      <MemoryRouter initialEntries={[`/notes/${note.id}`]}>
+        <AppRoutes />
+      </MemoryRouter>,
+    )
+
+    await screen.findByRole('heading', { name: 'A card' })
+    await user.click(screen.getByRole('button', { name: 'Edit note' }))
+    await user.click(screen.getByRole('button', { name: 'Add image' }))
+    const file = new File(['x'], 'cover.png', { type: 'image/png' })
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(input, file)
+
+    await waitFor(async () => {
+      const updated = await db.notes.get(note.id)
+      expect(updated?.cardImagePath).toBeTruthy()
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Edit note' }))
+    await user.click(await screen.findByRole('button', { name: 'Remove image' }))
+
+    await waitFor(async () => {
+      const updated = await db.notes.get(note.id)
+      expect(updated?.cardImagePath).toBeFalsy()
+    })
   })
 
   it('does not show card details for a regular notebook note', async () => {
@@ -121,7 +232,7 @@ describe('NotePage', () => {
     )
 
     await screen.findByRole('heading', { name: 'My note' })
-    expect(screen.queryByRole('heading', { name: 'Card details' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Card details' })).not.toBeInTheDocument()
   })
 
   it('navigates to the parent notebook after deleting the note', async () => {

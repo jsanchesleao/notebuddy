@@ -120,6 +120,14 @@ export function noteMatchesSearch(note: Note, query: string): boolean {
   return note.title.toLowerCase().includes(trimmed.toLowerCase())
 }
 
+// Unlike the filter's own 'tag' criterion (single tag, see evaluateCriterion above), an empty
+// selection here means "no tags picked" and must match everything — same convention as
+// noteMatchesSearch — while a non-empty selection requires every selected tag to be present.
+export function noteMatchesTags(note: Note, tags: string[]): boolean {
+  if (tags.length === 0) return true
+  return tags.every((tag) => note.metadata.tags.includes(tag))
+}
+
 export function collectFilterableProperties(
   notes: Note[],
   resolveCustomType: ResolveCustomType,

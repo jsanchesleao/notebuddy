@@ -2,6 +2,7 @@ import { db } from '../../db/db'
 import type { TagRecord } from '../entities.types'
 import { PILL_PALETTE } from './tagPalette'
 import { pickLeastUsedColor } from '../../lib/color/leastUsedColor'
+import { notifyTagAdded, notifyTagRemoved } from './tagSearchIndexClient'
 
 // Removes tags from the registry and strips them from every note that has them, in one
 // transaction — a tag can be removed whether it's currently in use or not.
@@ -26,6 +27,8 @@ export async function deleteTags(names: string[]): Promise<void> {
       ),
     )
   })
+
+  notifyTagRemoved(names)
 }
 
 export async function listTags(): Promise<TagRecord[]> {
@@ -37,18 +40,24 @@ export async function listTags(): Promise<TagRecord[]> {
 // note. Wrapped in a transaction so two brand-new tags registered close together don't race
 // on the same "least used" snapshot.
 export async function ensureTagColor(name: string): Promise<string> {
-  return db.transaction('rw', db.tags, async () => {
+  let created = false
+
+  const color = await db.transaction('rw', db.tags, async () => {
     const existing = await db.tags.get(name)
     if (existing) return existing.color
 
     const allTags = await db.tags.toArray()
-    const color = pickLeastUsedColor(
+    const assignedColor = pickLeastUsedColor(
       PILL_PALETTE,
       allTags.map((tag) => tag.color),
     )
-    await db.tags.add({ name, color, createdAt: new Date().toISOString() })
-    return color
+    await db.tags.add({ name, color: assignedColor, createdAt: new Date().toISOString() })
+    created = true
+    return assignedColor
   })
+
+  if (created) notifyTagAdded(name)
+  return color
 }
 
 export async function setTagColor(name: string, color: string): Promise<void> {

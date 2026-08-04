@@ -2,8 +2,16 @@ import { useState, type FormEvent } from 'react'
 import { Icon, type IconName } from '../../components/Icon/Icon'
 import { useIsDesktop } from '../useIsDesktop'
 import { NoteTypeSelect } from '../dataTypes/NoteTypeSelect'
+import { DismissableDropdown } from '../../components/Menu/DismissableDropdown'
+import dropdownStyles from '../../components/Menu/DismissableDropdown.module.css'
 import type { NoteType } from '../../domain/entities.types'
 import styles from './EntityPageHeader.module.css'
+
+export interface EntityPageHeaderMenuAction {
+  label: string
+  icon: IconName
+  onClick: () => void | Promise<void>
+}
 
 interface EntityPageHeaderProps {
   title: string
@@ -18,6 +26,10 @@ interface EntityPageHeaderProps {
     noteTypes: NoteType[]
     onChange: (id: string | null) => void
   }
+  // When provided, the edit icon opens a menu with "Rename" plus these actions instead of
+  // jumping straight into inline rename — used by board notes to fold "Add image" etc. into
+  // the same trigger rather than adding more standalone header buttons.
+  menuActions?: EntityPageHeaderMenuAction[]
 }
 
 export function EntityPageHeader({
@@ -29,6 +41,7 @@ export function EntityPageHeader({
   wideMode,
   onToggleProperties,
   defaultNoteType,
+  menuActions,
 }: EntityPageHeaderProps) {
   const [isRenaming, setIsRenaming] = useState(false)
   const isDesktop = useIsDesktop()
@@ -114,14 +127,58 @@ export function EntityPageHeader({
           <Icon name="properties" />
         </button>
       )}
-      <button
-        type="button"
-        className={styles.iconButton}
-        aria-label={`Rename ${entityLabel}`}
-        onClick={startRename}
-      >
-        <Icon name="edit" />
-      </button>
+      {menuActions && menuActions.length > 0 ? (
+        <DismissableDropdown
+          trigger={({ toggle, open }) => (
+            <button
+              type="button"
+              className={styles.iconButton}
+              aria-label={`Edit ${entityLabel}`}
+              aria-expanded={open}
+              onClick={toggle}
+            >
+              <Icon name="edit" />
+            </button>
+          )}
+        >
+          {({ close }) => (
+            <>
+              <button
+                type="button"
+                className={dropdownStyles.menuItem}
+                onClick={() => {
+                  startRename()
+                  close()
+                }}
+              >
+                <Icon name="edit" size={14} /> Rename
+              </button>
+              {menuActions.map((action) => (
+                <button
+                  key={action.label}
+                  type="button"
+                  className={dropdownStyles.menuItem}
+                  onClick={() => {
+                    void action.onClick()
+                    close()
+                  }}
+                >
+                  <Icon name={action.icon} size={14} /> {action.label}
+                </button>
+              ))}
+            </>
+          )}
+        </DismissableDropdown>
+      ) : (
+        <button
+          type="button"
+          className={styles.iconButton}
+          aria-label={`Rename ${entityLabel}`}
+          onClick={startRename}
+        >
+          <Icon name="edit" />
+        </button>
+      )}
       {confirmingDelete ? (
         <>
           <button

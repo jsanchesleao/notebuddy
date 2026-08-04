@@ -4,6 +4,7 @@ import {
   filterNotes,
   noteMatchesFilter,
   noteMatchesSearch,
+  noteMatchesTags,
 } from './noteFilterMatch'
 import { createId } from '../ids'
 import type { CustomDataType, DataTypeRef, Note, PropertyValueData } from '../entities.types'
@@ -355,5 +356,30 @@ describe('noteMatchesSearch', () => {
   it('does not match when the query is not a substring of the title', () => {
     const note = buildNote({ title: 'Weekly Planning' })
     expect(noteMatchesSearch(note, 'budget')).toBe(false)
+  })
+})
+
+describe('noteMatchesTags', () => {
+  it('matches everything when no tags are selected', () => {
+    const note = buildNote({
+      metadata: { tags: [], createdAt: '', updatedAt: '', properties: {} },
+    })
+    expect(noteMatchesTags(note, [])).toBe(true)
+  })
+
+  it('requires every selected tag to be present (AND)', () => {
+    const note = buildNote({
+      metadata: { tags: ['work', 'urgent'], createdAt: '', updatedAt: '', properties: {} },
+    })
+    expect(noteMatchesTags(note, ['work'])).toBe(true)
+    expect(noteMatchesTags(note, ['work', 'urgent'])).toBe(true)
+    expect(noteMatchesTags(note, ['work', 'home'])).toBe(false)
+  })
+
+  it('does not match a note missing any selected tag', () => {
+    const note = buildNote({
+      metadata: { tags: ['work'], createdAt: '', updatedAt: '', properties: {} },
+    })
+    expect(noteMatchesTags(note, ['home'])).toBe(false)
   })
 })

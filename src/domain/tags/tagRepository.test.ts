@@ -1,13 +1,26 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../db/db'
 import { deleteTags, ensureTagColor, listTags, setTagColor } from './tagRepository'
 import { PILL_PALETTE } from './tagPalette'
 import { createId } from '../ids'
 import type { Note } from '../entities.types'
 
+const { notifyTagAdded, notifyTagRemoved } = vi.hoisted(() => ({
+  notifyTagAdded: vi.fn(),
+  notifyTagRemoved: vi.fn(),
+}))
+
+vi.mock('./tagSearchIndexClient', () => ({
+  notifyTagAdded,
+  notifyTagRemoved,
+  queryTagSuggestions: vi.fn(),
+}))
+
 beforeEach(async () => {
   await db.tags.clear()
   await db.notes.clear()
+  notifyTagAdded.mockClear()
+  notifyTagRemoved.mockClear()
 })
 
 function buildNote(tags: string[]): Note {
@@ -37,6 +50,15 @@ describe('tagRepository', () => {
     const second = await ensureTagColor('urgent')
     expect(second).toBe(first)
     expect(await listTags()).toHaveLength(1)
+  })
+
+  it('notifies the search index only when a tag is newly created, not on re-registration', async () => {
+    await ensureTagColor('urgent')
+    expect(notifyTagAdded).toHaveBeenCalledTimes(1)
+    expect(notifyTagAdded).toHaveBeenCalledWith('urgent')
+
+    await ensureTagColor('urgent')
+    expect(notifyTagAdded).toHaveBeenCalledTimes(1)
   })
 
   it('treats tag names as case-sensitive', async () => {
@@ -120,6 +142,17 @@ describe('tagRepository', () => {
       await ensureTagColor('urgent')
       await deleteTags(['does-not-exist'])
       expect((await listTags()).map((tag) => tag.name)).toEqual(['urgent'])
+    })
+
+    it('notifies the search index with every removed name', async () => {
+      await ensureTagColor('urgent')
+      await ensureTagColor('work')
+      notifyTagAdded.mockClear()
+
+      await deleteTags(['urgent', 'work'])
+
+      expect(notifyTagRemoved).toHaveBeenCalledTimes(1)
+      expect(notifyTagRemoved).toHaveBeenCalledWith(['urgent', 'work'])
     })
   })
 })

@@ -199,6 +199,15 @@ export async function setNoteCardImagePath(id: string, cardImagePath: string): P
   })
 }
 
+export async function clearNoteCardImagePath(id: string): Promise<void> {
+  const now = new Date().toISOString()
+  await db.notes.update(id, {
+    cardImagePath: undefined,
+    updatedAt: now,
+    'metadata.updatedAt': now,
+  })
+}
+
 export async function setNoteTags(id: string, tags: string[]): Promise<void> {
   const normalized = Array.from(
     new Set(tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0)),
