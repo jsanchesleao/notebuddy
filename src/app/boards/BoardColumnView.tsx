@@ -15,9 +15,16 @@ interface BoardColumnViewProps {
   column: BoardColumn
   notes: Note[]
   onNewCard: (column: BoardColumn) => void
+  tagColors: Map<string, string>
 }
 
-export function BoardColumnView({ boardId, column, notes, onNewCard }: BoardColumnViewProps) {
+export function BoardColumnView({
+  boardId,
+  column,
+  notes,
+  onNewCard,
+  tagColors,
+}: BoardColumnViewProps) {
   const { setNodeRef, isOver } = useDroppable({ id: `${COLUMN_DROP_PREFIX}${column.id}` })
 
   return (
@@ -33,7 +40,7 @@ export function BoardColumnView({ boardId, column, notes, onNewCard }: BoardColu
         >
           {notes.length === 0 && <p className={styles.empty}>No cards</p>}
           {notes.map((note) => (
-            <BoardCard key={note.id} note={note} />
+            <BoardCard key={note.id} note={note} tagColors={tagColors} />
           ))}
         </SortableContext>
       </div>

@@ -11,12 +11,14 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core'
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useBoardCards } from './useBoardCards'
 import { groupCardsByColumn } from './groupCardsByColumn'
 import { BoardColumnView, COLUMN_DROP_PREFIX } from './BoardColumnView'
 import { NoteCreateModal } from '../notes/NoteCreateModal'
 import { reorderColumns } from '../../domain/boards/boardRepository'
 import { setNoteProperty } from '../../domain/notes/noteRepository'
+import { listTags } from '../../domain/tags/tagRepository'
 import type { Board, BoardColumn, Note } from '../../domain/entities.types'
 import styles from './KanbanBoard.module.css'
 
@@ -30,6 +32,8 @@ export function KanbanBoard({ board, notes }: KanbanBoardProps) {
   const { cardOrder, moveCard } = useBoardCards(board.cardsDocId)
   const [activeDrag, setActiveDrag] = useState<{ type: 'card' | 'column'; id: string } | null>(null)
   const [newCardColumn, setNewCardColumn] = useState<BoardColumn | null>(null)
+  const allTags = useLiveQuery(() => listTags(), [])
+  const tagColors = new Map((allTags ?? []).map((tag) => [tag.name, tag.color]))
 
   const visibleColumns = board.columns.filter((column) => column.visible)
   const grouped = groupCardsByColumn(board.columns, cardOrder, notes)
@@ -111,6 +115,7 @@ export function KanbanBoard({ board, notes }: KanbanBoardProps) {
               column={column}
               notes={grouped.get(column.id) ?? []}
               onNewCard={setNewCardColumn}
+              tagColors={tagColors}
             />
           ))}
         </div>
