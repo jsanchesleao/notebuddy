@@ -10,6 +10,7 @@ import {
   findOtherStatusTypeReferences,
   getBoard,
   listBoardsByFolder,
+  moveBoard,
   renameBoard,
   reorderColumns,
   setColumnColor,
@@ -231,6 +232,17 @@ describe('boardRepository', () => {
     await db.boards.add(board)
     await renameBoard(board.id, 'New')
     expect((await db.boards.get(board.id))?.title).toBe('New')
+  })
+
+  it('moves a board to a different folder, including to/from root', async () => {
+    const board = makeBoard({ folderId: null })
+    await db.boards.add(board)
+
+    await moveBoard(board.id, 'folder-a')
+    expect((await db.boards.get(board.id))?.folderId).toBe('folder-a')
+
+    await moveBoard(board.id, null)
+    expect((await db.boards.get(board.id))?.folderId).toBeNull()
   })
 
   it('sets a column color', async () => {

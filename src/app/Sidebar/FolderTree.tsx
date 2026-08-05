@@ -11,6 +11,8 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core'
 import { listFolderAncestors, moveFolder } from '../../domain/folders/folderRepository'
+import { moveNotebook } from '../../domain/notebooks/notebookRepository'
+import { moveBoard } from '../../domain/boards/boardRepository'
 import { FolderTreeChildren } from './FolderTreeChildren'
 import { useExpandedFolders, useAutoExpandActiveFolder } from './useExpandedFolders'
 import styles from './FolderTree.module.css'
@@ -59,15 +61,26 @@ export function FolderTree({ activeFolderId, activeNotebookId, activeBoardId }: 
     const overId = event.over?.id
     if (overId === undefined) return
 
-    const folderId = String(event.active.id)
+    // Draggable ids are prefixed by entity kind (`folder:`/`notebook:`/`board:`) since all
+    // three are draggable sources in this tree but only folders are ever valid drop targets.
+    const [kind, id] = String(event.active.id).split(':') as [
+      'folder' | 'notebook' | 'board',
+      string,
+    ]
     const newParentFolderId = overId === ROOT_DROP_ID ? null : String(overId)
-    if (newParentFolderId === folderId) return
+    if (kind === 'folder' && newParentFolderId === id) return
 
     try {
-      await moveFolder(folderId, newParentFolderId)
+      if (kind === 'folder') {
+        await moveFolder(id, newParentFolderId)
+      } else if (kind === 'notebook') {
+        await moveNotebook(id, newParentFolderId)
+      } else {
+        await moveBoard(id, newParentFolderId)
+      }
       setMoveError(null)
     } catch (err) {
-      setMoveError(err instanceof Error ? err.message : 'Could not move folder')
+      setMoveError(err instanceof Error ? err.message : `Could not move ${kind}`)
     }
   }
 

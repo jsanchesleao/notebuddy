@@ -16,6 +16,12 @@ import { TagQuickFilter } from '../notes/filters/TagQuickFilter'
 import { ManageColumnsControl } from '../boards/ManageColumnsControl'
 import { HiddenColumnsControl } from '../boards/HiddenColumnsControl'
 import { KanbanBoard } from '../boards/KanbanBoard'
+import { useIsMobile } from '../useIsMobile'
+import {
+  StickyNotesSection,
+  type StickyNotesSectionHandle,
+} from '../stickyNotes/StickyNotesSection'
+import { useStickyNotesVisibility } from '../stickyNotes/useStickyNotesVisibility'
 import styles from './BoardPage.module.css'
 
 const EMPTY_FILTER: FilterState = { mode: 'and', blocks: [] }
@@ -24,6 +30,10 @@ export function BoardPage() {
   const { boardId } = useParams<{ boardId: string }>()
   const navigate = useNavigate()
   const isDeletingRef = useRef(false)
+  const stickyNotesRef = useRef<StickyNotesSectionHandle>(null)
+  const isMobile = useIsMobile()
+  const { visible: stickyNotesVisible, toggleVisibility: toggleStickyNotesVisibility } =
+    useStickyNotesVisibility(boardId ?? '')
 
   const board = useLiveQuery(
     () => (boardId ? getBoard(boardId).then((found) => found ?? null) : Promise.resolve(null)),
@@ -78,6 +88,11 @@ export function BoardPage() {
           await deleteBoard(board.id)
           navigate(backTo, { replace: true })
         }}
+        stickyNotes={{
+          visible: stickyNotesVisible,
+          onToggleVisibility: toggleStickyNotesVisibility,
+          onAdd: (kind) => stickyNotesRef.current?.addStickyNote(kind),
+        }}
       />
 
       <div className={styles.toolbar}>
@@ -91,6 +106,14 @@ export function BoardPage() {
       <div className={styles.board}>
         <KanbanBoard key={board.cardsDocId} board={board} notes={visibleNotes} />
       </div>
+      <StickyNotesSection
+        key={`stickies-${board.cardsDocId}`}
+        ref={stickyNotesRef}
+        docId={board.cardsDocId}
+        visible={stickyNotesVisible}
+        isMobile={isMobile}
+        onCloseGallery={toggleStickyNotesVisibility}
+      />
     </div>
   )
 }

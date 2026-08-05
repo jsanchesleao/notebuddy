@@ -1,13 +1,16 @@
 import { useState } from 'react'
-import { moveFolder } from '../../domain/folders/folderRepository'
 import { Modal } from '../../components/Modal/Modal'
 import { FolderPickerTree } from './FolderPickerTree'
 import styles from './FolderPickerModal.module.css'
 
 interface FolderPickerModalProps {
   onClose: () => void
-  folderId: string
+  entityLabel: string
   currentParentFolderId: string | null
+  onConfirm: (targetFolderId: string | null) => Promise<void>
+  // Folder-only: prevents picking the folder itself or one of its descendants as the new
+  // parent (would create a cycle). Notebooks/boards can't contain folders, so neither applies.
+  disabledId?: string
 }
 
 const TITLE_ID = 'folder-picker-modal-title'
@@ -16,18 +19,20 @@ const TITLE_ID = 'folder-picker-modal-title'
 // `open` prop) so its own state starts correct without needing an effect to reset it.
 export function FolderPickerModal({
   onClose,
-  folderId,
+  entityLabel,
   currentParentFolderId,
+  onConfirm,
+  disabledId,
 }: FolderPickerModalProps) {
   const [selectedId, setSelectedId] = useState<string | null>(currentParentFolderId)
   const [error, setError] = useState<string | null>(null)
 
   const handleConfirm = async () => {
     try {
-      await moveFolder(folderId, selectedId)
+      await onConfirm(selectedId)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not move folder')
+      setError(err instanceof Error ? err.message : `Could not move ${entityLabel}`)
     }
   }
 
@@ -35,7 +40,7 @@ export function FolderPickerModal({
     <Modal open onClose={onClose} labelledBy={TITLE_ID}>
       <div className={styles.panel}>
         <h2 id={TITLE_ID} className={styles.heading}>
-          Move folder
+          Move {entityLabel}
         </h2>
         <div className={styles.tree}>
           <button
@@ -48,7 +53,7 @@ export function FolderPickerModal({
           <FolderPickerTree
             parentFolderId={null}
             depth={0}
-            disabledId={folderId}
+            disabledId={disabledId ?? ''}
             disabledSubtree={false}
             selectedId={selectedId}
             onSelect={setSelectedId}

@@ -26,6 +26,11 @@ interface EntityPageHeaderProps {
     noteTypes: NoteType[]
     onChange: (id: string | null) => void
   }
+  stickyNotes?: {
+    visible: boolean
+    onToggleVisibility: () => void
+    onAdd: (kind: 'text' | 'sketch') => void
+  }
   // When provided, the edit icon opens a menu with "Rename" plus these actions instead of
   // jumping straight into inline rename — used by board notes to fold "Add image" etc. into
   // the same trigger rather than adding more standalone header buttons.
@@ -41,6 +46,7 @@ export function EntityPageHeader({
   wideMode,
   onToggleProperties,
   defaultNoteType,
+  stickyNotes,
   menuActions,
 }: EntityPageHeaderProps) {
   const [isRenaming, setIsRenaming] = useState(false)
@@ -126,6 +132,57 @@ export function EntityPageHeader({
         >
           <Icon name="properties" />
         </button>
+      )}
+      {stickyNotes && (
+        <>
+          <button
+            type="button"
+            className={styles.iconButton}
+            aria-label={stickyNotes.visible ? 'Hide sticky notes' : 'Show sticky notes'}
+            aria-pressed={stickyNotes.visible}
+            onClick={stickyNotes.onToggleVisibility}
+          >
+            <Icon name={stickyNotes.visible ? 'visible' : 'hidden'} />
+          </button>
+          <DismissableDropdown
+            trigger={({ toggle, open }) => (
+              <button
+                type="button"
+                className={styles.iconButton}
+                aria-label="Add sticky note"
+                aria-expanded={open}
+                onClick={toggle}
+              >
+                <Icon name="add" />
+              </button>
+            )}
+          >
+            {({ close }) => (
+              <>
+                <button
+                  type="button"
+                  className={dropdownStyles.menuItem}
+                  onClick={() => {
+                    stickyNotes.onAdd('text')
+                    close()
+                  }}
+                >
+                  <Icon name="text" size={14} /> Text note
+                </button>
+                <button
+                  type="button"
+                  className={dropdownStyles.menuItem}
+                  onClick={() => {
+                    stickyNotes.onAdd('sketch')
+                    close()
+                  }}
+                >
+                  <Icon name="sketch" size={14} /> Sketch note
+                </button>
+              </>
+            )}
+          </DismissableDropdown>
+        </>
       )}
       {menuActions && menuActions.length > 0 ? (
         <DismissableDropdown

@@ -42,6 +42,10 @@ export async function renameNotebook(id: string, title: string): Promise<void> {
   await db.notebooks.update(id, { title })
 }
 
+export async function moveNotebook(id: string, folderId: string | null): Promise<void> {
+  await db.notebooks.update(id, { folderId })
+}
+
 export async function setDefaultNoteTypeId(id: string, noteTypeId: string | null): Promise<void> {
   await db.notebooks.update(id, { defaultNoteTypeId: noteTypeId })
 }

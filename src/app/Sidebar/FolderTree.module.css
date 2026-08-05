@@ -21,7 +21,8 @@
   border-radius: var(--radius-sm);
 }
 
-.row:hover {
+.row:hover,
+.leafRow:hover {
   background: var(--color-bg-elevated);
 }
 
@@ -89,7 +90,8 @@
   opacity: 0;
 }
 
-.row:hover .gripButton {
+.row:hover .gripButton,
+.leafRow:hover .gripButton {
   opacity: 1;
 }
 

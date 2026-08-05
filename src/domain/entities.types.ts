@@ -1,3 +1,5 @@
+import type { Stroke } from './blocks/blocks.types'
+
 export interface Folder {
   id: string
   parentFolderId: string | null
@@ -104,6 +106,21 @@ export interface Note {
   blockDocId: string
   createdAt: string
   updatedAt: string
+}
+
+// Hex value drawn from PILL_PALETTE (src/domain/tags/tagPalette.ts).
+export type StickyColor = string
+
+// No ownerId: unlike spec.md's literal shape, a StickyNote lives inside its owning
+// entity's own Y.Doc (Note.blockDocId / Board.cardsDocId / Notebook.stickyNotesDocId), which
+// only ever holds one owner's sticky notes — an ownerId field would be redundant dead data,
+// same reasoning as a block not carrying a redundant noteId.
+export interface StickyNote {
+  id: string
+  x: number
+  y: number
+  color: StickyColor
+  content: { kind: 'text'; text: string } | { kind: 'sketch'; strokes: Stroke[] }
 }
 
 export interface Setting {

@@ -5,6 +5,7 @@ import {
   deleteNotebook,
   getNotebook,
   listNotebooksByFolder,
+  moveNotebook,
   renameNotebook,
   setDefaultNoteTypeId,
 } from './notebookRepository'
@@ -46,6 +47,18 @@ describe('notebookRepository', () => {
     const notebook = await createNotebook({ folderId: null, title: 'Old' })
     await renameNotebook(notebook.id, 'New')
     expect((await getNotebook(notebook.id))?.title).toBe('New')
+  })
+
+  it('moves a notebook to a different folder, including to/from root', async () => {
+    const folderA = await createFolder({ parentFolderId: null, title: 'A' })
+    const folderB = await createFolder({ parentFolderId: null, title: 'B' })
+    const notebook = await createNotebook({ folderId: folderA.id, title: 'Notebook' })
+
+    await moveNotebook(notebook.id, folderB.id)
+    expect((await getNotebook(notebook.id))?.folderId).toBe(folderB.id)
+
+    await moveNotebook(notebook.id, null)
+    expect((await getNotebook(notebook.id))?.folderId).toBeNull()
   })
 
   it('sets and clears the default note type', async () => {

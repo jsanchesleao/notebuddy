@@ -33,7 +33,7 @@ export function FolderTreeNode({
     setNodeRef: setDragRef,
     isDragging,
   } = useDraggable({
-    id: folder.id,
+    id: `folder:${folder.id}`,
   })
   const { setNodeRef: setDropRef, isOver } = useDroppable({ id: folder.id })
 

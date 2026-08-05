@@ -98,6 +98,10 @@ export async function renameBoard(id: string, title: string): Promise<void> {
   await db.boards.update(id, { title })
 }
 
+export async function moveBoard(id: string, folderId: string | null): Promise<void> {
+  await db.boards.update(id, { folderId })
+}
+
 export async function setColumnColor(
   boardId: string,
   columnId: string,

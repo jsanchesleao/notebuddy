@@ -16,6 +16,12 @@ import { PropertiesPanel } from '../notes/PropertiesPanel/PropertiesPanel'
 import { BoardCardDetails } from '../boards/BoardCardDetails'
 import { useOpfsImageUpload } from '../notes/useOpfsImageUpload'
 import { getOpfsDriver } from '../../lib/opfs/opfsDriver'
+import { useIsMobile } from '../useIsMobile'
+import {
+  StickyNotesSection,
+  type StickyNotesSectionHandle,
+} from '../stickyNotes/StickyNotesSection'
+import { useStickyNotesVisibility } from '../stickyNotes/useStickyNotesVisibility'
 import { useWideMode } from './useWideMode'
 import styles from './NotePage.module.css'
 
@@ -26,6 +32,8 @@ export function NotePage() {
   const { isWide, toggleWide } = useWideMode()
   const [propertiesOpen, setPropertiesOpen] = useState(false)
   const cardImageInputRef = useRef<HTMLInputElement>(null)
+  const stickyNotesRef = useRef<StickyNotesSectionHandle>(null)
+  const isMobile = useIsMobile()
 
   const note = useLiveQuery(
     () => (noteId ? getNote(noteId).then((found) => found ?? null) : Promise.resolve(null)),
@@ -37,6 +45,9 @@ export function NotePage() {
     currentPath: note?.cardImagePath,
     onUploaded: (path) => note && setNoteCardImagePath(note.id, path),
   })
+
+  const { visible: stickyNotesVisible, toggleVisibility: toggleStickyNotesVisibility } =
+    useStickyNotesVisibility(note?.id ?? '')
 
   const notFound = note === null || !noteId
 
@@ -96,6 +107,11 @@ export function NotePage() {
         }}
         wideMode={{ isWide, onToggle: toggleWide }}
         onToggleProperties={() => setPropertiesOpen((open) => !open)}
+        stickyNotes={{
+          visible: stickyNotesVisible,
+          onToggleVisibility: toggleStickyNotesVisibility,
+          onAdd: (kind) => stickyNotesRef.current?.addStickyNote(kind),
+        }}
         menuActions={cardImageMenuActions}
       />
       <input
@@ -112,6 +128,14 @@ export function NotePage() {
       {note.boardId && <BoardCardDetails note={note} />}
       <NoteBlockList key={note.blockDocId} noteId={note.id} blockDocId={note.blockDocId} />
       <PropertiesPanel note={note} open={propertiesOpen} onClose={() => setPropertiesOpen(false)} />
+      <StickyNotesSection
+        key={`stickies-${note.blockDocId}`}
+        ref={stickyNotesRef}
+        docId={note.blockDocId}
+        visible={stickyNotesVisible}
+        isMobile={isMobile}
+        onCloseGallery={toggleStickyNotesVisibility}
+      />
     </div>
   )
 }

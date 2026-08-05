@@ -19,6 +19,12 @@ import { Breadcrumb } from '../common/Breadcrumb'
 import { buildNotebookCrumbs } from '../common/breadcrumbs'
 import { NoteFilter } from '../notes/filters/NoteFilter'
 import { NoteQuickSearch } from '../notes/filters/NoteQuickSearch'
+import { useIsMobile } from '../useIsMobile'
+import {
+  StickyNotesSection,
+  type StickyNotesSectionHandle,
+} from '../stickyNotes/StickyNotesSection'
+import { useStickyNotesVisibility } from '../stickyNotes/useStickyNotesVisibility'
 import styles from './NotebookPage.module.css'
 
 const EMPTY_FILTER: FilterState = { mode: 'and', blocks: [] }
@@ -27,6 +33,10 @@ export function NotebookPage() {
   const { notebookId } = useParams<{ notebookId: string }>()
   const navigate = useNavigate()
   const isDeletingRef = useRef(false)
+  const stickyNotesRef = useRef<StickyNotesSectionHandle>(null)
+  const isMobile = useIsMobile()
+  const { visible: stickyNotesVisible, toggleVisibility: toggleStickyNotesVisibility } =
+    useStickyNotesVisibility(notebookId ?? '')
 
   const notebook = useLiveQuery(
     () =>
@@ -83,6 +93,11 @@ export function NotebookPage() {
           noteTypes: noteTypes ?? [],
           onChange: (id) => setDefaultNoteTypeId(notebook.id, id),
         }}
+        stickyNotes={{
+          visible: stickyNotesVisible,
+          onToggleVisibility: toggleStickyNotesVisibility,
+          onAdd: (kind) => stickyNotesRef.current?.addStickyNote(kind),
+        }}
       />
 
       <section>
@@ -111,6 +126,14 @@ export function NotebookPage() {
           ))}
         </ul>
       </section>
+      <StickyNotesSection
+        key={`stickies-${notebook.stickyNotesDocId}`}
+        ref={stickyNotesRef}
+        docId={notebook.stickyNotesDocId}
+        visible={stickyNotesVisible}
+        isMobile={isMobile}
+        onCloseGallery={toggleStickyNotesVisibility}
+      />
     </div>
   )
 }
