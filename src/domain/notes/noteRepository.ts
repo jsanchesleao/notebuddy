@@ -118,7 +118,7 @@ export async function createNote(input: CreateNoteInput): Promise<Note> {
 
   if (placement) {
     const cardsDoc = await loadYDoc(placement.board.cardsDocId)
-    await appendCard(placement.board.cardsDocId, cardsDoc, note.id, placement.column.id)
+    await appendCard(placement.board.cardsDocId, cardsDoc, note.id)
   }
 
   return note

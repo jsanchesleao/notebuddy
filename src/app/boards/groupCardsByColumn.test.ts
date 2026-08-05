@@ -3,7 +3,7 @@ import { groupCardsByColumn } from './groupCardsByColumn'
 import { createId } from '../../domain/ids'
 import type { BoardColumn, Note } from '../../domain/entities.types'
 
-function makeNote(overrides: Partial<Note> = {}): Note {
+function makeNote(overrides: Partial<Note> = {}, statusValue?: string): Note {
   const now = new Date().toISOString()
   return {
     id: createId(),
@@ -11,7 +11,14 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     boardId: 'board-1',
     noteTypeId: null,
     title: 'Card',
-    metadata: { tags: [], createdAt: now, updatedAt: now, properties: {} },
+    metadata: {
+      tags: [],
+      createdAt: now,
+      updatedAt: now,
+      properties: statusValue
+        ? { status: { typeRef: { kind: 'customTypeRef', customTypeId: 'x' }, value: statusValue } }
+        : {},
+    },
     blockDocId: createId(),
     createdAt: now,
     updatedAt: now,
@@ -24,22 +31,14 @@ function makeColumn(overrides: Partial<BoardColumn> = {}): BoardColumn {
 }
 
 describe('groupCardsByColumn', () => {
-  it('groups notes into columns following cardOrder position', () => {
+  it('groups notes into their status-matching column, ordered by cardOrder', () => {
     const todo = makeColumn({ name: 'Todo', tag: 'todo' })
     const done = makeColumn({ name: 'Done', tag: 'done' })
-    const a = makeNote({ title: 'A' })
-    const b = makeNote({ title: 'B' })
-    const c = makeNote({ title: 'C' })
+    const a = makeNote({ title: 'A' }, 'todo')
+    const b = makeNote({ title: 'B' }, 'done')
+    const c = makeNote({ title: 'C' }, 'todo')
 
-    const grouped = groupCardsByColumn(
-      [todo, done],
-      [
-        { noteId: a.id, columnId: todo.id },
-        { noteId: b.id, columnId: done.id },
-        { noteId: c.id, columnId: todo.id },
-      ],
-      [a, b, c],
-    )
+    const grouped = groupCardsByColumn([todo, done], [a.id, c.id, b.id], [a, b, c])
 
     expect(grouped.get(todo.id)?.map((n) => n.id)).toEqual([a.id, c.id])
     expect(grouped.get(done.id)?.map((n) => n.id)).toEqual([b.id])
@@ -48,22 +47,24 @@ describe('groupCardsByColumn', () => {
   it('appends a note missing from cardOrder to the column matching its status value', () => {
     const todo = makeColumn({ name: 'Todo', tag: 'todo' })
     const done = makeColumn({ name: 'Done', tag: 'done' })
-    const orphan = makeNote({
-      title: 'Orphan',
-      metadata: {
-        tags: [],
-        createdAt: '',
-        updatedAt: '',
-        properties: {
-          status: { typeRef: { kind: 'customTypeRef', customTypeId: 'x' }, value: 'done' },
-        },
-      },
-    })
+    const orphan = makeNote({ title: 'Orphan' }, 'done')
 
     const grouped = groupCardsByColumn([todo, done], [], [orphan])
 
     expect(grouped.get(todo.id)).toEqual([])
     expect(grouped.get(done.id)?.map((n) => n.id)).toEqual([orphan.id])
+  })
+
+  it("reflects a note's current status even when cardOrder hasn't changed", () => {
+    const todo = makeColumn({ name: 'Todo', tag: 'todo' })
+    const done = makeColumn({ name: 'Done', tag: 'done' })
+    const note = makeNote({ title: 'Moved' }, 'done')
+
+    // cardOrder still lists the note — status alone determines its column now.
+    const grouped = groupCardsByColumn([todo, done], [note.id], [note])
+
+    expect(grouped.get(todo.id)).toEqual([])
+    expect(grouped.get(done.id)?.map((n) => n.id)).toEqual([note.id])
   })
 
   it('drops a note whose status matches no column', () => {
@@ -77,7 +78,7 @@ describe('groupCardsByColumn', () => {
 
   it('ignores a cardOrder entry whose note no longer exists', () => {
     const todo = makeColumn({ name: 'Todo', tag: 'todo' })
-    const grouped = groupCardsByColumn([todo], [{ noteId: 'ghost', columnId: todo.id }], [])
+    const grouped = groupCardsByColumn([todo], ['ghost'], [])
 
     expect(grouped.get(todo.id)).toEqual([])
   })

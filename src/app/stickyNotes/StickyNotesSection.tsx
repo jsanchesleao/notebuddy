@@ -13,6 +13,7 @@ interface StickyNotesSectionProps {
   visible: boolean
   isMobile: boolean
   onCloseGallery: () => void
+  scrollOffsetX?: number
   ref?: Ref<StickyNotesSectionHandle>
 }
 
@@ -27,6 +28,7 @@ export function StickyNotesSection({
   visible,
   isMobile,
   onCloseGallery,
+  scrollOffsetX,
   ref,
 }: StickyNotesSectionProps) {
   const {
@@ -70,6 +72,7 @@ export function StickyNotesSection({
       onDelete={deleteStickyNote}
       onMove={moveStickyNote}
       onBringToFront={bringStickyNoteToFront}
+      scrollOffsetX={scrollOffsetX}
     />
   )
 }

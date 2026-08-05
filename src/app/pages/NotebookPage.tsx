@@ -10,7 +10,7 @@ import {
 import { listNoteTypes } from '../../domain/noteTypes/noteTypeRepository'
 import { listCustomDataTypes } from '../../domain/dataTypes/dataTypeRepository'
 import { deleteNote, listNotesByNotebook, renameNote } from '../../domain/notes/noteRepository'
-import { filterNotes, noteMatchesSearch } from '../../domain/notes/noteFilterMatch'
+import { filterNotes, noteMatchesSearch, noteMatchesTags } from '../../domain/notes/noteFilterMatch'
 import type { FilterState } from '../../domain/notes/noteFilter.types'
 import { listTags } from '../../domain/tags/tagRepository'
 import { EntityPageHeader } from '../common/EntityPageHeader'
@@ -19,6 +19,7 @@ import { Breadcrumb } from '../common/Breadcrumb'
 import { buildNotebookCrumbs } from '../common/breadcrumbs'
 import { NoteFilter } from '../notes/filters/NoteFilter'
 import { NoteQuickSearch } from '../notes/filters/NoteQuickSearch'
+import { TagQuickFilter } from '../notes/filters/TagQuickFilter'
 import { useIsMobile } from '../useIsMobile'
 import {
   StickyNotesSection,
@@ -53,9 +54,12 @@ export function NotebookPage() {
   const tagColors = new Map((tags ?? []).map((tag) => [tag.name, tag.color]))
   const [filterState, setFilterState] = useState<FilterState>(EMPTY_FILTER)
   const [search, setSearch] = useState('')
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
   const resolveCustomType = (id: string) => customTypes?.find((type) => type.id === id)
   const filteredNotes = filterNotes(notes ?? [], filterState, resolveCustomType)
-  const visibleNotes = filteredNotes.filter((note) => noteMatchesSearch(note, search))
+  const visibleNotes = filteredNotes.filter(
+    (note) => noteMatchesSearch(note, search) && noteMatchesTags(note, selectedTags),
+  )
 
   const notFound = notebook === null || !notebookId
 
@@ -105,6 +109,7 @@ export function NotebookPage() {
         <div className={styles.toolbar}>
           <NoteFilter notes={notes ?? []} value={filterState} onChange={setFilterState} />
           <NoteQuickSearch value={search} onChange={setSearch} />
+          <TagQuickFilter value={selectedTags} onChange={setSelectedTags} tags={tags ?? []} />
         </div>
         {notes?.length === 0 && <p className={styles.empty}>No notes yet</p>}
         {notes && notes.length > 0 && visibleNotes.length === 0 && (

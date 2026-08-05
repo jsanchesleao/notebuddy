@@ -84,6 +84,34 @@ describe('NotebookPage', () => {
     expect(screen.getByRole('link', { name: 'Grocery List' })).toBeInTheDocument()
   })
 
+  it('narrows the notes list to notes matching the selected tag filter', async () => {
+    const notebook = await createNotebook({ folderId: null, title: 'Journal' })
+    const tagged = await createNote({ notebookId: notebook.id, title: 'Tagged note' })
+    await setNoteTags(tagged.id, ['work'])
+    await createNote({ notebookId: notebook.id, title: 'Untagged note' })
+    const user = userEvent.setup()
+
+    render(
+      <MemoryRouter initialEntries={[`/notebooks/${notebook.id}`]}>
+        <AppRoutes />
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByRole('link', { name: 'Tagged note' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Untagged note' })).toBeInTheDocument()
+
+    await user.type(screen.getByRole('textbox', { name: 'Filter notes by tag' }), 'work')
+    await user.click(screen.getByRole('menuitem', { name: 'work' }))
+
+    expect(screen.getByRole('link', { name: 'Tagged note' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Untagged note' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Remove tag filter work' }))
+
+    expect(screen.getByRole('link', { name: 'Tagged note' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Untagged note' })).toBeInTheDocument()
+  })
+
   it("shows each note's tags as pills next to its title", async () => {
     const notebook = await createNotebook({ folderId: null, title: 'Journal' })
     const tagged = await createNote({ notebookId: notebook.id, title: 'Tagged note' })

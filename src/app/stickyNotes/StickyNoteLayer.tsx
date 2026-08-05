@@ -18,12 +18,18 @@ interface StickyNoteLayerProps {
   onDelete: (stickyNoteId: string) => void | Promise<void>
   onMove: (stickyNoteId: string, x: number, y: number) => void | Promise<void>
   onBringToFront: (stickyNoteId: string) => void | Promise<void>
+  scrollOffsetX?: number
 }
 
 // Position is anchored to the page's own content flow (this element is a plain
 // `position: absolute; inset: 0` child of the page wrapper, not the viewport), so notes
 // scroll along with nearby content. Dragging is unconstrained — no restrictToParentElement
 // modifier — event.delta is added directly to the stored x/y.
+//
+// Vertical scroll tethering falls out of that for free (the page wrapper is the thing that
+// scrolls). Horizontal scroll on a board happens in a nested container instead (KanbanBoard's
+// .columns), so scrollOffsetX is passed down from BoardPage and applied as a translateX
+// compensation to keep notes visually tethered to the board content on that axis too.
 export function StickyNoteLayer({
   stickyNotes,
   onChangeContent,
@@ -31,6 +37,7 @@ export function StickyNoteLayer({
   onDelete,
   onMove,
   onBringToFront,
+  scrollOffsetX = 0,
 }: StickyNoteLayerProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -49,7 +56,7 @@ export function StickyNoteLayer({
   }
 
   return (
-    <div className={styles.layer}>
+    <div className={styles.layer} style={{ transform: `translateX(${-scrollOffsetX}px)` }}>
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         {stickyNotes.map((stickyNote) => (
           <StickyNoteItem

@@ -25,10 +25,11 @@ import styles from './KanbanBoard.module.css'
 interface KanbanBoardProps {
   board: Board
   notes: Note[]
+  onScrollLeftChange?: (scrollLeft: number) => void
 }
 
 // Callers must remount (key={board.cardsDocId}) on board switch — see useBoardCards.
-export function KanbanBoard({ board, notes }: KanbanBoardProps) {
+export function KanbanBoard({ board, notes, onScrollLeftChange }: KanbanBoardProps) {
   const { cardOrder, moveCard } = useBoardCards(board.cardsDocId)
   const [activeDrag, setActiveDrag] = useState<{ type: 'card' | 'column'; id: string } | null>(null)
   const [newCardColumn, setNewCardColumn] = useState<BoardColumn | null>(null)
@@ -78,8 +79,9 @@ export function KanbanBoard({ board, notes }: KanbanBoardProps) {
     const targetNotes = grouped.get(targetColumnId) ?? []
     const overIndex = targetNotes.findIndex((note) => note.id === overId)
     const insertIndex = overIndex === -1 ? targetNotes.length : overIndex
+    const beforeNoteId = targetNotes[insertIndex]?.id ?? null
 
-    await moveCard(activeId, targetColumnId, insertIndex)
+    await moveCard(activeId, beforeNoteId)
 
     const draggedNote = notes.find((note) => note.id === activeId)
     const currentStatus = draggedNote?.metadata.properties.status
@@ -107,7 +109,10 @@ export function KanbanBoard({ board, notes }: KanbanBoardProps) {
         items={visibleColumns.map((column) => column.id)}
         strategy={horizontalListSortingStrategy}
       >
-        <div className={styles.columns}>
+        <div
+          className={styles.columns}
+          onScroll={(event) => onScrollLeftChange?.(event.currentTarget.scrollLeft)}
+        >
           {visibleColumns.map((column) => (
             <BoardColumnView
               key={column.id}

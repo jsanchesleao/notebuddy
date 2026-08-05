@@ -5,20 +5,19 @@ import {
   loadBoardCards,
   moveCard as moveCardInDoc,
   snapshotCardOrder,
-  type CardOrderEntry,
 } from '../../domain/boards/boardCardsStore'
 
 export interface UseBoardCardsResult {
-  cardOrder: CardOrderEntry[]
+  cardOrder: string[]
   isLoading: boolean
-  moveCard: (noteId: string, toColumnId: string, toIndex: number) => Promise<void>
+  moveCard: (noteId: string, beforeNoteId: string | null) => Promise<void>
 }
 
 // Callers must remount (e.g. `key={cardsDocId}`) when `cardsDocId` changes to a different
 // board's doc — mirrors useNoteBlocks, which has the same requirement for note docs.
 export function useBoardCards(cardsDocId: string): UseBoardCardsResult {
   const [doc, setDoc] = useState<Y.Doc | null>(null)
-  const [cardOrder, setCardOrder] = useState<CardOrderEntry[]>([])
+  const [cardOrder, setCardOrder] = useState<string[]>([])
   const docRef = useRef<Y.Doc | null>(null)
 
   useEffect(() => {
@@ -49,9 +48,9 @@ export function useBoardCards(cardsDocId: string): UseBoardCardsResult {
   }, [doc])
 
   const moveCard = useCallback(
-    async (noteId: string, toColumnId: string, toIndex: number) => {
+    async (noteId: string, beforeNoteId: string | null) => {
       if (!docRef.current) return
-      await moveCardInDoc(cardsDocId, docRef.current, noteId, toColumnId, toIndex)
+      await moveCardInDoc(cardsDocId, docRef.current, noteId, beforeNoteId)
     },
     [cardsDocId],
   )

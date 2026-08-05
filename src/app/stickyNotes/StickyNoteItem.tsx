@@ -42,7 +42,7 @@ export function StickyNoteItem({
         {
           left: `${stickyNote.x}px`,
           top: `${stickyNote.y}px`,
-          background: stickyNote.color,
+          backgroundColor: stickyNote.color,
           '--drag-x': transform ? `${transform.x}px` : '0px',
           '--drag-y': transform ? `${transform.y}px` : '0px',
           '--tilt-deg': `${tiltDeg}deg`,

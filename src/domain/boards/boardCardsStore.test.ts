@@ -13,71 +13,81 @@ describe('boardCardsStore', () => {
     const { doc } = await loadBoardCards(docId)
     const noteId = createId()
 
-    await appendCard(docId, doc, noteId, 'col-a')
+    await appendCard(docId, doc, noteId)
 
     const reloaded = await loadBoardCards(docId)
-    expect(reloaded.cardOrder).toEqual([{ noteId, columnId: 'col-a' }])
+    expect(reloaded.cardOrder).toEqual([noteId])
   })
 
-  it('appends multiple cards to the same column in order', async () => {
+  it('appends multiple cards in order', async () => {
     const docId = createId()
     const { doc } = await loadBoardCards(docId)
     const first = createId()
     const second = createId()
 
-    await appendCard(docId, doc, first, 'col-a')
-    await appendCard(docId, doc, second, 'col-a')
+    await appendCard(docId, doc, first)
+    await appendCard(docId, doc, second)
 
     const reloaded = await loadBoardCards(docId)
-    expect(reloaded.cardOrder.map((c) => c.noteId)).toEqual([first, second])
+    expect(reloaded.cardOrder).toEqual([first, second])
   })
 
-  it('reorders a card within the same column', async () => {
+  it('moves a card to the end when beforeNoteId is null', async () => {
     const docId = createId()
     const { doc } = await loadBoardCards(docId)
     const first = createId()
     const second = createId()
     const third = createId()
-    await appendCard(docId, doc, first, 'col-a')
-    await appendCard(docId, doc, second, 'col-a')
-    await appendCard(docId, doc, third, 'col-a')
+    await appendCard(docId, doc, first)
+    await appendCard(docId, doc, second)
+    await appendCard(docId, doc, third)
 
-    // move first card to the last position within col-a
-    await moveCard(docId, doc, first, 'col-a', 2)
+    await moveCard(docId, doc, first, null)
 
     const reloaded = await loadBoardCards(docId)
-    expect(reloaded.cardOrder.map((c) => c.noteId)).toEqual([second, third, first])
+    expect(reloaded.cardOrder).toEqual([second, third, first])
   })
 
-  it('moves a card to a different column at a given position', async () => {
+  it('moves a card so it sits immediately before another card', async () => {
     const docId = createId()
     const { doc } = await loadBoardCards(docId)
     const a1 = createId()
     const b1 = createId()
     const b2 = createId()
-    await appendCard(docId, doc, a1, 'col-a')
-    await appendCard(docId, doc, b1, 'col-b')
-    await appendCard(docId, doc, b2, 'col-b')
+    await appendCard(docId, doc, a1)
+    await appendCard(docId, doc, b1)
+    await appendCard(docId, doc, b2)
 
-    await moveCard(docId, doc, a1, 'col-b', 1)
+    await moveCard(docId, doc, a1, b2)
 
     const reloaded = await loadBoardCards(docId)
-    const colB = reloaded.cardOrder.filter((c) => c.columnId === 'col-b').map((c) => c.noteId)
-    expect(colB).toEqual([b1, a1, b2])
-    expect(reloaded.cardOrder.find((c) => c.noteId === a1)?.columnId).toBe('col-b')
+    expect(reloaded.cardOrder).toEqual([b1, a1, b2])
   })
 
-  it('appends a card to the end of a column when toIndex is past its current count', async () => {
+  it('appends a not-yet-present card to the end when beforeNoteId is null', async () => {
     const docId = createId()
     const { doc } = await loadBoardCards(docId)
     const a1 = createId()
     const b1 = createId()
-    await appendCard(docId, doc, a1, 'col-a')
+    await appendCard(docId, doc, a1)
 
-    await moveCard(docId, doc, b1, 'col-a', 99)
+    await moveCard(docId, doc, b1, null)
 
     const reloaded = await loadBoardCards(docId)
-    expect(reloaded.cardOrder.map((c) => c.noteId)).toEqual([a1, b1])
+    expect(reloaded.cardOrder).toEqual([a1, b1])
+  })
+
+  it('falls back to the end when beforeNoteId is no longer present', async () => {
+    const docId = createId()
+    const { doc } = await loadBoardCards(docId)
+    const a1 = createId()
+    const b1 = createId()
+    await appendCard(docId, doc, a1)
+
+    await moveCard(docId, doc, b1, 'missing-note-id')
+
+    const reloaded = await loadBoardCards(docId)
+    expect(reloaded.cardOrder).toEqual([a1, b1])
   })
 
   it('removes a card and survives a fresh reload', async () => {
@@ -85,24 +95,24 @@ describe('boardCardsStore', () => {
     const { doc } = await loadBoardCards(docId)
     const first = createId()
     const second = createId()
-    await appendCard(docId, doc, first, 'col-a')
-    await appendCard(docId, doc, second, 'col-a')
+    await appendCard(docId, doc, first)
+    await appendCard(docId, doc, second)
 
     await removeCard(docId, doc, first)
 
     const reloaded = await loadBoardCards(docId)
-    expect(reloaded.cardOrder).toEqual([{ noteId: second, columnId: 'col-a' }])
+    expect(reloaded.cardOrder).toEqual([second])
   })
 
   it('is a no-op removing a card that is not present', async () => {
     const docId = createId()
     const { doc } = await loadBoardCards(docId)
     const first = createId()
-    await appendCard(docId, doc, first, 'col-a')
+    await appendCard(docId, doc, first)
 
     await removeCard(docId, doc, createId())
 
     const reloaded = await loadBoardCards(docId)
-    expect(reloaded.cardOrder.map((c) => c.noteId)).toEqual([first])
+    expect(reloaded.cardOrder).toEqual([first])
   })
 })

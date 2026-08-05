@@ -23,12 +23,12 @@ describe('useBoardCards', () => {
     const cardsDocId = createId()
     const noteId = createId()
     const doc = await loadYDoc(cardsDocId)
-    await appendCard(cardsDocId, doc, noteId, 'col-a')
+    await appendCard(cardsDocId, doc, noteId)
 
     const { result } = renderHook(() => useBoardCards(cardsDocId))
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
-    expect(result.current.cardOrder).toEqual([{ noteId, columnId: 'col-a' }])
+    expect(result.current.cardOrder).toEqual([noteId])
   })
 
   it('reflects a move reactively', async () => {
@@ -36,32 +36,34 @@ describe('useBoardCards', () => {
     const first = createId()
     const second = createId()
     const seedDoc = await loadYDoc(cardsDocId)
-    await appendCard(cardsDocId, seedDoc, first, 'col-a')
-    await appendCard(cardsDocId, seedDoc, second, 'col-a')
+    await appendCard(cardsDocId, seedDoc, first)
+    await appendCard(cardsDocId, seedDoc, second)
 
     const { result } = renderHook(() => useBoardCards(cardsDocId))
     await waitFor(() => expect(result.current.cardOrder).toHaveLength(2))
 
     await act(async () => {
-      await result.current.moveCard(first, 'col-a', 1)
+      await result.current.moveCard(first, null)
     })
 
-    expect(result.current.cardOrder.map((c) => c.noteId)).toEqual([second, first])
+    expect(result.current.cardOrder).toEqual([second, first])
   })
 
-  it('moves a card into a different column', async () => {
+  it('moves a card so it sits immediately before another card', async () => {
     const cardsDocId = createId()
-    const noteId = createId()
+    const a = createId()
+    const b = createId()
     const seedDoc = await loadYDoc(cardsDocId)
-    await appendCard(cardsDocId, seedDoc, noteId, 'col-a')
+    await appendCard(cardsDocId, seedDoc, a)
+    await appendCard(cardsDocId, seedDoc, b)
 
     const { result } = renderHook(() => useBoardCards(cardsDocId))
-    await waitFor(() => expect(result.current.cardOrder).toHaveLength(1))
+    await waitFor(() => expect(result.current.cardOrder).toHaveLength(2))
 
     await act(async () => {
-      await result.current.moveCard(noteId, 'col-b', 0)
+      await result.current.moveCard(b, a)
     })
 
-    expect(result.current.cardOrder).toEqual([{ noteId, columnId: 'col-b' }])
+    expect(result.current.cardOrder).toEqual([b, a])
   })
 })

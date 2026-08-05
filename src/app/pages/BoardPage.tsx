@@ -34,6 +34,7 @@ export function BoardPage() {
   const isMobile = useIsMobile()
   const { visible: stickyNotesVisible, toggleVisibility: toggleStickyNotesVisibility } =
     useStickyNotesVisibility(boardId ?? '')
+  const [boardScrollLeft, setBoardScrollLeft] = useState(0)
 
   const board = useLiveQuery(
     () => (boardId ? getBoard(boardId).then((found) => found ?? null) : Promise.resolve(null)),
@@ -104,16 +105,22 @@ export function BoardPage() {
       </div>
 
       <div className={styles.board}>
-        <KanbanBoard key={board.cardsDocId} board={board} notes={visibleNotes} />
+        <KanbanBoard
+          key={board.cardsDocId}
+          board={board}
+          notes={visibleNotes}
+          onScrollLeftChange={setBoardScrollLeft}
+        />
+        <StickyNotesSection
+          key={`stickies-${board.cardsDocId}`}
+          ref={stickyNotesRef}
+          docId={board.cardsDocId}
+          visible={stickyNotesVisible}
+          isMobile={isMobile}
+          onCloseGallery={toggleStickyNotesVisibility}
+          scrollOffsetX={boardScrollLeft}
+        />
       </div>
-      <StickyNotesSection
-        key={`stickies-${board.cardsDocId}`}
-        ref={stickyNotesRef}
-        docId={board.cardsDocId}
-        visible={stickyNotesVisible}
-        isMobile={isMobile}
-        onCloseGallery={toggleStickyNotesVisibility}
-      />
     </div>
   )
 }

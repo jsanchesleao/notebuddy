@@ -259,7 +259,7 @@ describe('noteRepository', () => {
       const note = await createNote({ notebookId: null, boardId: board.id, title: 'Card' })
 
       const { cardOrder } = await loadBoardCards(board.cardsDocId)
-      expect(cardOrder).toEqual([{ noteId: note.id, columnId: board.columns[0].id }])
+      expect(cardOrder).toEqual([note.id])
     })
 
     it('skips status/card-order for a board with no columns', async () => {
