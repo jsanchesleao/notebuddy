@@ -14,6 +14,7 @@ import styles from './StickyNoteLayer.module.css'
 interface StickyNoteLayerProps {
   stickyNotes: StickyNote[]
   onChangeContent: (stickyNoteId: string, content: StickyNote['content']) => void | Promise<void>
+  onChangeColor: (stickyNoteId: string, color: string) => void | Promise<void>
   onDelete: (stickyNoteId: string) => void | Promise<void>
   onMove: (stickyNoteId: string, x: number, y: number) => void | Promise<void>
   onBringToFront: (stickyNoteId: string) => void | Promise<void>
@@ -26,6 +27,7 @@ interface StickyNoteLayerProps {
 export function StickyNoteLayer({
   stickyNotes,
   onChangeContent,
+  onChangeColor,
   onDelete,
   onMove,
   onBringToFront,
@@ -54,7 +56,9 @@ export function StickyNoteLayer({
             key={stickyNote.id}
             stickyNote={stickyNote}
             onChangeContent={(content) => onChangeContent(stickyNote.id, content)}
+            onChangeColor={(color) => onChangeColor(stickyNote.id, color)}
             onDelete={() => onDelete(stickyNote.id)}
+            onBringToFront={() => onBringToFront(stickyNote.id)}
           />
         ))}
       </DndContext>

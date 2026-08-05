@@ -163,6 +163,7 @@ export function EntityPageHeader({
                   type="button"
                   className={dropdownStyles.menuItem}
                   onClick={() => {
+                    if (!stickyNotes.visible) stickyNotes.onToggleVisibility()
                     stickyNotes.onAdd('text')
                     close()
                   }}
@@ -173,6 +174,7 @@ export function EntityPageHeader({
                   type="button"
                   className={dropdownStyles.menuItem}
                   onClick={() => {
+                    if (!stickyNotes.visible) stickyNotes.onToggleVisibility()
                     stickyNotes.onAdd('sketch')
                     close()
                   }}

@@ -6,8 +6,16 @@
   min-height: 140px;
   padding: var(--space-2);
   border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-md);
+  transform: translate3d(var(--drag-x, 0px), var(--drag-y, 0px), 0) rotate(var(--tilt-deg, 0deg));
+  transition: box-shadow 150ms ease;
+  box-shadow: var(--shadow-sticky);
   pointer-events: auto;
+}
+
+.item.dragging {
+  --tilt-deg: 0deg;
+  transition: none;
+  box-shadow: var(--shadow-sticky-active);
 }
 
 .header {
@@ -17,7 +25,6 @@
   margin-bottom: var(--space-1);
 }
 
-.gripButton,
 .deleteButton {
   display: inline-flex;
   align-items: center;
@@ -28,17 +35,9 @@
   border: none;
   border-radius: var(--radius-sm);
   opacity: 0.7;
-}
-
-.gripButton {
-  cursor: grab;
-}
-
-.deleteButton {
   cursor: pointer;
 }
 
-.gripButton:hover,
 .deleteButton:hover {
   opacity: 1;
 }

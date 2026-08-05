@@ -1,0 +1,52 @@
+.gripButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  opacity: 0.7;
+  cursor: grab;
+}
+
+.gripButton:hover,
+.gripButton[aria-expanded='true'] {
+  opacity: 1;
+}
+
+.picker {
+  width: 10rem;
+  padding: var(--space-1);
+}
+
+.swatchGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+}
+
+.swatch {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.swatch[aria-pressed='true'] {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.hexForm {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.hexForm input {
+  flex: 1;
+  min-width: 0;
+}

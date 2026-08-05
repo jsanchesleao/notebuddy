@@ -45,6 +45,9 @@ export function StickyNotesSection({
   const handleChangeContent = (stickyNoteId: string, content: StickyNote['content']) =>
     updateStickyNote(stickyNoteId, { content })
 
+  const handleChangeColor = (stickyNoteId: string, color: string) =>
+    updateStickyNote(stickyNoteId, { color })
+
   if (isMobile) {
     return (
       <StickyNoteGallery
@@ -63,6 +66,7 @@ export function StickyNotesSection({
     <StickyNoteLayer
       stickyNotes={stickyNotes}
       onChangeContent={handleChangeContent}
+      onChangeColor={handleChangeColor}
       onDelete={deleteStickyNote}
       onMove={moveStickyNote}
       onBringToFront={bringStickyNoteToFront}
