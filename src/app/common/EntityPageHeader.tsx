@@ -142,7 +142,7 @@ export function EntityPageHeader({
             aria-pressed={stickyNotes.visible}
             onClick={stickyNotes.onToggleVisibility}
           >
-            <Icon name={stickyNotes.visible ? 'visible' : 'hidden'} />
+            <Icon name={stickyNotes.visible ? 'stickyNotesVisible' : 'stickyNotesHidden'} />
           </button>
           <DismissableDropdown
             trigger={({ toggle, open }) => (
@@ -153,7 +153,7 @@ export function EntityPageHeader({
                 aria-expanded={open}
                 onClick={toggle}
               >
-                <Icon name="add" />
+                <Icon name="stickyNoteAdd" />
               </button>
             )}
           >

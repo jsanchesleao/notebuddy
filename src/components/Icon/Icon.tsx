@@ -52,6 +52,9 @@ import {
   Search,
   Eye,
   EyeOff,
+  StickyNotePlus,
+  StickyNotes,
+  StickyNoteOff,
 } from 'lucide-react'
 
 const ICONS = {
@@ -108,6 +111,9 @@ const ICONS = {
   search: Search,
   visible: Eye,
   hidden: EyeOff,
+  stickyNoteAdd: StickyNotePlus,
+  stickyNotesVisible: StickyNotes,
+  stickyNotesHidden: StickyNoteOff,
 } as const
 
 export type IconName = keyof typeof ICONS
