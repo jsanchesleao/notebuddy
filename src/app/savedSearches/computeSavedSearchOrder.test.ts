@@ -12,6 +12,7 @@ function buildSavedSearch(name: string, overrides: Partial<SavedSearch> = {}): S
     boardId: null,
     query: '',
     filter: { mode: 'and', blocks: [] },
+    selectedTags: [],
     order: 0,
     createdAt: now,
     updatedAt: now,

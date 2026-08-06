@@ -162,6 +162,7 @@ export interface SavedSearch {
   boardId: string | null
   query: string
   filter: FilterState
+  selectedTags: string[]
   order: number
   createdAt: string
   updatedAt: string

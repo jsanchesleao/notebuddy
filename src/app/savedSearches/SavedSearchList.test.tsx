@@ -61,6 +61,7 @@ describe('SavedSearchList', () => {
       boardId: null,
       query: 'urgent',
       filter: { mode: 'and', blocks: [] },
+      selectedTags: [],
     })
     await createSavedSearch({
       name: 'Notebook one',
@@ -68,6 +69,7 @@ describe('SavedSearchList', () => {
       boardId: null,
       query: '',
       filter: { mode: 'and', blocks: [] },
+      selectedTags: [],
     })
 
     renderList()
@@ -89,6 +91,7 @@ describe('SavedSearchList', () => {
       boardId: null,
       query: 'urgent',
       filter,
+      selectedTags: [],
     })
     const user = userEvent.setup()
 
@@ -99,7 +102,7 @@ describe('SavedSearchList', () => {
     const probe = await screen.findByTestId('location-probe')
     const parsed = JSON.parse(probe.textContent ?? '{}')
     expect(parsed.path).toBe('/search?q=urgent')
-    expect(parsed.state).toEqual({ filter })
+    expect(parsed.state).toEqual({ filter, selectedTags: [] })
   })
 
   it('running a scoped saved search navigates to the notebook with query+filter in state', async () => {
@@ -111,6 +114,7 @@ describe('SavedSearchList', () => {
       boardId: null,
       query: 'plan',
       filter,
+      selectedTags: [],
     })
     const user = userEvent.setup()
 
@@ -121,7 +125,7 @@ describe('SavedSearchList', () => {
     const probe = await screen.findByTestId('location-probe')
     const parsed = JSON.parse(probe.textContent ?? '{}')
     expect(parsed.path).toBe(`/notebooks/${notebook.id}`)
-    expect(parsed.state).toEqual({ query: 'plan', filter })
+    expect(parsed.state).toEqual({ query: 'plan', filter, selectedTags: [] })
   })
 
   it('renames and deletes a saved search', async () => {
@@ -131,6 +135,7 @@ describe('SavedSearchList', () => {
       boardId: null,
       query: '',
       filter: { mode: 'and', blocks: [] },
+      selectedTags: [],
     })
     const user = userEvent.setup()
 
@@ -168,6 +173,7 @@ describe('SavedSearchList', () => {
       boardId: null,
       query: '',
       filter: staleFilter,
+      selectedTags: [],
     })
     const user = userEvent.setup()
 
@@ -181,6 +187,6 @@ describe('SavedSearchList', () => {
     const probe = await screen.findByTestId('location-probe')
     const parsed = JSON.parse(probe.textContent ?? '{}')
     expect(parsed.path).toBe('/search?q=')
-    expect(parsed.state).toEqual({ filter: staleFilter })
+    expect(parsed.state).toEqual({ filter: staleFilter, selectedTags: [] })
   })
 })

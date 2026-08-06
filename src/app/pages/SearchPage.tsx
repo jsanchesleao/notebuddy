@@ -26,7 +26,9 @@ export function SearchPage() {
     () => navigationState?.filter ?? EMPTY_FILTER,
   )
   const [crumbsByNoteId, setCrumbsByNoteId] = useState<Map<string, BreadcrumbItem[]>>(new Map())
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [selectedTags, setSelectedTags] = useState<string[]>(
+    () => navigationState?.selectedTags ?? [],
+  )
 
   const notes = useLiveQuery(() => db.notes.toArray(), [], [])
   const customTypes = useLiveQuery(() => listCustomDataTypes(), [], [])
@@ -87,7 +89,13 @@ export function SearchPage() {
         />
         <NoteFilter notes={notes} value={filterState} onChange={setFilterState} />
         <TagQuickFilter value={selectedTags} onChange={setSelectedTags} tags={tags ?? []} />
-        <SaveSearchButton query={query} filter={filterState} notebookId={null} boardId={null} />
+        <SaveSearchButton
+          query={query}
+          filter={filterState}
+          selectedTags={selectedTags}
+          notebookId={null}
+          boardId={null}
+        />
       </div>
       {!hasQueryOrFilter && <p className={styles.empty}>Start typing or add a filter to search</p>}
       {hasQueryOrFilter && visibleNotes.length === 0 && (

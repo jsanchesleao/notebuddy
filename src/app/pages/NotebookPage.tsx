@@ -60,7 +60,9 @@ export function NotebookPage() {
     () => navigationState?.filter ?? EMPTY_FILTER,
   )
   const [search, setSearch] = useState(() => navigationState?.query ?? '')
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [selectedTags, setSelectedTags] = useState<string[]>(
+    () => navigationState?.selectedTags ?? [],
+  )
   const visibleNotes = useVisibleNotes({
     notes: notes ?? [],
     filterState,
@@ -122,6 +124,7 @@ export function NotebookPage() {
           <SaveSearchButton
             query={search}
             filter={filterState}
+            selectedTags={selectedTags}
             notebookId={notebookId ?? null}
             boardId={null}
           />

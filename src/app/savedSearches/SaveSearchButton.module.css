@@ -1,10 +1,15 @@
-.trigger {
+.container {
+  margin-bottom: var(--space-2);
+}
+
+.toggle {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
+  padding: 0 var(--space-2);
+  height: 1.75rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
   background: none;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -12,9 +17,19 @@
   white-space: nowrap;
 }
 
-.trigger:hover {
-  background: var(--color-bg-elevated);
-  color: var(--color-text);
+.toggle:hover {
+  background: var(--color-bg-sidebar);
+}
+
+.toggle[aria-expanded='true'] {
+  color: var(--color-accent-fg);
+  background: var(--color-accent);
+}
+
+.panel {
+  display: flex;
+  width: max-content;
+  padding: var(--space-2);
 }
 
 .form {

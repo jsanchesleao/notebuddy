@@ -9,6 +9,7 @@ import {
   updateSavedSearchQuery,
 } from './savedSearchRepository'
 import type { FilterState } from '../notes/noteFilter.types'
+import type { SavedSearch } from '../entities.types'
 
 const EMPTY_FILTER: FilterState = { mode: 'and', blocks: [] }
 
@@ -24,6 +25,7 @@ describe('savedSearchRepository', () => {
       boardId: null,
       query: 'urgent',
       filter: EMPTY_FILTER,
+      selectedTags: [],
     })
     const second = await createSavedSearch({
       name: 'Another one',
@@ -31,6 +33,7 @@ describe('savedSearchRepository', () => {
       boardId: null,
       query: '',
       filter: EMPTY_FILTER,
+      selectedTags: [],
     })
 
     expect(first.order).toBe(0)
@@ -46,6 +49,7 @@ describe('savedSearchRepository', () => {
       boardId: null,
       query: '',
       filter: EMPTY_FILTER,
+      selectedTags: [],
     })
     const scopedToBoard = await createSavedSearch({
       name: 'Board search',
@@ -53,6 +57,7 @@ describe('savedSearchRepository', () => {
       boardId: 'board-1',
       query: '',
       filter: EMPTY_FILTER,
+      selectedTags: [],
     })
 
     expect(scopedToNotebook.notebookId).toBe('notebook-1')
@@ -66,6 +71,7 @@ describe('savedSearchRepository', () => {
       boardId: null,
       query: '',
       filter: EMPTY_FILTER,
+      selectedTags: [],
     })
     const b = await createSavedSearch({
       name: 'B',
@@ -73,6 +79,7 @@ describe('savedSearchRepository', () => {
       boardId: null,
       query: '',
       filter: EMPTY_FILTER,
+      selectedTags: [],
     })
 
     await reorderSavedSearches([b.id, a.id])
@@ -87,6 +94,7 @@ describe('savedSearchRepository', () => {
       boardId: null,
       query: '',
       filter: EMPTY_FILTER,
+      selectedTags: [],
     })
 
     await renameSavedSearch(search.id, 'Renamed')
@@ -102,17 +110,55 @@ describe('savedSearchRepository', () => {
       boardId: null,
       query: 'old',
       filter: EMPTY_FILTER,
+      selectedTags: [],
     })
     const newFilter: FilterState = {
       mode: 'and',
       blocks: [{ id: 'block-1', criteria: [{ id: 'crit-1', kind: 'tag', tag: 'work' }] }],
     }
 
-    await updateSavedSearchQuery(search.id, { query: 'new', filter: newFilter })
+    await updateSavedSearchQuery(search.id, {
+      query: 'new',
+      filter: newFilter,
+      selectedTags: ['work'],
+    })
 
     const [updated] = await listSavedSearches()
     expect(updated.query).toBe('new')
     expect(updated.filter).toEqual(newFilter)
+    expect(updated.selectedTags).toEqual(['work'])
+  })
+
+  it('persists selected tags on a saved search', async () => {
+    const search = await createSavedSearch({
+      name: 'Tagged',
+      notebookId: null,
+      boardId: null,
+      query: '',
+      filter: EMPTY_FILTER,
+      selectedTags: ['urgent', 'work'],
+    })
+
+    const [loaded] = await listSavedSearches()
+    expect(loaded.id).toBe(search.id)
+    expect(loaded.selectedTags).toEqual(['urgent', 'work'])
+  })
+
+  it('defaults selectedTags to an empty array for rows written before that field existed', async () => {
+    await db.savedSearches.add({
+      id: 'legacy-1',
+      name: 'Legacy search',
+      notebookId: null,
+      boardId: null,
+      query: 'old',
+      filter: EMPTY_FILTER,
+      order: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } as unknown as SavedSearch)
+
+    const [loaded] = await listSavedSearches()
+    expect(loaded.selectedTags).toEqual([])
   })
 
   it('deletes a saved search', async () => {
@@ -122,6 +168,7 @@ describe('savedSearchRepository', () => {
       boardId: null,
       query: '',
       filter: EMPTY_FILTER,
+      selectedTags: [],
     })
 
     await deleteSavedSearch(search.id)
@@ -136,6 +183,7 @@ describe('savedSearchRepository', () => {
       boardId: null,
       query: '',
       filter: EMPTY_FILTER,
+      selectedTags: [],
     })
     const b = await createSavedSearch({
       name: 'B',
@@ -143,6 +191,7 @@ describe('savedSearchRepository', () => {
       boardId: null,
       query: '',
       filter: EMPTY_FILTER,
+      selectedTags: [],
     })
     const c = await createSavedSearch({
       name: 'C',
@@ -150,6 +199,7 @@ describe('savedSearchRepository', () => {
       boardId: null,
       query: '',
       filter: EMPTY_FILTER,
+      selectedTags: [],
     })
 
     await reorderSavedSearches([c.id, a.id, b.id])
@@ -173,6 +223,7 @@ describe('savedSearchRepository', () => {
       boardId: null,
       query: '',
       filter: staleFilter,
+      selectedTags: [],
     })
 
     const [loaded] = await listSavedSearches()

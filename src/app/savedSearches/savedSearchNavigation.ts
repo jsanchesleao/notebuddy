@@ -7,11 +7,13 @@ import type { SavedSearch } from '../../domain/entities.types'
 export interface SavedSearchNavigationState {
   query?: string
   filter?: FilterState
+  selectedTags?: string[]
 }
 
 // notebookId/boardId set -> that page's own quick-search + filter UI, pre-filled via router
 // state (neither page persists its search/filter in the URL); both null (global) -> /search,
-// whose query does round-trip through ?q= — filter still travels via state either way.
+// whose query does round-trip through ?q= — filter and selectedTags still travel via state
+// either way.
 export function runPathAndState(savedSearch: SavedSearch): {
   to: string
   state: SavedSearchNavigationState
@@ -19,17 +21,25 @@ export function runPathAndState(savedSearch: SavedSearch): {
   if (savedSearch.notebookId) {
     return {
       to: `/notebooks/${savedSearch.notebookId}`,
-      state: { query: savedSearch.query, filter: savedSearch.filter },
+      state: {
+        query: savedSearch.query,
+        filter: savedSearch.filter,
+        selectedTags: savedSearch.selectedTags,
+      },
     }
   }
   if (savedSearch.boardId) {
     return {
       to: `/boards/${savedSearch.boardId}`,
-      state: { query: savedSearch.query, filter: savedSearch.filter },
+      state: {
+        query: savedSearch.query,
+        filter: savedSearch.filter,
+        selectedTags: savedSearch.selectedTags,
+      },
     }
   }
   return {
     to: `/search?q=${encodeURIComponent(savedSearch.query)}`,
-    state: { filter: savedSearch.filter },
+    state: { filter: savedSearch.filter, selectedTags: savedSearch.selectedTags },
   }
 }

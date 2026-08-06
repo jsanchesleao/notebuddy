@@ -9,6 +9,7 @@ export interface CreateSavedSearchInput {
   boardId: string | null
   query: string
   filter: FilterState
+  selectedTags: string[]
 }
 
 export async function createSavedSearch(input: CreateSavedSearchInput): Promise<SavedSearch> {
@@ -22,6 +23,7 @@ export async function createSavedSearch(input: CreateSavedSearchInput): Promise<
     boardId: input.boardId,
     query: input.query,
     filter: input.filter,
+    selectedTags: input.selectedTags,
     order: existing.length,
     createdAt: now,
     updatedAt: now,
@@ -31,9 +33,12 @@ export async function createSavedSearch(input: CreateSavedSearchInput): Promise<
   return savedSearch
 }
 
+// selectedTags defaults to [] for rows written before that field existed.
 export async function listSavedSearches(): Promise<SavedSearch[]> {
   const all = await db.savedSearches.toArray()
-  return all.sort((a, b) => a.order - b.order)
+  return all
+    .map((search) => ({ ...search, selectedTags: search.selectedTags ?? [] }))
+    .sort((a, b) => a.order - b.order)
 }
 
 export async function renameSavedSearch(id: string, name: string): Promise<void> {
@@ -42,11 +47,12 @@ export async function renameSavedSearch(id: string, name: string): Promise<void>
 
 export async function updateSavedSearchQuery(
   id: string,
-  input: { query: string; filter: FilterState },
+  input: { query: string; filter: FilterState; selectedTags: string[] },
 ): Promise<void> {
   await db.savedSearches.update(id, {
     query: input.query,
     filter: input.filter,
+    selectedTags: input.selectedTags,
     updatedAt: new Date().toISOString(),
   })
 }
