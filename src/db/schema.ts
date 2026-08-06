@@ -32,3 +32,12 @@ export const SCHEMA_V5 = {
 // No index changes — this version only backfills `Notebook.stickyNotesDocId` (added to the
 // type after notebooks already existed in persisted databases) via an .upgrade() in db.ts.
 export const SCHEMA_V6 = {}
+
+// One row per FlexSearch export() chunk, keyed by chunk name.
+export const SCHEMA_V7 = {
+  searchIndexSnapshot: 'key',
+}
+
+export const SCHEMA_V8 = {
+  savedSearches: 'id, notebookId, boardId',
+}

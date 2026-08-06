@@ -1,4 +1,5 @@
 import type { Stroke } from './blocks/blocks.types'
+import type { FilterState } from './notes/noteFilter.types'
 
 export interface Folder {
   id: string
@@ -143,4 +144,25 @@ export interface YjsUpdateRow {
   docId: string
   update: Uint8Array
   createdAt: number
+}
+
+// One row per FlexSearch export() chunk; `data` is that chunk's serialized JSON string.
+export interface SearchIndexSnapshotRow {
+  key: string
+  data: string
+}
+
+// notebookId/boardId both null = global; exactly one set = scoped to that notebook/board —
+// mirrors Note's own nullable-FK convention. `filter` reuses FilterState as the one persisted
+// exception to its own doc comment (see noteFilter.types.ts).
+export interface SavedSearch {
+  id: string
+  name: string
+  notebookId: string | null
+  boardId: string | null
+  query: string
+  filter: FilterState
+  order: number
+  createdAt: string
+  updatedAt: string
 }

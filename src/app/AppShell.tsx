@@ -11,6 +11,7 @@ import { useHeaderCompact } from './useHeaderCompact'
 import { Icon } from '../components/Icon/Icon'
 import { getNotebook } from '../domain/notebooks/notebookRepository'
 import { getBoard } from '../domain/boards/boardRepository'
+import { HeaderSearchInput } from './search/HeaderSearchInput'
 import styles from './AppShell.module.css'
 
 export function AppShell() {
@@ -49,6 +50,7 @@ export function AppShell() {
           <Icon name="menu" />
         </button>
         <span className={styles.title}>Notebuddy</span>
+        <HeaderSearchInput />
         <ThemeToggle />
       </header>
       <div

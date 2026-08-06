@@ -8,6 +8,9 @@ interface EditableEntityRowProps {
   title: string
   icon: IconName
   to?: string
+  // Forwarded to the Link as its `state` prop — lets a caller hand the destination route
+  // some non-URL context (e.g. a saved search's query/filter to pre-fill on arrival).
+  linkState?: unknown
   tags?: string[]
   tagColors?: Map<string, string>
   onRename?: (title: string) => void | Promise<void>
@@ -19,6 +22,7 @@ export function EditableEntityRow({
   title,
   icon,
   to,
+  linkState,
   tags,
   tagColors,
   onRename,
@@ -83,7 +87,7 @@ export function EditableEntityRow({
           <Icon name={icon} />
         </span>
         {to ? (
-          <Link to={to} className={styles.link}>
+          <Link to={to} state={linkState} className={styles.link}>
             {title}
           </Link>
         ) : (

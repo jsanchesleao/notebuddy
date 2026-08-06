@@ -15,7 +15,6 @@
   z-index: 30;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-3);
   height: var(--header-height);
   box-sizing: border-box;
@@ -32,9 +31,16 @@
 }
 
 .title {
+  flex-shrink: 0;
   font-family: var(--font-content);
   font-size: var(--font-size-lg);
   font-weight: 600;
+}
+
+@media (max-width: 639px) {
+  .title {
+    display: none;
+  }
 }
 
 .menuButton {

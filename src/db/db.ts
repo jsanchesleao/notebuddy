@@ -1,5 +1,14 @@
 import Dexie, { type Table } from 'dexie'
-import { SCHEMA_V1, SCHEMA_V2, SCHEMA_V3, SCHEMA_V4, SCHEMA_V5, SCHEMA_V6 } from './schema'
+import {
+  SCHEMA_V1,
+  SCHEMA_V2,
+  SCHEMA_V3,
+  SCHEMA_V4,
+  SCHEMA_V5,
+  SCHEMA_V6,
+  SCHEMA_V7,
+  SCHEMA_V8,
+} from './schema'
 import { createId } from '../domain/ids'
 import type {
   Board,
@@ -8,6 +17,8 @@ import type {
   Note,
   NoteType,
   Notebook,
+  SavedSearch,
+  SearchIndexSnapshotRow,
   Setting,
   TagRecord,
   YjsUpdateRow,
@@ -23,6 +34,8 @@ export class NotebuddyDB extends Dexie {
   customDataTypes!: Table<CustomDataType, string>
   noteTypes!: Table<NoteType, string>
   tags!: Table<TagRecord, string>
+  searchIndexSnapshot!: Table<SearchIndexSnapshotRow, string>
+  savedSearches!: Table<SavedSearch, string>
 
   constructor(name = 'notebuddy') {
     super(name)
@@ -41,6 +54,8 @@ export class NotebuddyDB extends Dexie {
             if (!notebook.stickyNotesDocId) notebook.stickyNotesDocId = createId()
           })
       })
+    this.version(7).stores(SCHEMA_V7)
+    this.version(8).stores(SCHEMA_V8)
   }
 }
 

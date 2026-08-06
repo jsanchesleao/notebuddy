@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
   deleteNotebook,
@@ -10,7 +10,6 @@ import {
 import { listNoteTypes } from '../../domain/noteTypes/noteTypeRepository'
 import { listCustomDataTypes } from '../../domain/dataTypes/dataTypeRepository'
 import { deleteNote, listNotesByNotebook, renameNote } from '../../domain/notes/noteRepository'
-import { filterNotes, noteMatchesSearch, noteMatchesTags } from '../../domain/notes/noteFilterMatch'
 import type { FilterState } from '../../domain/notes/noteFilter.types'
 import { listTags } from '../../domain/tags/tagRepository'
 import { EntityPageHeader } from '../common/EntityPageHeader'
@@ -20,6 +19,9 @@ import { buildNotebookCrumbs } from '../common/breadcrumbs'
 import { NoteFilter } from '../notes/filters/NoteFilter'
 import { NoteQuickSearch } from '../notes/filters/NoteQuickSearch'
 import { TagQuickFilter } from '../notes/filters/TagQuickFilter'
+import { useVisibleNotes } from '../notes/filters/useVisibleNotes'
+import { SaveSearchButton } from '../savedSearches/SaveSearchButton'
+import type { SavedSearchNavigationState } from '../savedSearches/savedSearchNavigation'
 import { useIsMobile } from '../useIsMobile'
 import {
   StickyNotesSection,
@@ -33,6 +35,8 @@ const EMPTY_FILTER: FilterState = { mode: 'and', blocks: [] }
 export function NotebookPage() {
   const { notebookId } = useParams<{ notebookId: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
+  const navigationState = location.state as SavedSearchNavigationState | null
   const isDeletingRef = useRef(false)
   const stickyNotesRef = useRef<StickyNotesSectionHandle>(null)
   const isMobile = useIsMobile()
@@ -52,14 +56,19 @@ export function NotebookPage() {
   const customTypes = useLiveQuery(() => listCustomDataTypes(), [], [])
   const tags = useLiveQuery(() => listTags(), [], [])
   const tagColors = new Map((tags ?? []).map((tag) => [tag.name, tag.color]))
-  const [filterState, setFilterState] = useState<FilterState>(EMPTY_FILTER)
-  const [search, setSearch] = useState('')
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const resolveCustomType = (id: string) => customTypes?.find((type) => type.id === id)
-  const filteredNotes = filterNotes(notes ?? [], filterState, resolveCustomType)
-  const visibleNotes = filteredNotes.filter(
-    (note) => noteMatchesSearch(note, search) && noteMatchesTags(note, selectedTags),
+  const [filterState, setFilterState] = useState<FilterState>(
+    () => navigationState?.filter ?? EMPTY_FILTER,
   )
+  const [search, setSearch] = useState(() => navigationState?.query ?? '')
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const visibleNotes = useVisibleNotes({
+    notes: notes ?? [],
+    filterState,
+    search,
+    selectedTags,
+    customTypes: customTypes ?? [],
+    notebookId,
+  })
 
   const notFound = notebook === null || !notebookId
 
@@ -110,6 +119,12 @@ export function NotebookPage() {
           <NoteFilter notes={notes ?? []} value={filterState} onChange={setFilterState} />
           <NoteQuickSearch value={search} onChange={setSearch} />
           <TagQuickFilter value={selectedTags} onChange={setSelectedTags} tags={tags ?? []} />
+          <SaveSearchButton
+            query={search}
+            filter={filterState}
+            notebookId={notebookId ?? null}
+            boardId={null}
+          />
         </div>
         {notes?.length === 0 && <p className={styles.empty}>No notes yet</p>}
         {notes && notes.length > 0 && visibleNotes.length === 0 && (

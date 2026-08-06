@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../../db/db'
@@ -14,8 +14,18 @@ import { NoteFilter } from './NoteFilter'
 function Harness({ notes }: { notes: Note[] }) {
   const [filterState, setFilterState] = useState<FilterState>({ mode: 'and', blocks: [] })
   const customTypes = useLiveQuery(() => listCustomDataTypes(), [], [])
-  const resolveCustomType = (id: string) => customTypes?.find((type) => type.id === id)
-  const filtered = filterNotes(notes, filterState, resolveCustomType)
+  const [filtered, setFiltered] = useState<Note[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    const resolveCustomType = (id: string) => customTypes?.find((type) => type.id === id)
+    filterNotes(notes, filterState, resolveCustomType).then((result) => {
+      if (!cancelled) setFiltered(result)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [notes, filterState, customTypes])
 
   return (
     <>
@@ -54,9 +64,11 @@ describe('NoteFilter', () => {
     const user = userEvent.setup()
     render(<Harness notes={notes} />)
 
-    expect(screen.getByText('Recipe Pancakes')).toBeInTheDocument()
-    expect(screen.getByText('Recipe Dinner')).toBeInTheDocument()
-    expect(screen.getByText('Meeting notes')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Recipe Pancakes')).toBeInTheDocument()
+      expect(screen.getByText('Recipe Dinner')).toBeInTheDocument()
+      expect(screen.getByText('Meeting notes')).toBeInTheDocument()
+    })
 
     await user.click(screen.getByRole('button', { name: /Filter/ }))
     await user.click(screen.getByRole('button', { name: /Add block/ }))
@@ -65,9 +77,11 @@ describe('NoteFilter', () => {
     await user.click(screen.getByRole('button', { name: /Choose a tag/ }))
     await user.click(screen.getByRole('menuitemradio', { name: 'breakfast' }))
 
-    expect(screen.getByText('Recipe Pancakes')).toBeInTheDocument()
-    expect(screen.queryByText('Recipe Dinner')).not.toBeInTheDocument()
-    expect(screen.queryByText('Meeting notes')).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Recipe Pancakes')).toBeInTheDocument()
+      expect(screen.queryByText('Recipe Dinner')).not.toBeInTheDocument()
+      expect(screen.queryByText('Meeting notes')).not.toBeInTheDocument()
+    })
   })
 
   it('applies the AND/OR mode duality across two blocks', async () => {
@@ -90,9 +104,11 @@ describe('NoteFilter', () => {
     await user.click(screen.getByRole('menuitem', { name: 'Title' }))
     await user.type(screen.getByRole('textbox'), 'recipe')
 
-    expect(screen.getByText('Recipe Pancakes')).toBeInTheDocument()
-    expect(screen.getByText('Recipe Dinner')).toBeInTheDocument()
-    expect(screen.queryByText('Meeting notes')).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Recipe Pancakes')).toBeInTheDocument()
+      expect(screen.getByText('Recipe Dinner')).toBeInTheDocument()
+      expect(screen.queryByText('Meeting notes')).not.toBeInTheDocument()
+    })
 
     // Block 2: tag = "work" -> matches Meeting notes.
     await user.click(screen.getByRole('button', { name: /Add block/ }))
@@ -103,15 +119,19 @@ describe('NoteFilter', () => {
     await user.click(screen.getByRole('menuitemradio', { name: 'work' }))
 
     // mode=and (default): criteria AND within a block, blocks OR together -> union of both blocks.
-    expect(screen.getByText('Recipe Pancakes')).toBeInTheDocument()
-    expect(screen.getByText('Recipe Dinner')).toBeInTheDocument()
-    expect(screen.getByText('Meeting notes')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Recipe Pancakes')).toBeInTheDocument()
+      expect(screen.getByText('Recipe Dinner')).toBeInTheDocument()
+      expect(screen.getByText('Meeting notes')).toBeInTheDocument()
+    })
 
     // mode=or: criteria OR within a block, blocks AND together -> intersection (title AND tag), which is empty.
     await user.click(screen.getByRole('button', { name: 'OR' }))
 
-    expect(screen.queryByText('Recipe Pancakes')).not.toBeInTheDocument()
-    expect(screen.queryByText('Recipe Dinner')).not.toBeInTheDocument()
-    expect(screen.queryByText('Meeting notes')).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.queryByText('Recipe Pancakes')).not.toBeInTheDocument()
+      expect(screen.queryByText('Recipe Dinner')).not.toBeInTheDocument()
+      expect(screen.queryByText('Meeting notes')).not.toBeInTheDocument()
+    })
   })
 })

@@ -14,6 +14,11 @@ import './theme/reset.css'
 import './theme/tokens.css'
 import './theme/global.css'
 import App from './App.tsx'
+import { initSearchIndex } from './domain/search/searchIndexStore'
+import { registerSearchIndexSync } from './domain/search/searchIndexSync'
+
+registerSearchIndexSync()
+void initSearchIndex()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -5,6 +5,7 @@ import { SidebarFolderView } from './SidebarFolderView'
 import { SidebarNotebookView } from './SidebarNotebookView'
 import { getNote } from '../../domain/notes/noteRepository'
 import { Icon } from '../../components/Icon/Icon'
+import { SavedSearchList } from '../savedSearches/SavedSearchList'
 import styles from './Sidebar.module.css'
 
 interface SidebarProps {
@@ -36,6 +37,7 @@ export function Sidebar({ open, routeKind, folderId, notebookId, boardId, noteId
       {activeNotebookId && (
         <SidebarNotebookView notebookId={activeNotebookId} activeNoteId={noteId} />
       )}
+      <SavedSearchList />
       <Link
         to="/data-types"
         className={

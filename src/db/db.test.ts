@@ -5,7 +5,7 @@ import { createId } from '../domain/ids'
 import { SCHEMA_V1, SCHEMA_V2, SCHEMA_V3, SCHEMA_V4, SCHEMA_V5 } from './schema'
 
 describe('NotebuddyDB schema', () => {
-  it('declares all nine stores', () => {
+  it('declares all eleven stores', () => {
     const db = new NotebuddyDB(`test-${createId()}`)
     const tableNames = db.tables.map((table) => table.name).sort()
 
@@ -17,6 +17,8 @@ describe('NotebuddyDB schema', () => {
         'noteTypes',
         'notebooks',
         'notes',
+        'savedSearches',
+        'searchIndexSnapshot',
         'settings',
         'tags',
         'yjsUpdates',

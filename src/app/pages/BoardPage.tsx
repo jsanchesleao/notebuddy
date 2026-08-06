@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { deleteBoard, getBoard, renameBoard } from '../../domain/boards/boardRepository'
 import { getCustomDataType, listCustomDataTypes } from '../../domain/dataTypes/dataTypeRepository'
 import { listNotesByBoardId } from '../../domain/notes/noteRepository'
-import { filterNotes, noteMatchesSearch, noteMatchesTags } from '../../domain/notes/noteFilterMatch'
 import { listTags } from '../../domain/tags/tagRepository'
 import type { FilterState } from '../../domain/notes/noteFilter.types'
 import { EntityPageHeader } from '../common/EntityPageHeader'
@@ -13,6 +12,9 @@ import { buildBoardCrumbs } from '../common/breadcrumbs'
 import { NoteFilter } from '../notes/filters/NoteFilter'
 import { NoteQuickSearch } from '../notes/filters/NoteQuickSearch'
 import { TagQuickFilter } from '../notes/filters/TagQuickFilter'
+import { useVisibleNotes } from '../notes/filters/useVisibleNotes'
+import { SaveSearchButton } from '../savedSearches/SaveSearchButton'
+import type { SavedSearchNavigationState } from '../savedSearches/savedSearchNavigation'
 import { ManageColumnsControl } from '../boards/ManageColumnsControl'
 import { HiddenColumnsControl } from '../boards/HiddenColumnsControl'
 import { KanbanBoard } from '../boards/KanbanBoard'
@@ -29,6 +31,8 @@ const EMPTY_FILTER: FilterState = { mode: 'and', blocks: [] }
 export function BoardPage() {
   const { boardId } = useParams<{ boardId: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
+  const navigationState = location.state as SavedSearchNavigationState | null
   const isDeletingRef = useRef(false)
   const stickyNotesRef = useRef<StickyNotesSectionHandle>(null)
   const isMobile = useIsMobile()
@@ -50,14 +54,19 @@ export function BoardPage() {
   )
   const customTypes = useLiveQuery(() => listCustomDataTypes(), [], [])
   const allTags = useLiveQuery(() => listTags(), [], [])
-  const [filterState, setFilterState] = useState<FilterState>(EMPTY_FILTER)
-  const [search, setSearch] = useState('')
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const resolveCustomType = (id: string) => customTypes?.find((type) => type.id === id)
-  const filteredNotes = filterNotes(notes ?? [], filterState, resolveCustomType)
-  const visibleNotes = filteredNotes.filter(
-    (note) => noteMatchesSearch(note, search) && noteMatchesTags(note, selectedTags),
+  const [filterState, setFilterState] = useState<FilterState>(
+    () => navigationState?.filter ?? EMPTY_FILTER,
   )
+  const [search, setSearch] = useState(() => navigationState?.query ?? '')
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const visibleNotes = useVisibleNotes({
+    notes: notes ?? [],
+    filterState,
+    search,
+    selectedTags,
+    customTypes: customTypes ?? [],
+    boardId,
+  })
 
   const notFound = board === null || !boardId
 
@@ -100,6 +109,12 @@ export function BoardPage() {
         <NoteFilter notes={notes ?? []} value={filterState} onChange={setFilterState} />
         <NoteQuickSearch value={search} onChange={setSearch} />
         <TagQuickFilter value={selectedTags} onChange={setSelectedTags} tags={allTags ?? []} />
+        <SaveSearchButton
+          query={search}
+          filter={filterState}
+          notebookId={null}
+          boardId={boardId ?? null}
+        />
         {customType && <ManageColumnsControl board={board} customType={customType} />}
         <HiddenColumnsControl boardId={board.id} columns={board.columns} />
       </div>

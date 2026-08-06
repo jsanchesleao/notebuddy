@@ -5,6 +5,7 @@ import { NotebookPage } from './pages/NotebookPage'
 import { BoardPage } from './pages/BoardPage'
 import { NotePage } from './pages/NotePage'
 import { DataTypesPage } from './pages/DataTypesPage'
+import { SearchPage } from './pages/SearchPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 
 export function AppRoutes() {
@@ -16,6 +17,7 @@ export function AppRoutes() {
       <Route path="/boards/:boardId" element={<BoardPage />} />
       <Route path="/notes/:noteId" element={<NotePage />} />
       <Route path="/data-types" element={<DataTypesPage />} />
+      <Route path="/search" element={<SearchPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )

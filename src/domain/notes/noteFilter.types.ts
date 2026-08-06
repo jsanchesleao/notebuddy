@@ -15,8 +15,10 @@ export const OPERATORS_BY_PRIMITIVE: Record<PrimitiveKind, PropertyOperator[]> =
   link: ['equals'],
 }
 
-// A criterion is one atomic check. `id` is ephemeral UI state (never persisted to Dexie),
-// generated with createId() purely to key React lists and target updates/removals.
+// A criterion is one atomic check. `id` is ephemeral UI state (never persisted to Dexie on
+// its own), generated with createId() purely to key React lists and target updates/removals.
+// The one persisted exception is SavedSearch.filter (entities.types.ts), which stores a whole
+// FilterState verbatim — criterion ids persist there too, but only as harmless stable React keys.
 export type FilterCriterion =
   | { id: string; kind: 'tag'; tag: string }
   | { id: string; kind: 'noteType'; noteTypeId: string | null }

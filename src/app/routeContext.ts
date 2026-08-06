@@ -1,6 +1,7 @@
 import { matchPath, useLocation } from 'react-router-dom'
 
-export type RouteKind = 'home' | 'folder' | 'notebook' | 'board' | 'note' | 'dataTypes' | 'notFound'
+export type RouteKind =
+  'home' | 'folder' | 'notebook' | 'board' | 'note' | 'dataTypes' | 'search' | 'notFound'
 
 export interface CurrentRouteContext {
   routeKind: RouteKind
@@ -22,6 +23,7 @@ export function useCurrentRouteContext(): CurrentRouteContext {
   const boardMatch = matchPath('/boards/:boardId', location.pathname)
   const noteMatch = matchPath('/notes/:noteId', location.pathname)
   const dataTypesMatch = matchPath('/data-types', location.pathname)
+  const searchMatch = matchPath('/search', location.pathname)
 
   const routeKind: RouteKind = homeMatch
     ? 'home'
@@ -35,7 +37,9 @@ export function useCurrentRouteContext(): CurrentRouteContext {
             ? 'note'
             : dataTypesMatch
               ? 'dataTypes'
-              : 'notFound'
+              : searchMatch
+                ? 'search'
+                : 'notFound'
 
   return {
     routeKind,

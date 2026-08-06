@@ -1,4 +1,5 @@
 import { resolveTypeRef } from '../dataTypes/resolveTypeRef'
+import { searchNotes } from '../search/searchIndexStore'
 import type { CustomDataType, Note } from '../entities.types'
 import type {
   FilterableProperty,
@@ -9,24 +10,58 @@ import type {
 
 type ResolveCustomType = (id: string) => CustomDataType | undefined
 
-export function filterNotes(
+// 'title' criteria are index-backed (see searchIndexStore.ts) rather than a plain substring
+// check, but evaluateCriterion below stays synchronous — so every distinct 'title' criterion
+// text referenced by a filter is resolved to a matching-id set up front, once, rather than
+// making the whole per-note criterion evaluation chain async.
+async function resolveTitleCriterionMatches(
+  filter: FilterState,
+): Promise<Map<string, Set<string>>> {
+  const texts = new Set<string>()
+  for (const block of filter.blocks) {
+    for (const criterion of block.criteria) {
+      if (criterion.kind === 'title' && criterion.text !== '') texts.add(criterion.text)
+    }
+  }
+
+  const entries = await Promise.all(
+    Array.from(texts).map(async (text) => {
+      const ids = await searchNotes(text)
+      return [text, new Set(ids ?? [])] as const
+    }),
+  )
+  return new Map(entries)
+}
+
+export async function filterNotes(
   notes: Note[],
   filter: FilterState,
   resolveCustomType: ResolveCustomType,
-): Note[] {
-  return notes.filter((note) => noteMatchesFilter(note, filter, resolveCustomType))
+): Promise<Note[]> {
+  const titleMatches = await resolveTitleCriterionMatches(filter)
+  return notes.filter((note) => evaluateFilter(note, filter, resolveCustomType, titleMatches))
 }
 
-export function noteMatchesFilter(
+export async function noteMatchesFilter(
   note: Note,
   filter: FilterState,
   resolveCustomType: ResolveCustomType,
+): Promise<boolean> {
+  const titleMatches = await resolveTitleCriterionMatches(filter)
+  return evaluateFilter(note, filter, resolveCustomType, titleMatches)
+}
+
+function evaluateFilter(
+  note: Note,
+  filter: FilterState,
+  resolveCustomType: ResolveCustomType,
+  titleMatches: Map<string, Set<string>>,
 ): boolean {
   const activeBlocks = filter.blocks.filter((block) => block.criteria.length > 0)
   if (activeBlocks.length === 0) return true
 
   const blockResults = activeBlocks.map((block) =>
-    evaluateBlock(note, block, filter.mode, resolveCustomType),
+    evaluateBlock(note, block, filter.mode, resolveCustomType, titleMatches),
   )
 
   // Cross-block combinator is the opposite of the within-block one: mode='and' combines
@@ -40,9 +75,10 @@ function evaluateBlock(
   block: FilterBlock,
   mode: FilterState['mode'],
   resolveCustomType: ResolveCustomType,
+  titleMatches: Map<string, Set<string>>,
 ): boolean {
   const results = block.criteria.map((criterion) =>
-    evaluateCriterion(note, criterion, resolveCustomType),
+    evaluateCriterion(note, criterion, resolveCustomType, titleMatches),
   )
   return mode === 'and' ? results.every(Boolean) : results.some(Boolean)
 }
@@ -51,6 +87,7 @@ function evaluateCriterion(
   note: Note,
   criterion: FilterCriterion,
   resolveCustomType: ResolveCustomType,
+  titleMatches: Map<string, Set<string>>,
 ): boolean {
   switch (criterion.kind) {
     case 'tag':
@@ -59,11 +96,9 @@ function evaluateCriterion(
       return note.noteTypeId === criterion.noteTypeId
     case 'title':
       // An empty/unset text (what a freshly added criterion starts with) never matches —
-      // '' is a substring of everything, which would otherwise make a not-yet-configured
-      // criterion match every note. Same intentional boundary as the property operand check.
-      return (
-        criterion.text !== '' && note.title.toLowerCase().includes(criterion.text.toLowerCase())
-      )
+      // matches searchNotes' own empty-query convention of "no filter", which would otherwise
+      // make a not-yet-configured criterion match every note.
+      return criterion.text !== '' && (titleMatches.get(criterion.text)?.has(note.id) ?? false)
     case 'property':
       return evaluatePropertyCriterion(note, criterion, resolveCustomType)
   }
@@ -112,12 +147,17 @@ function evaluatePropertyCriterion(
 }
 
 // Unlike the filter's own 'title' criterion (see evaluateCriterion above), an empty query here
-// means "no search active" and must match everything, not nothing — this backs the notebook
-// page's always-visible quick search box rather than a configurable filter criterion.
-export function noteMatchesSearch(note: Note, query: string): boolean {
-  const trimmed = query.trim()
-  if (trimmed === '') return true
-  return note.title.toLowerCase().includes(trimmed.toLowerCase())
+// means "no search active" and must match everything, not nothing — this backs the notebook/
+// board pages' always-visible quick search box rather than a configurable filter criterion.
+// Index-backed (searchNotes) rather than a title-only substring check, so it also matches tags,
+// properties, and block content — scope restricts the match to a notebook/board when given.
+export async function noteMatchesSearch(
+  note: Note,
+  query: string,
+  scope?: { notebookId?: string; boardId?: string },
+): Promise<boolean> {
+  const ids = await searchNotes(query, scope)
+  return ids === null || ids.includes(note.id)
 }
 
 // Unlike the filter's own 'tag' criterion (single tag, see evaluateCriterion above), an empty

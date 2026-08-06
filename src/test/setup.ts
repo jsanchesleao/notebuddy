@@ -1,5 +1,16 @@
 import '@testing-library/jest-dom/vitest'
 import 'fake-indexeddb/auto'
+import { beforeEach } from 'vitest'
+import { resetSearchIndexForTests } from '../domain/search/searchIndexStore'
+import { registerSearchIndexSync } from '../domain/search/searchIndexSync'
+
+// Mirrors main.tsx's app-init call so every test exercising note create/update/delete (via
+// noteRepository, not raw db.notes calls) keeps the search index in sync like production does.
+// Reset before each test so one test's indexed notes never leak into the next.
+registerSearchIndexSync()
+beforeEach(() => {
+  resetSearchIndexForTests()
+})
 
 // jsdom doesn't implement layout, so ProseMirror (used by the TipTap text block)
 // crashes computing selection coordinates unless these are stubbed out.

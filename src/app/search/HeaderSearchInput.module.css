@@ -1,0 +1,12 @@
+.form {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+  max-width: 24rem;
+  margin-inline: auto;
+}
+
+.form > * {
+  width: 100%;
+}

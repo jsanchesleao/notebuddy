@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import {
   collectFilterableProperties,
   filterNotes,
@@ -6,6 +6,7 @@ import {
   noteMatchesSearch,
   noteMatchesTags,
 } from './noteFilterMatch'
+import { indexNote } from '../search/searchIndexStore'
 import { createId } from '../ids'
 import type { CustomDataType, DataTypeRef, Note, PropertyValueData } from '../entities.types'
 import type { FilterCriterion, FilterState } from './noteFilter.types'
@@ -60,27 +61,27 @@ function noteTypeCriterion(noteTypeId: string | null): FilterCriterion {
 }
 
 describe('noteMatchesFilter — no active filter', () => {
-  it('matches everything when there are no blocks', () => {
+  it('matches everything when there are no blocks', async () => {
     const note = buildNote()
-    expect(noteMatchesFilter(note, { mode: 'and', blocks: [] }, noCustomTypes)).toBe(true)
+    expect(await noteMatchesFilter(note, { mode: 'and', blocks: [] }, noCustomTypes)).toBe(true)
   })
 
-  it('matches everything when every block is empty', () => {
+  it('matches everything when every block is empty', async () => {
     const note = buildNote()
     const filter: FilterState = { mode: 'and', blocks: [block([]), block([])] }
-    expect(noteMatchesFilter(note, filter, noCustomTypes)).toBe(true)
+    expect(await noteMatchesFilter(note, filter, noCustomTypes)).toBe(true)
   })
 })
 
 describe('noteMatchesFilter — criterion kinds', () => {
-  it('tag: matches when the note has the tag', () => {
+  it('tag: matches when the note has the tag', async () => {
     const note = buildNote({
       metadata: { tags: ['work'], createdAt: '', updatedAt: '', properties: {} },
     })
     const filter: FilterState = { mode: 'and', blocks: [block([tagCriterion('work')])] }
-    expect(noteMatchesFilter(note, filter, noCustomTypes)).toBe(true)
+    expect(await noteMatchesFilter(note, filter, noCustomTypes)).toBe(true)
     expect(
-      noteMatchesFilter(
+      await noteMatchesFilter(
         note,
         { mode: 'and', blocks: [block([tagCriterion('home')])] },
         noCustomTypes,
@@ -88,17 +89,17 @@ describe('noteMatchesFilter — criterion kinds', () => {
     ).toBe(false)
   })
 
-  it('noteType: matches on exact noteTypeId, including null', () => {
+  it('noteType: matches on exact noteTypeId, including null', async () => {
     const note = buildNote({ noteTypeId: 'type-1' })
     expect(
-      noteMatchesFilter(
+      await noteMatchesFilter(
         note,
         { mode: 'and', blocks: [block([noteTypeCriterion('type-1')])] },
         noCustomTypes,
       ),
     ).toBe(true)
     expect(
-      noteMatchesFilter(
+      await noteMatchesFilter(
         note,
         { mode: 'and', blocks: [block([noteTypeCriterion(null)])] },
         noCustomTypes,
@@ -106,17 +107,18 @@ describe('noteMatchesFilter — criterion kinds', () => {
     ).toBe(false)
   })
 
-  it('title: case-insensitive substring match', () => {
+  it('title: case-insensitive, index-backed prefix match', async () => {
     const note = buildNote({ title: 'Weekly Planning' })
+    indexNote(note, '')
     expect(
-      noteMatchesFilter(
+      await noteMatchesFilter(
         note,
         { mode: 'and', blocks: [block([titleCriterion('plan')])] },
         noCustomTypes,
       ),
     ).toBe(true)
     expect(
-      noteMatchesFilter(
+      await noteMatchesFilter(
         note,
         { mode: 'and', blocks: [block([titleCriterion('xyz')])] },
         noCustomTypes,
@@ -124,10 +126,11 @@ describe('noteMatchesFilter — criterion kinds', () => {
     ).toBe(false)
   })
 
-  it('title: an empty/unset text never matches (not "every note")', () => {
+  it('title: an empty/unset text never matches (not "every note")', async () => {
     const note = buildNote({ title: 'Weekly Planning' })
+    indexNote(note, '')
     expect(
-      noteMatchesFilter(
+      await noteMatchesFilter(
         note,
         { mode: 'and', blocks: [block([titleCriterion('')])] },
         noCustomTypes,
@@ -156,7 +159,7 @@ describe('noteMatchesFilter — property criterion operators', () => {
     }
   }
 
-  it('text: contains, case-insensitive', () => {
+  it('text: contains, case-insensitive', async () => {
     const note = withProperty(buildNote(), 'field', textType, 'Chocolate Cake')
     const criterion = propertyCriterion({
       primitive: 'text',
@@ -164,28 +167,28 @@ describe('noteMatchesFilter — property criterion operators', () => {
       operand: 'cake',
     })
     expect(
-      noteMatchesFilter(note, { mode: 'and', blocks: [block([criterion])] }, noCustomTypes),
+      await noteMatchesFilter(note, { mode: 'and', blocks: [block([criterion])] }, noCustomTypes),
     ).toBe(true)
   })
 
-  it('number: equals / greaterThan / lessThan', () => {
+  it('number: equals / greaterThan / lessThan', async () => {
     const note = withProperty(buildNote(), 'field', numberType, 5)
     const equals = propertyCriterion({ primitive: 'number', operator: 'equals', operand: 5 })
     const greater = propertyCriterion({ primitive: 'number', operator: 'greaterThan', operand: 3 })
     const less = propertyCriterion({ primitive: 'number', operator: 'lessThan', operand: 3 })
 
-    expect(noteMatchesFilter(note, { mode: 'and', blocks: [block([equals])] }, noCustomTypes)).toBe(
-      true,
-    )
     expect(
-      noteMatchesFilter(note, { mode: 'and', blocks: [block([greater])] }, noCustomTypes),
+      await noteMatchesFilter(note, { mode: 'and', blocks: [block([equals])] }, noCustomTypes),
     ).toBe(true)
-    expect(noteMatchesFilter(note, { mode: 'and', blocks: [block([less])] }, noCustomTypes)).toBe(
-      false,
-    )
+    expect(
+      await noteMatchesFilter(note, { mode: 'and', blocks: [block([greater])] }, noCustomTypes),
+    ).toBe(true)
+    expect(
+      await noteMatchesFilter(note, { mode: 'and', blocks: [block([less])] }, noCustomTypes),
+    ).toBe(false)
   })
 
-  it('date: equals / before / after (fixed-width string comparison)', () => {
+  it('date: equals / before / after (fixed-width string comparison)', async () => {
     const note = withProperty(buildNote(), 'field', dateType, '2026-06-15')
     const equals = propertyCriterion({
       primitive: 'date',
@@ -199,34 +202,34 @@ describe('noteMatchesFilter — property criterion operators', () => {
     })
     const after = propertyCriterion({ primitive: 'date', operator: 'after', operand: '2026-07-01' })
 
-    expect(noteMatchesFilter(note, { mode: 'and', blocks: [block([equals])] }, noCustomTypes)).toBe(
-      true,
-    )
-    expect(noteMatchesFilter(note, { mode: 'and', blocks: [block([before])] }, noCustomTypes)).toBe(
-      true,
-    )
-    expect(noteMatchesFilter(note, { mode: 'and', blocks: [block([after])] }, noCustomTypes)).toBe(
-      false,
-    )
-  })
-
-  it('boolean: equals only', () => {
-    const note = withProperty(buildNote(), 'field', boolType, true)
-    const criterion = propertyCriterion({ primitive: 'boolean', operator: 'equals', operand: true })
     expect(
-      noteMatchesFilter(note, { mode: 'and', blocks: [block([criterion])] }, noCustomTypes),
+      await noteMatchesFilter(note, { mode: 'and', blocks: [block([equals])] }, noCustomTypes),
     ).toBe(true)
-  })
-
-  it('never matches an unset/default operand', () => {
-    const note = withProperty(buildNote(), 'field', textType, 'Cake')
-    const criterion = propertyCriterion({ primitive: 'text', operator: 'contains', operand: '' })
     expect(
-      noteMatchesFilter(note, { mode: 'and', blocks: [block([criterion])] }, noCustomTypes),
+      await noteMatchesFilter(note, { mode: 'and', blocks: [block([before])] }, noCustomTypes),
+    ).toBe(true)
+    expect(
+      await noteMatchesFilter(note, { mode: 'and', blocks: [block([after])] }, noCustomTypes),
     ).toBe(false)
   })
 
-  it('never matches when the property is missing', () => {
+  it('boolean: equals only', async () => {
+    const note = withProperty(buildNote(), 'field', boolType, true)
+    const criterion = propertyCriterion({ primitive: 'boolean', operator: 'equals', operand: true })
+    expect(
+      await noteMatchesFilter(note, { mode: 'and', blocks: [block([criterion])] }, noCustomTypes),
+    ).toBe(true)
+  })
+
+  it('never matches an unset/default operand', async () => {
+    const note = withProperty(buildNote(), 'field', textType, 'Cake')
+    const criterion = propertyCriterion({ primitive: 'text', operator: 'contains', operand: '' })
+    expect(
+      await noteMatchesFilter(note, { mode: 'and', blocks: [block([criterion])] }, noCustomTypes),
+    ).toBe(false)
+  })
+
+  it('never matches when the property is missing', async () => {
     const note = buildNote()
     const criterion = propertyCriterion({
       primitive: 'text',
@@ -234,15 +237,15 @@ describe('noteMatchesFilter — property criterion operators', () => {
       operand: 'cake',
     })
     expect(
-      noteMatchesFilter(note, { mode: 'and', blocks: [block([criterion])] }, noCustomTypes),
+      await noteMatchesFilter(note, { mode: 'and', blocks: [block([criterion])] }, noCustomTypes),
     ).toBe(false)
   })
 
-  it('never matches when the property has since drifted to a different kind', () => {
+  it('never matches when the property has since drifted to a different kind', async () => {
     const note = withProperty(buildNote(), 'field', numberType, 5)
     const criterion = propertyCriterion({ primitive: 'text', operator: 'contains', operand: '5' })
     expect(
-      noteMatchesFilter(note, { mode: 'and', blocks: [block([criterion])] }, noCustomTypes),
+      await noteMatchesFilter(note, { mode: 'and', blocks: [block([criterion])] }, noCustomTypes),
     ).toBe(false)
   })
 })
@@ -253,14 +256,18 @@ describe('noteMatchesFilter — AND/OR duality across blocks and within blocks',
     metadata: { tags: ['work'], createdAt: '', updatedAt: '', properties: {} },
   })
 
-  it('mode=and: criteria within a block AND together, blocks OR together', () => {
+  beforeEach(() => {
+    indexNote(note, '')
+  })
+
+  it('mode=and: criteria within a block AND together, blocks OR together', async () => {
     const matchingBlock = block([tagCriterion('work'), titleCriterion('plan')])
     const partiallyMatchingBlock = block([tagCriterion('work'), titleCriterion('xyz')])
     const nonMatchingBlock = block([tagCriterion('home')])
 
     // A block with all-true criteria makes the whole (OR-combined) filter match.
     expect(
-      noteMatchesFilter(
+      await noteMatchesFilter(
         note,
         { mode: 'and', blocks: [nonMatchingBlock, matchingBlock] },
         noCustomTypes,
@@ -269,26 +276,30 @@ describe('noteMatchesFilter — AND/OR duality across blocks and within blocks',
 
     // A block with one false criterion (AND) fails that block; if it's the only block, no match.
     expect(
-      noteMatchesFilter(note, { mode: 'and', blocks: [partiallyMatchingBlock] }, noCustomTypes),
+      await noteMatchesFilter(
+        note,
+        { mode: 'and', blocks: [partiallyMatchingBlock] },
+        noCustomTypes,
+      ),
     ).toBe(false)
 
     // No block matches -> overall false.
     expect(
-      noteMatchesFilter(note, { mode: 'and', blocks: [nonMatchingBlock] }, noCustomTypes),
+      await noteMatchesFilter(note, { mode: 'and', blocks: [nonMatchingBlock] }, noCustomTypes),
     ).toBe(false)
   })
 
-  it('mode=or: criteria within a block OR together, blocks AND together', () => {
+  it('mode=or: criteria within a block OR together, blocks AND together', async () => {
     const eitherMatchesBlock = block([tagCriterion('home'), titleCriterion('plan')])
     const bothFailBlock = block([tagCriterion('home'), titleCriterion('xyz')])
 
     // Every block must have at least one true criterion (OR) for the (AND-combined) filter to match.
     expect(
-      noteMatchesFilter(note, { mode: 'or', blocks: [eitherMatchesBlock] }, noCustomTypes),
+      await noteMatchesFilter(note, { mode: 'or', blocks: [eitherMatchesBlock] }, noCustomTypes),
     ).toBe(true)
 
     expect(
-      noteMatchesFilter(
+      await noteMatchesFilter(
         note,
         { mode: 'or', blocks: [eitherMatchesBlock, bothFailBlock] },
         noCustomTypes,
@@ -298,12 +309,14 @@ describe('noteMatchesFilter — AND/OR duality across blocks and within blocks',
 })
 
 describe('filterNotes', () => {
-  it('returns only the notes matching the filter', () => {
+  it('returns only the notes matching the filter', async () => {
     const matching = buildNote({ title: 'Match me' })
     const nonMatching = buildNote({ title: 'Skip me' })
+    indexNote(matching, '')
+    indexNote(nonMatching, '')
     const filter: FilterState = { mode: 'and', blocks: [block([titleCriterion('match')])] }
 
-    expect(filterNotes([matching, nonMatching], filter, noCustomTypes)).toEqual([matching])
+    expect(await filterNotes([matching, nonMatching], filter, noCustomTypes)).toEqual([matching])
   })
 })
 
@@ -337,25 +350,29 @@ describe('collectFilterableProperties', () => {
 })
 
 describe('noteMatchesSearch', () => {
-  it('matches everything when the query is empty', () => {
+  it('matches everything when the query is empty', async () => {
     const note = buildNote({ title: 'Anything' })
-    expect(noteMatchesSearch(note, '')).toBe(true)
+    indexNote(note, '')
+    expect(await noteMatchesSearch(note, '')).toBe(true)
   })
 
-  it('matches everything when the query is only whitespace', () => {
+  it('matches everything when the query is only whitespace', async () => {
     const note = buildNote({ title: 'Anything' })
-    expect(noteMatchesSearch(note, '   ')).toBe(true)
+    indexNote(note, '')
+    expect(await noteMatchesSearch(note, '   ')).toBe(true)
   })
 
-  it('matches a case-insensitive title substring', () => {
+  it('matches a case-insensitive title prefix', async () => {
     const note = buildNote({ title: 'Weekly Planning' })
-    expect(noteMatchesSearch(note, 'plan')).toBe(true)
-    expect(noteMatchesSearch(note, 'PLAN')).toBe(true)
+    indexNote(note, '')
+    expect(await noteMatchesSearch(note, 'plan')).toBe(true)
+    expect(await noteMatchesSearch(note, 'PLAN')).toBe(true)
   })
 
-  it('does not match when the query is not a substring of the title', () => {
+  it('does not match when the query has no indexed match', async () => {
     const note = buildNote({ title: 'Weekly Planning' })
-    expect(noteMatchesSearch(note, 'budget')).toBe(false)
+    indexNote(note, '')
+    expect(await noteMatchesSearch(note, 'budget')).toBe(false)
   })
 })
 

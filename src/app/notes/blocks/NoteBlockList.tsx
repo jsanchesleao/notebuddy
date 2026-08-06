@@ -14,6 +14,9 @@ import { useNoteBlocks } from '../useNoteBlocks'
 import { createEmptyBlock } from '../../../domain/blocks/noteBlocksFactory'
 import { createId } from '../../../domain/ids'
 import type { NoteBlockType } from '../../../domain/blocks/blocks.types'
+import { getNote } from '../../../domain/notes/noteRepository'
+import { extractBlocksText } from '../../../domain/search/extractBlockText'
+import { indexNote } from '../../../domain/search/searchIndexStore'
 import { AddBlockMenu } from './AddBlockMenu'
 import { SortableBlockWrapper, type SortableBlockWrapperHandle } from './SortableBlockWrapper'
 import { TextBlock, type BlockEdge, type TextBlockHandle } from './TextBlock/TextBlock'
@@ -105,6 +108,21 @@ export function NoteBlockList({ noteId, blockDocId }: NoteBlockListProps) {
     window.addEventListener('mouseup', handleGlobalMouseUp)
     return () => window.removeEventListener('mouseup', handleGlobalMouseUp)
   }, [])
+
+  // Block content lives in Yjs, not Dexie, so it has no Dexie hook to keep the search index in
+  // sync (see searchIndexSync.ts) — reindex here instead, whenever this note's blocks change
+  // (including remote/CRDT-applied changes, via useNoteBlocks' observeDeep). No debounce of our
+  // own on top: each block editor (e.g. TextBlock) already debounces its own updateBlock calls
+  // before `blocks` changes at all, so stacking another debounce here would only add latency —
+  // and worse, risk losing a pending reindex entirely if the user navigates away before it
+  // fires, since an unmounting effect's cleanup can't safely flush a still-pending timer.
+  useEffect(() => {
+    if (isLoading) return
+
+    void getNote(noteId).then((note) => {
+      if (note) indexNote(note, extractBlocksText(blocks))
+    })
+  }, [noteId, blocks, isLoading])
 
   if (isLoading) return null
 

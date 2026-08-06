@@ -29,6 +29,7 @@
     "@tiptap/starter-kit": "^3.28.0",
     "dexie": "^4.4.4",
     "dexie-react-hooks": "^4.4.0",
+    "flexsearch": "^0.8.212",
     "lucide-react": "^1.25.0",
     "perfect-freehand": "^1.2.3",
     "prismjs": "^1.30.0",
