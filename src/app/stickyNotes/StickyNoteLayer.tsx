@@ -9,6 +9,7 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core'
 import { StickyNoteItem } from './StickyNoteItem'
+import { restrictToViewport } from './restrictToViewport'
 import type { StickyNote } from '../../domain/entities.types'
 import styles from './StickyNoteLayer.module.css'
 
@@ -24,13 +25,19 @@ interface StickyNoteLayerProps {
 
 // Position is anchored to the page's own content flow (this element is a plain
 // `position: absolute; inset: 0` child of the page wrapper, not the viewport), so notes
-// scroll along with nearby content. Dragging is unconstrained — no restrictToParentElement
-// modifier — event.delta is added directly to the stored x/y.
+// scroll along with nearby content. Dragging is unconstrained relative to that content — no
+// restrictToParentElement modifier — event.delta is added directly to the stored x/y.
 //
 // Vertical scroll tethering falls out of that for free (the page wrapper is the thing that
 // scrolls). Horizontal scroll on a board happens in a nested container instead (KanbanBoard's
 // .columns), so scrollOffsetX is passed down from BoardPage and applied as a translateX
 // compensation to keep notes visually tethered to the board content on that axis too.
+//
+// Scrolling *during* an active drag is blocked outright (autoScroll={false}, the wheel-block
+// effect below, restrictToViewport, and touch-action: none on the grip handle in
+// StickyNoteColorPicker) rather than compensated for — see restrictToViewport.ts for why an
+// unconstrained drag can silently grow a scrolling ancestor's scrollable area even without any
+// of those triggering it directly.
 export function StickyNoteLayer({
   stickyNotes,
   onChangeContent,
@@ -80,6 +87,7 @@ export function StickyNoteLayer({
       <DndContext
         sensors={sensors}
         autoScroll={false}
+        modifiers={[restrictToViewport]}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}

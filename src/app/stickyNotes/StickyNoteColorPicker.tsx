@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import type { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/core'
 import { DismissableDropdown } from '../../components/Menu/DismissableDropdown'
 import { Icon } from '../../components/Icon/Icon'
 import { PILL_PALETTE } from '../../domain/tags/tagPalette'
@@ -11,21 +10,16 @@ interface StickyNoteColorPickerProps {
   onChangeColor: (color: string) => void
   onOpen: () => void
   textColor: string
-  attributes: DraggableAttributes
-  listeners: DraggableSyntheticListeners
 }
 
-// The grip button doubles as both the drag handle (dnd-kit attributes/listeners, spread here)
-// and the color-picker trigger — a click with no pointer movement falls through to a normal
-// click event since PointerSensor only activates a drag past its distance threshold, so the
-// two behaviors coexist on one button rather than needing separate controls.
+// The whole card is the drag surface (StickyNoteItem), so this button only opens the color
+// picker — it stops propagation so the click doesn't also bubble up to the card's
+// click-to-edit handler.
 export function StickyNoteColorPicker({
   color,
   onChangeColor,
   onOpen,
   textColor,
-  attributes,
-  listeners,
 }: StickyNoteColorPickerProps) {
   const [draft, setDraft] = useState(color)
 
@@ -36,15 +30,14 @@ export function StickyNoteColorPicker({
           type="button"
           className={styles.gripButton}
           style={{ color: textColor }}
-          aria-label="Move or change color of sticky note"
+          aria-label="Change sticky note color"
           aria-expanded={open}
-          onClick={() => {
+          onClick={(event) => {
+            event.stopPropagation()
             setDraft(color)
             if (!open) onOpen()
             toggle()
           }}
-          {...attributes}
-          {...listeners}
         >
           <Icon name="grip" size={12} />
         </button>
