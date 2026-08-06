@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import {
   DndContext,
   KeyboardSensor,
@@ -43,21 +44,46 @@ export function StickyNoteLayer({
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor),
   )
+  const [isDragActive, setIsDragActive] = useState(false)
+
+  // Scrolling underneath a drag would desync the pointer's client-space delta from the note's
+  // rendered position (see the tethering comment above), so scroll is blocked entirely for the
+  // duration of a drag rather than compensated for. dnd-kit's own autoScroll (edge-scrolling the
+  // nearest scrollable ancestor while dragging) is disabled below for the same reason; this
+  // effect covers scroll-wheel/trackpad input, which autoScroll={false} doesn't touch.
+  useEffect(() => {
+    if (!isDragActive) return
+    const preventScroll = (event: WheelEvent) => event.preventDefault()
+    window.addEventListener('wheel', preventScroll, { passive: false })
+    return () => window.removeEventListener('wheel', preventScroll)
+  }, [isDragActive])
 
   const handleDragStart = async (event: DragStartEvent) => {
+    setIsDragActive(true)
     await onBringToFront(String(event.active.id))
   }
 
   const handleDragEnd = async (event: DragEndEvent) => {
+    setIsDragActive(false)
     const stickyNoteId = String(event.active.id)
     const stickyNote = stickyNotes.find((note) => note.id === stickyNoteId)
     if (!stickyNote) return
     await onMove(stickyNoteId, stickyNote.x + event.delta.x, stickyNote.y + event.delta.y)
   }
 
+  const handleDragCancel = () => {
+    setIsDragActive(false)
+  }
+
   return (
     <div className={styles.layer} style={{ transform: `translateX(${-scrollOffsetX}px)` }}>
-      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        autoScroll={false}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
+      >
         {stickyNotes.map((stickyNote) => (
           <StickyNoteItem
             key={stickyNote.id}
