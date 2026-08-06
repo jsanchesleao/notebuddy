@@ -51,6 +51,7 @@ export function NotebookPage() {
   const notes = useLiveQuery(
     () => (notebookId ? listNotesByNotebook(notebookId) : Promise.resolve([])),
     [notebookId],
+    [],
   )
   const noteTypes = useLiveQuery(() => listNoteTypes(), [], [])
   const customTypes = useLiveQuery(() => listCustomDataTypes(), [], [])
@@ -64,7 +65,7 @@ export function NotebookPage() {
     () => navigationState?.selectedTags ?? [],
   )
   const visibleNotes = useVisibleNotes({
-    notes: notes ?? [],
+    notes,
     filterState,
     search,
     selectedTags,
@@ -118,7 +119,7 @@ export function NotebookPage() {
       <section>
         <h2 className={styles.sectionHeading}>Notes</h2>
         <div className={styles.toolbar}>
-          <NoteFilter notes={notes ?? []} value={filterState} onChange={setFilterState} />
+          <NoteFilter notes={notes} value={filterState} onChange={setFilterState} />
           <NoteQuickSearch value={search} onChange={setSearch} />
           <TagQuickFilter value={selectedTags} onChange={setSelectedTags} tags={tags ?? []} />
           <SaveSearchButton
@@ -129,8 +130,8 @@ export function NotebookPage() {
             boardId={null}
           />
         </div>
-        {notes?.length === 0 && <p className={styles.empty}>No notes yet</p>}
-        {notes && notes.length > 0 && visibleNotes.length === 0 && (
+        {notes.length === 0 && <p className={styles.empty}>No notes yet</p>}
+        {notes.length > 0 && visibleNotes.length === 0 && (
           <p className={styles.empty}>No notes match the current filter</p>
         )}
         <ul className={styles.list}>

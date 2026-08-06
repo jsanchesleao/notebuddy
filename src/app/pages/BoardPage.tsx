@@ -47,6 +47,7 @@ export function BoardPage() {
   const notes = useLiveQuery(
     () => (boardId ? listNotesByBoardId(boardId) : Promise.resolve([])),
     [boardId],
+    [],
   )
   const customType = useLiveQuery(
     () => (board?.statusTypeId ? getCustomDataType(board.statusTypeId) : Promise.resolve(null)),
@@ -62,7 +63,7 @@ export function BoardPage() {
     () => navigationState?.selectedTags ?? [],
   )
   const visibleNotes = useVisibleNotes({
-    notes: notes ?? [],
+    notes,
     filterState,
     search,
     selectedTags,
@@ -108,7 +109,7 @@ export function BoardPage() {
       />
 
       <div className={styles.toolbar}>
-        <NoteFilter notes={notes ?? []} value={filterState} onChange={setFilterState} />
+        <NoteFilter notes={notes} value={filterState} onChange={setFilterState} />
         <NoteQuickSearch value={search} onChange={setSearch} />
         <TagQuickFilter value={selectedTags} onChange={setSelectedTags} tags={allTags ?? []} />
         <SaveSearchButton
