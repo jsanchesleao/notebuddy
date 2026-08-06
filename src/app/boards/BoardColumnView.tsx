@@ -34,19 +34,21 @@ export function BoardColumnView({
         ref={setNodeRef}
         className={isOver ? `${styles.body} ${styles.dropTarget}` : styles.body}
       >
-        <SortableContext
-          items={notes.map((note) => note.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          {notes.length === 0 && <p className={styles.empty}>No cards</p>}
-          {notes.map((note) => (
-            <BoardCard key={note.id} note={note} tagColors={tagColors} />
-          ))}
-        </SortableContext>
+        <div className={styles.cardList}>
+          <SortableContext
+            items={notes.map((note) => note.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {notes.length === 0 && <p className={styles.empty}>No cards</p>}
+            {notes.map((note) => (
+              <BoardCard key={note.id} note={note} tagColors={tagColors} />
+            ))}
+          </SortableContext>
+        </div>
+        <button type="button" className={styles.newCardButton} onClick={() => onNewCard(column)}>
+          <Icon name="add" size={14} /> New card
+        </button>
       </div>
-      <button type="button" className={styles.newCardButton} onClick={() => onNewCard(column)}>
-        <Icon name="add" size={14} /> New card
-      </button>
     </div>
   )
 }

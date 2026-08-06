@@ -12,11 +12,18 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
   padding: 0 var(--space-2) var(--space-2);
-  overflow-y: auto;
-  min-height: 3rem;
+  min-height: 0;
   border-radius: var(--radius-sm);
+}
+
+.cardList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 0 1 auto;
+  min-height: 3rem;
+  overflow-y: auto;
 }
 
 .dropTarget {
@@ -35,7 +42,8 @@
   display: flex;
   align-items: center;
   gap: var(--space-1);
-  margin: 0 var(--space-2) var(--space-2);
+  flex: 0 0 auto;
+  margin-top: var(--space-2);
   padding: var(--space-2);
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);

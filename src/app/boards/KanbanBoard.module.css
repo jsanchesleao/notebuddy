@@ -1,6 +1,6 @@
 .columns {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   gap: var(--space-3);
   overflow-x: auto;
   padding-bottom: var(--space-2);
